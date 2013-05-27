@@ -1,0 +1,9 @@
+[Unit]
+Description=systemd-cron weekly script service
+RefuseManualStart=true
+RefuseManualStop=true
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/run-parts /usr/local/etc/cron.weekly
+

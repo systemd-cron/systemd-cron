@@ -1,0 +1,7 @@
+[Unit]
+Description=systemd-cron
+Requires=cron-hourly.timer cron-daily.timer cron-weekly.timer cron-monthly.timer
+
+[Install]
+WantedBy=multi-user.target
+

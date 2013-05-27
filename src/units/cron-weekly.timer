@@ -1,0 +1,9 @@
+[Unit]
+Description=systemd-cron weekly timer
+PartOf=cron.target
+RefuseManualStart=true
+RefuseManualStop=true
+
+[Timer]
+OnCalendar=weekly
+

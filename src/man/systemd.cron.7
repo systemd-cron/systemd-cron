@@ -1,0 +1,91 @@
+.TH SYSTEMD.CRON 7 "" "systemd-cron unknown version" systemd.cron
+
+.SH NAME
+systemd.cron - systemd cron units
+
+.SH SYNOPSIS
+cron.target, cron-hourly.timer, cron-daily.timer, cron-weekly.timer,
+cron-monthly.timer, cron-hourly.service, cron-daily.service,
+cron-weekly.service, cron-monthly.service
+
+.SH DESCRIPTION
+These units provide minimal cron daemon functionality by running scripts in
+cron directories.
+
+.SH FILES
+.TP
+.I /usr/local/etc/cron.hourly
+Directory for scripts to be executed every hour.
+
+.TP
+.I /usr/local/etc/cron.daily
+Directory for scripts to be executed every day.
+
+.TP
+.I /usr/local/etc/cron.weekly
+Directory for scripts to be executed every week.
+
+.TP
+.I /usr/local/etc/cron.monthly
+Directory for scripts to be executed every month.
+
+.SH SYSTEM UNITS
+.TP
+cron.target
+The target unit which starts the others. This should be enabled and started to
+use cron functionality.
+
+.TP
+cron-\fIschedule\fR.timer
+The timer units which trigger the cron-\fIschedule\fR.service units at the
+appropriate time. Started and stopped by the cron.target unit. These units
+cannot be controlled manually.
+
+.TP
+cron-\fIschedule\fR.service
+The service units which run scripts in the cron directories. Started and
+stopped by the cron-\fIschedule\fR.timer units. These units cannot be
+controlled manually. You can use \fBjournalctl\fR(1) to view the output of
+scripts run from these units.
+
+.SH LIMITATIONS
+These units are \fInot\fR a drop-in replacement for a cron daemon. They only
+provide execution of scripts in the aforementioned directories. Do \fInot\fR
+use with a cron daemon, otherwise scripts may be executed multiple times.
+
+.SH EXAMPLES
+
+.IP "Start cron units"
+.SB # systemctl start cron.target
+
+.IP "Start cron units on boot"
+.SB # systemctl enable cron.target
+
+.IP "View script output"
+.SB # journalctl -u cron-hourly
+.br
+.SB # journalctl -u cron-daily
+.br
+.SB # journalctl -u cron-weekly
+.br
+.SB # journalctl -u cron-monthly
+
+.SH NOTES
+.nr step 1 1
+.IP \n[step]. 3
+The exact times scripts are executed is determined by the values of the special
+calendar events \fIhourly\fR, \fIdaily\fR, \fIweekly\fR, and \fImonthly\fR
+defined by \fBsystemd.time\fR(7).
+.IP \n+[step].
+\fBrun-parts\fR(8) is used to run scripts. Scripts must be executable by
+\fIroot\fR to run.
+
+.SH SEE ALSO
+.BR systemd (1),
+.BR systemd.unit (5),
+.BR systemd.service (5),
+.BR systemd.target (5),
+.BR systemd.timer (5),
+.BR systemd.time (7),
+.BR run-parts (8)
+
