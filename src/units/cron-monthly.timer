@@ -1,5 +1,5 @@
 [Unit]
-Description=Sdcron monthly timer
+Description=systemd-cron monthly timer
 PartOf=cron.target
 RefuseManualStart=true
 RefuseManualStop=true
