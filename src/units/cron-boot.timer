@@ -1,0 +1,9 @@
+[Unit]
+Description=systemd-cron boot timer
+PartOf=cron.target
+RefuseManualStart=true
+RefuseManualStop=true
+
+[Timer]
+OnBootSec=0
+
