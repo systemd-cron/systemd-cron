@@ -16,14 +16,17 @@ Packaging
 --------------
 Building
 
+    $ ./configure
     $ make
 
 Staging
 
     $ make DESTDIR="$destdir" install
 
-See `Makefile` for additional installation variables. At the very least, you
-probably want to override `prefix` and `confdir`.
+See `configure` for configuration variables. At the very least, you
+probably want to override `prefix` and `confdir`, e.g.:
+
+    $ ./configure --prefix=/usr --confdir=/etc
 
 See Also
 ------------
