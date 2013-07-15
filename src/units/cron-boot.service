@@ -7,3 +7,5 @@ RefuseManualStop=true
 Type=oneshot
 ExecStart=/usr/bin/run-parts /usr/local/etc/cron.boot
 
+[Install]
+WantedBy=cron-boot.target
