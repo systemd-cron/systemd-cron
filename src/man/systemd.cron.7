@@ -5,8 +5,9 @@ systemd.cron - systemd cron units
 
 .SH SYNOPSIS
 cron.target, cron-boot.timer, cron-hourly.timer, cron-daily.timer,
-cron-weekly.timer, cron-monthly.timer, cron-boot.service, cron-hourly.service,
-cron-daily.service, cron-weekly.service, cron-monthly.service
+cron-weekly.timer, cron-monthly.timer, cron-boot.target, cron-hourly.target,
+cron-daily.target, cron-weekly.target, cron-monthly.target,cron-boot.service,
+cron-hourly.service, cron-daily.service, cron-weekly.service, cron-monthly.service
 
 .SH DESCRIPTION
 These units provide minimal cron daemon functionality by running scripts in
@@ -41,21 +42,25 @@ use cron functionality.
 
 .TP
 cron-\fIschedule\fR.timer
-The timer units which trigger the cron-\fIschedule\fR.service units at the
+The timer units which pull the cron-\fIschedule\fR.target units at the
 appropriate time. Started and stopped by the cron.target unit. These units
 cannot be controlled manually.
 
 .TP
+cron-\fIschedule\fR.target
+The targets invoke all service units wanted by them, including cron-\fIschedule\fR.service.
+
+.TP
 cron-\fIschedule\fR.service
 The service units which run scripts in the cron directories. Started and
-stopped by the cron-\fIschedule\fR.timer units. These units cannot be
+stopped by the cron-\fIschedule\fR.target units. These units cannot be
 controlled manually. You can use \fBjournalctl\fR(1) to view the output of
 scripts run from these units.
 
 .SH LIMITATIONS
 These units are \fInot\fR a drop-in replacement for a cron daemon. They only
-provide execution of scripts in the aforementioned directories. Do \fInot\fR
-use with a cron daemon, otherwise scripts may be executed multiple times.
+provide limited cron capabilites. For example user-defined crontabs are not (yet) supported.
+Do \fInot\fR use with a cron daemon, otherwise scripts may be executed multiple times.
 
 .SH EXAMPLES
 
@@ -75,6 +80,27 @@ use with a cron daemon, otherwise scripts may be executed multiple times.
 .SB # journalctl -u cron-weekly
 .br
 .SB # journalctl -u cron-monthly
+
+.IP "Example service file executed every hour"
+.SB [Unit]
+.br
+.SB Description=Update the man db
+.br
+.br
+.SB [Service]
+.br
+.SB Nice=19
+.br
+.SB IOSchedulingClass=2
+.br
+.SB IOSchedulingPriority=7
+.br
+.SB ExecStart=/usr/bin/mandb --quiet
+.br
+.br
+.SB [Install]
+.br
+.SB WantedBy=cron-hourly.target
 
 .SH NOTES
 .nr step 1 1
