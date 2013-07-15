@@ -85,8 +85,7 @@ Do \fInot\fR use with a cron daemon, otherwise scripts may be executed multiple 
 .SB [Unit]
 .br
 .SB Description=Update the man db
-.br
-.br
+
 .SB [Service]
 .br
 .SB Nice=19
@@ -96,8 +95,7 @@ Do \fInot\fR use with a cron daemon, otherwise scripts may be executed multiple 
 .SB IOSchedulingPriority=7
 .br
 .SB ExecStart=/usr/bin/mandb --quiet
-.br
-.br
+
 .SB [Install]
 .br
 .SB WantedBy=cron-hourly.target
