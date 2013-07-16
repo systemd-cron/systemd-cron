@@ -6,4 +6,4 @@ RefuseManualStop=true
 
 [Timer]
 OnCalendar=monthly
-
+Unit=cron-monthly.target

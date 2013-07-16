@@ -61,6 +61,17 @@ all:
 	ln -s $(srcdir)/units/cron-monthly.timer	\
 		$(builddir)/units/cron-monthly.timer
 
+	ln -s $(srcdir)/units/cron-boot.target		\
+		$(builddir)/units/cron-boot.target
+	ln -s $(srcdir)/units/cron-hourly.target	\
+		$(builddir)/units/cron-hourly.target
+	ln -s $(srcdir)/units/cron-daily.target		\
+		$(builddir)/units/cron-daily.target
+	ln -s $(srcdir)/units/cron-weekly.target	\
+		$(builddir)/units/cron-weekly.target
+	ln -s $(srcdir)/units/cron-monthly.target	\
+		$(builddir)/units/cron-monthly.target
+
 clean:
 
 	rm -rf $(outdir)
@@ -90,6 +101,12 @@ install: $(builddir)
 	install -m644 $(builddir)/units/cron-weekly.timer	$(DESTDIR)$(unitdir)
 	install -m644 $(builddir)/units/cron-monthly.timer	$(DESTDIR)$(unitdir)
 
+	install -m644 $(builddir)/units/cron-boot.target	$(DESTDIR)$(unitdir)
+	install -m644 $(builddir)/units/cron-hourly.target	$(DESTDIR)$(unitdir)
+	install -m644 $(builddir)/units/cron-daily.target	$(DESTDIR)$(unitdir)
+	install -m644 $(builddir)/units/cron-weekly.target	$(DESTDIR)$(unitdir)
+	install -m644 $(builddir)/units/cron-monthly.target	$(DESTDIR)$(unitdir)
+
 	install -m644 $(builddir)/units/cron-boot.service		$(DESTDIR)$(unitdir)
 	install -m644 $(builddir)/units/cron-hourly.service		$(DESTDIR)$(unitdir)
 	install -m644 $(builddir)/units/cron-daily.service		$(DESTDIR)$(unitdir)
@@ -111,6 +128,12 @@ uninstall:
 	rm -f $(DESTDIR)$(unitdir)/cron-daily.timer
 	rm -f $(DESTDIR)$(unitdir)/cron-weekly.timer
 	rm -f $(DESTDIR)$(unitdir)/cron-monthly.timer
+
+	rm -f $(DESTDIR)$(unitdir)/cron-boot.target
+	rm -f $(DESTDIR)$(unitdir)/cron-hourly.target
+	rm -f $(DESTDIR)$(unitdir)/cron-daily.target
+	rm -f $(DESTDIR)$(unitdir)/cron-weekly.target
+	rm -f $(DESTDIR)$(unitdir)/cron-monthly.target
 
 	rm -f $(DESTDIR)$(unitdir)/cron-boot.service
 	rm -f $(DESTDIR)$(unitdir)/cron-hourly.service

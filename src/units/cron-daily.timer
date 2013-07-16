@@ -6,4 +6,4 @@ RefuseManualStop=true
 
 [Timer]
 OnCalendar=daily
-
+Unit=cron-daily.target
