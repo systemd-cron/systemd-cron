@@ -74,12 +74,6 @@ install: $(builddir)
 	install -d $(DESTDIR)$(mandir)
 	install -d $(DESTDIR)$(mandir)/man7
 
-	install -d $(DESTDIR)$(confdir)/cron.boot
-	install -d $(DESTDIR)$(confdir)/cron.hourly
-	install -d $(DESTDIR)$(confdir)/cron.daily
-	install -d $(DESTDIR)$(confdir)/cron.weekly
-	install -d $(DESTDIR)$(confdir)/cron.monthly
-
 	install -m644 $(builddir)/man/systemd.cron.7 $(DESTDIR)$(mandir)/man7
 
 	install -m644 $(builddir)/units/cron.target $(DESTDIR)$(unitdir)
@@ -97,12 +91,6 @@ install: $(builddir)
 	install -m644 $(builddir)/units/cron-monthly.service	$(DESTDIR)$(unitdir)
 
 uninstall:
-
-	rmdir --ignore-fail-on-non-empty $(DESTDIR)$(confdir)/cron.boot
-	rmdir --ignore-fail-on-non-empty $(DESTDIR)$(confdir)/cron.hourly
-	rmdir --ignore-fail-on-non-empty $(DESTDIR)$(confdir)/cron.daily
-	rmdir --ignore-fail-on-non-empty $(DESTDIR)$(confdir)/cron.weekly
-	rmdir --ignore-fail-on-non-empty $(DESTDIR)$(confdir)/cron.monthly
 
 	rm -f $(DESTDIR)$(unitdir)/cron.target
 
