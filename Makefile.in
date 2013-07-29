@@ -69,7 +69,6 @@ dist: $(tarball)
 
 install: $(builddir)
 
-	install -d $(DESTDIR)$(confdir)
 	install -d $(DESTDIR)$(unitdir)
 	install -d $(DESTDIR)$(mandir)
 	install -d $(DESTDIR)$(mandir)/man7
