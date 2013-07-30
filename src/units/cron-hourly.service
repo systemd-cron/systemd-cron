@@ -2,6 +2,7 @@
 Description=systemd-cron hourly script service
 RefuseManualStart=true
 RefuseManualStop=true
+ConditionDirectoryNotEmpty=/usr/local/etc/cron.hourly
 
 [Service]
 Type=oneshot
