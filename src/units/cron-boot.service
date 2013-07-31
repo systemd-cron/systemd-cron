@@ -2,6 +2,7 @@
 Description=systemd-cron boot script service
 RefuseManualStart=true
 RefuseManualStop=true
+ConditionDirectoryNotEmpty=/usr/local/etc/cron.boot
 
 [Service]
 Type=oneshot

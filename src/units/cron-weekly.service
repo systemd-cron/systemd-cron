@@ -2,6 +2,7 @@
 Description=systemd-cron weekly script service
 RefuseManualStart=true
 RefuseManualStop=true
+ConditionDirectoryNotEmpty=/usr/local/etc/cron.weekly
 
 [Service]
 Type=oneshot
