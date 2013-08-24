@@ -1,3 +1,5 @@
 [Unit]
 Description=systemd-cron hourly target
+Requires=cron-hourly.service
 StopWhenUnneeded=yes
+

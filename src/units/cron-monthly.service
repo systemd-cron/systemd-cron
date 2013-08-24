@@ -1,5 +1,6 @@
 [Unit]
 Description=systemd-cron monthly script service
+PartOf=cron-monthly.target
 RefuseManualStart=true
 RefuseManualStop=true
 ConditionDirectoryNotEmpty=/usr/local/etc/cron.monthly
@@ -8,5 +9,3 @@ ConditionDirectoryNotEmpty=/usr/local/etc/cron.monthly
 Type=oneshot
 ExecStart=/usr/bin/run-parts /usr/local/etc/cron.monthly
 
-[Install]
-WantedBy=cron-monthly.target

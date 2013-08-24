@@ -1,5 +1,6 @@
 [Unit]
 Description=systemd-cron hourly script service
+PartOf=cron-hourly.target
 RefuseManualStart=true
 RefuseManualStop=true
 ConditionDirectoryNotEmpty=/usr/local/etc/cron.hourly
@@ -8,5 +9,3 @@ ConditionDirectoryNotEmpty=/usr/local/etc/cron.hourly
 Type=oneshot
 ExecStart=/usr/bin/run-parts /usr/local/etc/cron.hourly
 
-[Install]
-WantedBy=cron-hourly.target
