@@ -1,3 +1,5 @@
 [Unit]
 Description=systemd-cron boot target
+Requires=cron-boot.service
 StopWhenUnneeded=yes
+

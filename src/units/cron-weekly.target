@@ -1,3 +1,5 @@
 [Unit]
 Description=systemd-cron weekly target
+Requires=cron-weekly.service
 StopWhenUnneeded=yes
+
