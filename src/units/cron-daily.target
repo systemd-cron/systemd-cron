@@ -1,3 +1,5 @@
 [Unit]
 Description=systemd-cron daily target
+Requires=cron-daily.service
 StopWhenUnneeded=yes
+
