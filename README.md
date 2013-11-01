@@ -30,7 +30,7 @@ probably want to override `prefix` and `confdir`, e.g.:
 
 See Also
 ------------
-`system.cron(7)` or in source tree `man -l src/man/systemd.cron.7`
+`systemd.cron(7)` or in source tree `man -l src/man/systemd.cron.7`
 
 [1]: http://www.freedesktop.org/wiki/Software/systemd/ "systemd"
 [2]: http://en.wikipedia.org/wiki/Cron "cron"
