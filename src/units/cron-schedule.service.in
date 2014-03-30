@@ -2,8 +2,8 @@
 Description=@package@ @schedule@ script service
 Documentation=man:systemd.cron(7)
 PartOf=cron-@schedule@.target
-RefuseManualStart=true
-RefuseManualStop=true
+RefuseManualStart=yes
+RefuseManualStop=yes
 ConditionDirectoryNotEmpty=@confdir@/cron.@schedule@
 
 [Service]
