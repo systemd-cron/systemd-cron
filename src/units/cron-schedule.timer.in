@@ -1,0 +1,10 @@
+[Unit]
+Description=@package@ @schedule@ timer
+PartOf=cron.target
+RefuseManualStart=true
+RefuseManualStop=true
+
+[Timer]
+OnCalendar=@schedule@
+Unit=cron-@schedule@.target
+

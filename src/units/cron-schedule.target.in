@@ -1,0 +1,5 @@
+[Unit]
+Description=@package@ @schedule@ target
+Requires=cron-@schedule@.service
+StopWhenUnneeded=yes
+

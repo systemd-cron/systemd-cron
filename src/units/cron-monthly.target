@@ -1,5 +1,0 @@
-[Unit]
-Description=systemd-cron monthly target
-Requires=cron-monthly.service
-StopWhenUnneeded=yes
-

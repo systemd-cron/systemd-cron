@@ -1,9 +1,10 @@
 [Unit]
-Description=systemd-cron weekly timer
+Description=@package@ @schedule@ timer
 PartOf=cron.target
 RefuseManualStart=true
 RefuseManualStop=true
 
 [Timer]
-OnCalendar=weekly
-Unit=cron-weekly.target
+OnBootSec=0
+Unit=cron-@schedule@.target
+

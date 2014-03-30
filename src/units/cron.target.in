@@ -1,0 +1,7 @@
+[Unit]
+Description=@package@
+@requires@
+
+[Install]
+WantedBy=multi-user.target
+

@@ -1,9 +1,0 @@
-[Unit]
-Description=systemd-cron daily timer
-PartOf=cron.target
-RefuseManualStart=true
-RefuseManualStop=true
-
-[Timer]
-OnCalendar=daily
-Unit=cron-daily.target

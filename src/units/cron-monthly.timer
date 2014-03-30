@@ -1,9 +1,0 @@
-[Unit]
-Description=systemd-cron monthly timer
-PartOf=cron.target
-RefuseManualStart=true
-RefuseManualStop=true
-
-[Timer]
-OnCalendar=monthly
-Unit=cron-monthly.target

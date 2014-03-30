@@ -1,0 +1,11 @@
+[Unit]
+Description=@package@ @schedule@ script service
+PartOf=cron-@schedule@.target
+RefuseManualStart=true
+RefuseManualStop=true
+ConditionDirectoryNotEmpty=@confdir@/cron.@schedule@
+
+[Service]
+Type=oneshot
+ExecStart=@runparts@ @confdir@/cron.@schedule@
+
