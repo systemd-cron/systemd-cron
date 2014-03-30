@@ -1,5 +1,8 @@
-package		:= systemd-cron
+package		:= $(shell cat README.md | head -n1)
 version		:= $(shell cat VERSION)
+
+schedules			:= @schedules@
+enable_persistent	:= @enable_persistent@
 
 prefix		:= @prefix@
 bindir		:= @bindir@
@@ -20,65 +23,54 @@ distname	:= $(package)-$(version)
 distdir		:= $(outdir)/dist/$(distname)
 tarball		:= $(outdir)/dist/$(distname).tar.xz
 
-SED_SERVICE := sed \
-	-e "s|/usr/local/etc|$(confdir)|g" \
-	-e "s|/usr/bin/run-parts|$(runparts)|g"
+out_services	:= $(foreach schedule,$(schedules),$(builddir)/units/cron-$(schedule).service)
+out_timers		:= $(foreach schedule,$(schedules),$(builddir)/units/cron-$(schedule).timer)
+out_targets		:= $(foreach schedule,$(schedules),$(builddir)/units/cron-$(schedule).target)
+out_units		:= $(out_services) $(out_timers) $(out_targets) $(builddir)/units/cron.target
+out_manuals		:= $(patsubst $(srcdir)/man/%.in,$(builddir)/man/%,$(wildcard $(srcdir)/man/*))
+outputs			:= $(out_units) $(out_manuals)
 
-SED_MAN := sed \
-	-e "s|/usr/local/etc|$(confdir)|g" \
-	-e "s|unknown version|$(version)|g"
+define \n
 
-all:
 
-	mkdir -p $(outdir)
-	mkdir -p $(builddir)
-	mkdir -p $(builddir)/man
-	mkdir -p $(builddir)/units
+endef
 
-	$(SED_MAN) $(srcdir)/man/systemd.cron.7 > $(builddir)/man/systemd.cron.7
+null :=
+requires = $(subst ${null} ${null},\n,$(foreach schedule,$(schedules),Requires=cron-$(schedule).timer))
+persistent = $(if $(filter $(enable_persistent),yes),Persistent=true,\@DELETEME\@)
 
-	$(SED_SERVICE) $(srcdir)/units/cron-boot.service	> \
-		$(builddir)/units/cron-boot.service
-	$(SED_SERVICE) $(srcdir)/units/cron-hourly.service	> \
-		$(builddir)/units/cron-hourly.service
-	$(SED_SERVICE) $(srcdir)/units/cron-daily.service	> \
-		$(builddir)/units/cron-daily.service
-	$(SED_SERVICE) $(srcdir)/units/cron-weekly.service	> \
-		$(builddir)/units/cron-weekly.service
-	$(SED_SERVICE) $(srcdir)/units/cron-monthly.service	> \
-		$(builddir)/units/cron-monthly.service
+# $(call in2out,$input,$output,$schedule,$requires)
+define in2out
 
-	ln -s $(srcdir)/units/cron.target $(builddir)/units/cron.target
+	sed \
+		-e "s|\@package\@|$(package)|g" \
+		-e "s|\@confdir\@|$(confdir)|g" \
+		-e "s|\@runparts\@|$(runparts)|g" \
+		-e "s|\@version\@|$(version)|g" \
+		-e "s|\@persistent\@|$(persistent)|g" \
+		-e "s|\@schedule\@|$3|g" \
+		-e "s|\@requires\@|$4|g" \
+		$1 > $2
 
-	ln -s $(srcdir)/units/cron-boot.timer		\
-		$(builddir)/units/cron-boot.timer
-	ln -s $(srcdir)/units/cron-hourly.timer		\
-		$(builddir)/units/cron-hourly.timer
-	ln -s $(srcdir)/units/cron-daily.timer		\
-		$(builddir)/units/cron-daily.timer
-	ln -s $(srcdir)/units/cron-weekly.timer		\
-		$(builddir)/units/cron-weekly.timer
-	ln -s $(srcdir)/units/cron-monthly.timer	\
-		$(builddir)/units/cron-monthly.timer
+	sed -i '/\@DELETEME\@/d' $2
+endef
 
-	ln -s $(srcdir)/units/cron-boot.target		\
-		$(builddir)/units/cron-boot.target
-	ln -s $(srcdir)/units/cron-hourly.target	\
-		$(builddir)/units/cron-hourly.target
-	ln -s $(srcdir)/units/cron-daily.target		\
-		$(builddir)/units/cron-daily.target
-	ln -s $(srcdir)/units/cron-weekly.target	\
-		$(builddir)/units/cron-weekly.target
-	ln -s $(srcdir)/units/cron-monthly.target	\
-		$(builddir)/units/cron-monthly.target
+all: $(builddir) $(outputs)
 
 clean:
-
 	rm -rf $(outdir)
+
+distprep: $(distdir)
+	cp -a configure		$(distdir)
+	cp -a Makefile.in	$(distdir)
+	cp -a LICENSE		$(distdir)
+	cp -a README.md		$(distdir)
+	cp -a VERSION		$(distdir)
+	cp -a src			$(distdir)
 
 dist: $(tarball)
 
-install: $(builddir)
+install: all
 
 	install -d $(DESTDIR)$(unitdir)
 	install -d $(DESTDIR)$(mandir)
@@ -88,61 +80,54 @@ install: $(builddir)
 
 	install -m644 $(builddir)/units/cron.target $(DESTDIR)$(unitdir)
 
-	install -m644 $(builddir)/units/cron-boot.timer		$(DESTDIR)$(unitdir)
-	install -m644 $(builddir)/units/cron-hourly.timer	$(DESTDIR)$(unitdir)
-	install -m644 $(builddir)/units/cron-daily.timer	$(DESTDIR)$(unitdir)
-	install -m644 $(builddir)/units/cron-weekly.timer	$(DESTDIR)$(unitdir)
-	install -m644 $(builddir)/units/cron-monthly.timer	$(DESTDIR)$(unitdir)
-
-	install -m644 $(builddir)/units/cron-boot.target	$(DESTDIR)$(unitdir)
-	install -m644 $(builddir)/units/cron-hourly.target	$(DESTDIR)$(unitdir)
-	install -m644 $(builddir)/units/cron-daily.target	$(DESTDIR)$(unitdir)
-	install -m644 $(builddir)/units/cron-weekly.target	$(DESTDIR)$(unitdir)
-	install -m644 $(builddir)/units/cron-monthly.target	$(DESTDIR)$(unitdir)
-
-	install -m644 $(builddir)/units/cron-boot.service		$(DESTDIR)$(unitdir)
-	install -m644 $(builddir)/units/cron-hourly.service		$(DESTDIR)$(unitdir)
-	install -m644 $(builddir)/units/cron-daily.service		$(DESTDIR)$(unitdir)
-	install -m644 $(builddir)/units/cron-weekly.service		$(DESTDIR)$(unitdir)
-	install -m644 $(builddir)/units/cron-monthly.service	$(DESTDIR)$(unitdir)
+	$(foreach schedule,$(schedules),\
+		install -m644 $(builddir)/units/cron-$(schedule).timer $(DESTDIR)$(unitdir)${\n})
+	$(foreach schedule,$(schedules),\
+		install -m644 $(builddir)/units/cron-$(schedule).target $(DESTDIR)$(unitdir)${\n})
+	$(foreach schedule,$(schedules),\
+		install -m644 $(builddir)/units/cron-$(schedule).service $(DESTDIR)$(unitdir)${\n})
 
 uninstall:
-
 	rm -f $(DESTDIR)$(unitdir)/cron.target
 
-	rm -f $(DESTDIR)$(unitdir)/cron-boot.timer
-	rm -f $(DESTDIR)$(unitdir)/cron-hourly.timer
-	rm -f $(DESTDIR)$(unitdir)/cron-daily.timer
-	rm -f $(DESTDIR)$(unitdir)/cron-weekly.timer
-	rm -f $(DESTDIR)$(unitdir)/cron-monthly.timer
+	$(foreach schedule,$(schedules),\
+		rm -f $(DESTDIR)$(unitdir)/cron-$(schedule).timer${\n})
+	$(foreach schedule,$(schedules),\
+		rm -f $(DESTDIR)$(unitdir)/cron-$(schedule).target${\n})
+	$(foreach schedule,$(schedules),\
+		rm -f $(DESTDIR)$(unitdir)/cron-$(schedule).service${\n})
 
-	rm -f $(DESTDIR)$(unitdir)/cron-boot.target
-	rm -f $(DESTDIR)$(unitdir)/cron-hourly.target
-	rm -f $(DESTDIR)$(unitdir)/cron-daily.target
-	rm -f $(DESTDIR)$(unitdir)/cron-weekly.target
-	rm -f $(DESTDIR)$(unitdir)/cron-monthly.target
+$(builddir)/units/cron-%.service: $(srcdir)/units/cron-schedule.service.in
+	$(call in2out,$<,$@,$*)
 
-	rm -f $(DESTDIR)$(unitdir)/cron-boot.service
-	rm -f $(DESTDIR)$(unitdir)/cron-hourly.service
-	rm -f $(DESTDIR)$(unitdir)/cron-daily.service
-	rm -f $(DESTDIR)$(unitdir)/cron-weekly.service
-	rm -f $(DESTDIR)$(unitdir)/cron-monthly.service
+$(builddir)/units/cron-%.timer: $(srcdir)/units/cron-schedule.timer.in
+	$(call in2out,$<,$@,$*)
 
-$(tarball): $(distdir)
+$(builddir)/units/cron-boot.timer: $(srcdir)/units/cron-boot.timer.in
+	$(call in2out,$<,$@,boot)
 
-	cd $(distdir)/..; \
-		tar -cJ --owner=root --group=root --file $(tarball) $(distname)
+$(builddir)/units/cron-%.target: $(srcdir)/units/cron-schedule.target.in
+	$(call in2out,$<,$@,$*)
+
+$(builddir)/units/cron.target: $(srcdir)/units/cron.target.in
+	$(call in2out,$<,$@,,$(requires))
+
+$(builddir)/man/%: $(srcdir)/man/%.in
+	$(call in2out,$<,$@)
+
+$(outdir):
+	mkdir -p $@
+
+$(builddir):
+	mkdir -p $@
+	mkdir -p $@/man
+	mkdir -p $@/units
 
 $(distdir):
-
 	mkdir -p $(distdir)
 
-	cp -a configure		$(distdir)
-	cp -a Makefile.in	$(distdir)
-	cp -a LICENSE		$(distdir)
-	cp -a README.md		$(distdir)
-	cp -a VERSION		$(distdir)
-	cp -a src			$(distdir)
+$(tarball): distprep
+	cd $(distdir)/..; tar -cJ --owner=root --group=root --file $(tarball) $(distname)
 
-.PHONY: all clean dist install uninstall
+.PHONY: all clean dist distprep install uninstall
 

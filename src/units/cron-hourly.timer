@@ -1,9 +1,0 @@
-[Unit]
-Description=systemd-cron hourly timer
-PartOf=cron.target
-RefuseManualStart=true
-RefuseManualStop=true
-
-[Timer]
-OnCalendar=hourly
-Unit=cron-hourly.target

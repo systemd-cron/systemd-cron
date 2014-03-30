@@ -1,0 +1,8 @@
+[Unit]
+Description=@package@
+Documentation=man:systemd.cron(7)
+@requires@
+
+[Install]
+WantedBy=multi-user.target
+
