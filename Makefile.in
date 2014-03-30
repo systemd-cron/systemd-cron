@@ -1,7 +1,8 @@
 package		:= $(shell cat README.md | head -n1)
 version		:= $(shell cat VERSION)
 
-schedules	:= @schedules@
+schedules			:= @schedules@
+enable_persistent	:= @enable_persistent@
 
 prefix		:= @prefix@
 bindir		:= @bindir@
@@ -36,17 +37,22 @@ endef
 
 null :=
 requires = $(subst ${null} ${null},\n,$(foreach schedule,$(schedules),Requires=cron-$(schedule).timer))
+persistent = $(if $(filter $(enable_persistent),yes),Persistent=true,\@DELETEME\@)
 
 # $(call in2out,$input,$output,$schedule,$requires)
 define in2out
+
 	sed \
 		-e "s|\@package\@|$(package)|g" \
 		-e "s|\@confdir\@|$(confdir)|g" \
 		-e "s|\@runparts\@|$(runparts)|g" \
 		-e "s|\@version\@|$(version)|g" \
+		-e "s|\@persistent\@|$(persistent)|g" \
 		-e "s|\@schedule\@|$3|g" \
 		-e "s|\@requires\@|$4|g" \
 		$1 > $2
+
+	sed -i '/\@DELETEME\@/d' $2
 endef
 
 all: $(builddir) $(outputs)
