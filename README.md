@@ -15,16 +15,17 @@ Dependencies
 
 Packaging
 --------------
-Building
+
+### Building
 
     $ ./configure
     $ make
 
-Staging
+### Staging
 
     $ make DESTDIR="$destdir" install
 
-Configuration
+### Configuration
 
 The `configure` script takes command line arguments to configure various details of the build. The following options
 follow the standard GNU [installation directories][4]:
