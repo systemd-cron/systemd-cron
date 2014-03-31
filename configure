@@ -9,7 +9,6 @@ statedir='$(prefix)/var'
 mandir='$(datadir)/man'
 docdir='$(datadir)/doc/$(package)'
 unitdir='$(libdir)/systemd/system'
-sed='/usr/bin/sed'
 runparts='/usr/bin/run-parts'
 
 # systemd ≥ 197
