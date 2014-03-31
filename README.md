@@ -6,6 +6,15 @@ Description
 ---------------
 systemd units to provide minimal cron daemon functionality by running scripts in cron directories.
 
+Usage
+---------
+Add executable scripts to the appropriate cron directory (e.g. `/etc/cron.daily`) and enable systemd-cron:
+
+    # systemctl enable cron.target
+    # systemctl start cron.target
+   
+The scripts should now be automatically run by systemd. See man:systemd.cron(7) for more information.
+
 Dependencies
 ----------------
 * systemd ≥ 197
