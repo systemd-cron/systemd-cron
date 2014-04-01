@@ -115,6 +115,8 @@ $(builddir)/units/cron.target: $(srcdir)/units/cron.target.in
 $(builddir)/man/%: $(srcdir)/man/%.in
 	$(call in2out,$<,$@)
 
+$(outputs): | $(builddir)
+
 $(outdir):
 	mkdir -p $@
 
