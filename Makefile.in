@@ -28,7 +28,8 @@ out_timers		:= $(foreach schedule,$(schedules),$(builddir)/units/cron-$(schedule
 out_targets		:= $(foreach schedule,$(schedules),$(builddir)/units/cron-$(schedule).target)
 out_units		:= $(out_services) $(out_timers) $(out_targets) $(builddir)/units/cron.target
 out_manuals		:= $(patsubst $(srcdir)/man/%.in,$(builddir)/man/%,$(wildcard $(srcdir)/man/*))
-outputs			:= $(out_units) $(out_manuals)
+out_programs		:= $(patsubst $(srcdir)/bin/%,$(builddir)/bin/%,$(wildcard $(srcdir)/bin/*))
+outputs			:= $(out_units) $(out_manuals) $(out_programs)
 
 define \n
 
@@ -72,11 +73,21 @@ dist: $(tarball)
 
 install: all
 
+	install -d $(DESTDIR)$(bindir)
 	install -d $(DESTDIR)$(unitdir)
 	install -d $(DESTDIR)$(mandir)
+	install -d $(DESTDIR)$(mandir)/man1
+	install -d $(DESTDIR)$(mandir)/man5
 	install -d $(DESTDIR)$(mandir)/man7
 
+	install -m755 $(builddir)/bin/crontab $(DESTDIR)$(bindir)/crontab
+	install -m755 $(builddir)/bin/systemd-crontab-generator $(DESTDIR)$(bindir)/systemd-crontab-generator
+	install -m755 $(builddir)/bin/systemd-crontab-update $(DESTDIR)$(bindir)/systemd-crontab-update
+
 	install -m644 $(builddir)/man/systemd.cron.7 $(DESTDIR)$(mandir)/man7
+	install -m644 $(builddir)/man/crontab.1 $(DESTDIR)$(mandir)/man1
+	install -m644 $(builddir)/man/crontab.5 $(DESTDIR)$(mandir)/man5
+	install -m644 $(builddir)/man/systemd-crontab-generator.1 $(DESTDIR)$(mandir)/man1
 
 	install -m644 $(builddir)/units/cron.target $(DESTDIR)$(unitdir)
 
@@ -115,6 +126,9 @@ $(builddir)/units/cron.target: $(srcdir)/units/cron.target.in
 $(builddir)/man/%: $(srcdir)/man/%.in
 	$(call in2out,$<,$@)
 
+$(builddir)/bin/%: $(srcdir)/bin/%
+	cp $< $@
+
 $(outputs): | $(builddir)
 
 $(outdir):
@@ -122,6 +136,7 @@ $(outdir):
 
 $(builddir):
 	mkdir -p $@
+	mkdir -p $@/bin
 	mkdir -p $@/man
 	mkdir -p $@/units
 
