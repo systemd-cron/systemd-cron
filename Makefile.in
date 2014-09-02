@@ -74,6 +74,7 @@ dist: $(tarball)
 install: all
 
 	install -d $(DESTDIR)$(bindir)
+	install -d $(DESTDIR)$(libdir)/systemd/system-generators/
 	install -d $(DESTDIR)$(unitdir)
 	install -d $(DESTDIR)$(mandir)
 	install -d $(DESTDIR)$(mandir)/man1
@@ -81,7 +82,7 @@ install: all
 	install -d $(DESTDIR)$(mandir)/man7
 
 	install -m755 $(builddir)/bin/crontab $(DESTDIR)$(bindir)/crontab
-	install -m755 $(builddir)/bin/systemd-crontab-generator $(DESTDIR)$(bindir)/systemd-crontab-generator
+	install -m755 $(builddir)/bin/systemd-crontab-generator $(DESTDIR)$(libdir)/systemd/system-generators/systemd-crontab-generator
 	install -m755 $(builddir)/bin/systemd-crontab-update $(DESTDIR)$(bindir)/systemd-crontab-update
 
 	install -m644 $(builddir)/man/systemd.cron.7 $(DESTDIR)$(mandir)/man7
@@ -99,6 +100,11 @@ install: all
 		install -m644 $(builddir)/units/cron-$(schedule).service $(DESTDIR)$(unitdir)${\n})
 
 uninstall:
+	rm -f $(DESTDIR)$(mandir)/man7/systemd.cron.7
+	rm -f $(DESTDIR)$(mandir)/man1/crontab.1
+	rm -f $(DESTDIR)$(mandir)/man5/crontab.5
+	rm -f $(DESTDIR)$(mandir)/man1/systemd-crontab-generator.1
+
 	rm -f $(DESTDIR)$(unitdir)/cron.target
 
 	$(foreach schedule,$(schedules),\

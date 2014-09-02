@@ -10,7 +10,8 @@ cron-yearly.target, cron-boot.service, cron-hourly.service, cron-daily.service, 
 cron-monthly.service, cron-yearly.service
 
 .SH DESCRIPTION
-These units provide minimal cron daemon functionality by running scripts in cron directories.
+These units provide cron daemon functionality by running scripts in cron directories,
+the crontabs are automaticaly translated by \fBsystemd-crontab-generator\fR(1) .
 
 .SH FILES
 .TP
@@ -58,8 +59,8 @@ units. These units cannot be controlled manually. You can use \fBjournalctl\fR(1
 from these units.
 
 .SH LIMITATIONS
-These units are \fInot\fR a drop-in replacement for a cron daemon. They only provide limited cron capabilities. For
-example user-defined crontabs are not (yet) supported. Do \fInot\fR use with a cron daemon, otherwise scripts may be
+This cron replacement doesn't send any mails. The log of jobs is saved in systemd journal.
+Do \fInot\fR use with a cron daemon or anacron, otherwise scripts may be
 executed multiple times.
 
 .SH EXAMPLES

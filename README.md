@@ -4,7 +4,8 @@ systemd-cron
 
 Description
 ---------------
-systemd units to provide minimal cron daemon functionality by running scripts in cron directories.
+systemd units to provide cron daemon functionality by running scripts in cron directories.
+The crontabs are automaticaly translated using (/usr)/lib/systemd-crontab-generator[6].
 
 Usage
 ---------
@@ -21,6 +22,7 @@ Dependencies
     * systemd ≥ 209, yearly timers
     * systemd ≥ 212, persistent timers
 * [run-parts][3]
+* python 2
 
 Packaging
 --------------
@@ -82,4 +84,4 @@ See Also
 [3]: http://packages.qa.debian.org/d/debianutils.html "debianutils"
 [4]: https://www.gnu.org/prep/standards/html_node/Directory-Variables.html "Directory Variables"
 [5]: http://www.freedesktop.org/software/systemd/man/systemd.timer.html#Persistent= "systemd.timer"
-
+[6]: https://github.com/kstep/systemd-crontab-generator "crontab generator"

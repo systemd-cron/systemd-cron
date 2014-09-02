@@ -17,7 +17,7 @@
 .\"
 .\" $Id: crontab.5,v 2.4 1994/01/15 20:43:43 vixie Exp $
 .\"
-.TH CRONTAB 5 "03 July 2014"
+.TH CRONTAB 5 "03 July 2014" "@package@ @version@" "crontab"
 .UC 4
 .SH NAME
 crontab \- tables for driving cron
