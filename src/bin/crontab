@@ -6,7 +6,8 @@ import os
 import argparse
 import getpass
 
-EDITOR = os.environ.get('EDITOR', '/usr/bin/vim')
+EDITOR = (os.environ.get('EDITOR') or
+	  os.environ.get('VISUAL','/usr/bin/vim'))
 CRONTAB_DIR = '/var/spool/cron'
 
 args_parser = argparse.ArgumentParser(description='maintain crontab files for individual users')
