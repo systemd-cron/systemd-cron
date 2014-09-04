@@ -133,7 +133,7 @@ $(builddir)/man/%: $(srcdir)/man/%.in
 	$(call in2out,$<,$@)
 
 $(builddir)/bin/%: $(srcdir)/bin/%
-	cp $< $@
+	$(call in2out,$<,$@)
 
 $(outputs): | $(builddir)
 

@@ -204,8 +204,8 @@ RefuseManualStop=true
 
 [Timer]
 Unit=%s.service
-Persistent=true
-AccuracySec=%sm
+@persistent@
+#AccuracySec=%sm
 %s
 ''' % (SELF, job['f'], job['l'], unit_name, accuracy, schedule))
 
