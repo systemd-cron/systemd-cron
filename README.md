@@ -4,7 +4,8 @@ systemd-cron
 
 Description
 ---------------
-systemd units to provide minimal cron daemon functionality by running scripts in cron directories.
+systemd units to provide cron daemon functionality by running scripts in cron directories.
+The crontabs are automaticaly translated using (/usr)/lib/[systemd-crontab-generator][6].
 
 Usage
 ---------
@@ -12,6 +13,8 @@ Add executable scripts to the appropriate cron directory (e.g. `/etc/cron.daily`
 
     # systemctl enable cron.target
     # systemctl start cron.target
+
+The project also includes simple crontab command equivalent, which behaves like standard crontab command (and accepts the same main options).
    
 The scripts should now be automatically run by systemd. See man:systemd.cron(7) for more information.
 
@@ -21,6 +24,13 @@ Dependencies
     * systemd ≥ 209, yearly timers
     * systemd ≥ 212, persistent timers
 * [run-parts][3]
+* python 2
+
+Installation
+----------------
+There exists a Debian package: http://packages.debian.org/systemd-cron/ .
+You can also build it manually from source.
+
 
 Packaging
 --------------
@@ -77,9 +87,23 @@ See Also
 ------------
 `systemd.cron(7)` or in source tree `man -l src/man/systemd.cron.7`
 
+
+License
+-----------
+The project is licensed under MIT.
+
+
+Copyright
+-------------
+© 2014, Dwayne Bent : original package with static units  
+© 2014, Konstantin Stepanov (me@kstep.me) : author of crontab generator  
+© 2014, Daniel Schaal : review of crontab generator  
+© 2014, Alexandre Detiste (alexandre@detiste.be) : manpage for crontab generator  
+
+
 [1]: http://www.freedesktop.org/wiki/Software/systemd/ "systemd"
 [2]: http://en.wikipedia.org/wiki/Cron "cron"
 [3]: http://packages.qa.debian.org/d/debianutils.html "debianutils"
 [4]: https://www.gnu.org/prep/standards/html_node/Directory-Variables.html "Directory Variables"
 [5]: http://www.freedesktop.org/software/systemd/man/systemd.timer.html#Persistent= "systemd.timer"
-
+[6]: https://github.com/kstep/systemd-crontab-generator "crontab generator"
