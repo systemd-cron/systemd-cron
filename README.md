@@ -28,7 +28,10 @@ Dependencies
 
 Installation
 ----------------
-There exists a Debian package: http://packages.debian.org/systemd-cron/ .
+There exists packages avaible for:
+* [Debian][7]
+* [Ubuntu][8]
+
 You can also build it manually from source.
 
 
@@ -107,3 +110,5 @@ Copyright
 [4]: https://www.gnu.org/prep/standards/html_node/Directory-Variables.html "Directory Variables"
 [5]: http://www.freedesktop.org/software/systemd/man/systemd.timer.html#Persistent= "systemd.timer"
 [6]: https://github.com/kstep/systemd-crontab-generator "crontab generator"
+[7]: http://packages.debian.org/systemd-cron/
+[8]: http://packages.ubuntu.com/search?suite=all&searchon=names&keywords=systemd-cron
