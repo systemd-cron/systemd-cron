@@ -134,8 +134,8 @@ def parse_crontab(filename, withuser=True, monotonic=False):
 def parse_time_unit(value, values, mapping=int):
     if value == '*':
         return ['*']
-    return list(reduce(lambda a, i: a.union(set(i)), map(values.__getitem__,
-        map(parse_period(mapping), value.split(','))), set()))
+    return sorted(list(reduce(lambda a, i: a.union(set(i)), map(values.__getitem__,
+        map(parse_period(mapping), value.split(','))), set())))
 
 def month_map(month):
     try:
