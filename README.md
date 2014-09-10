@@ -31,6 +31,7 @@ Installation
 There exists packages avaible for:
 * [Debian][7]
 * [Ubuntu][8]
+* [Arch][9]
 
 You can also build it manually from source.
 
@@ -112,3 +113,4 @@ Copyright
 [6]: https://github.com/kstep/systemd-crontab-generator "crontab generator"
 [7]: http://packages.debian.org/systemd-cron/
 [8]: http://packages.ubuntu.com/search?suite=all&searchon=names&keywords=systemd-cron
+[9]: https://aur.archlinux.org/packages/systemd-cron
