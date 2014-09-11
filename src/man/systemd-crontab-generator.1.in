@@ -41,11 +41,6 @@ Directory for system crontabs.
 Directory for users crontabs.
 .br
 
-.\.SH LIMITATIONS
-.\The \-s flag (SELinux) is not supported.
-.\.br
-.\/etc/cron.allow & /etc/cron.deny are not supported.
-
 .SH SEE ALSO
 \fBcrontab\fR(1),\fBsystemd.unit\fR(5),\fBsystemd.timer\fR(5)
 
