@@ -1,4 +1,4 @@
-.TH SYSTEMD-CRONTAB-GENERATOR 1 "2014-06-29" "@package@ @version@" systemd-crontab-generator
+.TH SYSTEMD-CRONTAB-GENERATOR 8 "2014-06-29" "@package@ @version@" systemd-crontab-generator
 
 .SH NAME
 systemd-crontab-generator - translate cron schedules in systemd Units

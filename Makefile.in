@@ -81,6 +81,7 @@ install: all
 	install -d $(DESTDIR)$(mandir)/man1
 	install -d $(DESTDIR)$(mandir)/man5
 	install -d $(DESTDIR)$(mandir)/man7
+	install -d $(DESTDIR)$(mandir)/man8
 
 	install -m755 $(builddir)/bin/crontab $(DESTDIR)$(bindir)/crontab
 	install -m755 $(builddir)/bin/systemd-crontab-generator $(DESTDIR)$(libdir)/systemd/system-generators/systemd-crontab-generator
@@ -88,7 +89,7 @@ install: all
 	install -m644 $(builddir)/man/systemd.cron.7 $(DESTDIR)$(mandir)/man7
 	install -m644 $(builddir)/man/crontab.1 $(DESTDIR)$(mandir)/man1
 	install -m644 $(builddir)/man/crontab.5 $(DESTDIR)$(mandir)/man5
-	install -m644 $(builddir)/man/systemd-crontab-generator.1 $(DESTDIR)$(mandir)/man1
+	install -m644 $(builddir)/man/systemd-crontab-generator.8 $(DESTDIR)$(mandir)/man8
 
 	install -m644 $(builddir)/units/cron.target $(DESTDIR)$(unitdir)
 
@@ -103,7 +104,7 @@ uninstall:
 	rm -f $(DESTDIR)$(mandir)/man7/systemd.cron.7
 	rm -f $(DESTDIR)$(mandir)/man1/crontab.1
 	rm -f $(DESTDIR)$(mandir)/man5/crontab.5
-	rm -f $(DESTDIR)$(mandir)/man1/systemd-crontab-generator.1
+	rm -f $(DESTDIR)$(mandir)/man8/systemd-crontab-generator.8
 
 	rm -f $(DESTDIR)$(unitdir)/cron.target
 
