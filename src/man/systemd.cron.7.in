@@ -10,8 +10,9 @@ cron-yearly.target, cron-boot.service, cron-hourly.service, cron-daily.service, 
 cron-monthly.service, cron-yearly.service
 
 .SH DESCRIPTION
-These units provide cron daemon functionality by running scripts in cron directories,
-the crontabs are automaticaly translated by \fBsystemd-crontab-generator\fR(1) .
+These units provide cron daemon functionality by running scripts in cron directories.
+.BR
+The crontabs are automaticaly translated by \fBsystemd-crontab-generator\fR(1) .
 
 .SH FILES
 .TP
@@ -111,6 +112,10 @@ The exact times scripts are executed is determined by the values of the special 
 .IP \n+[step].
 \fBrun-parts\fR(8) is used to run scripts. Scripts must be executable by \fIroot\fR to run.
 
+.SH DIAGNOSTICS
+With systemd >= 209, you can execute "systemctl list-timers" to have a overview of
+timers and know when they will elapse.
+
 .SH SEE ALSO
 .BR systemd (1),
 .BR systemd.unit (5),
@@ -120,3 +125,5 @@ The exact times scripts are executed is determined by the values of the special 
 .BR systemd.time (7),
 .BR run-parts (8)
 
+.SH AUTHOR
+Dwayne Bent

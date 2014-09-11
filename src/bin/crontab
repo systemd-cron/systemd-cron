@@ -8,7 +8,7 @@ import getpass
 
 EDITOR = (os.environ.get('EDITOR') or
 	  os.environ.get('VISUAL','/usr/bin/vim'))
-CRONTAB_DIR = '/var/spool/cron'
+CRONTAB_DIR = '@statedir@'
 
 args_parser = argparse.ArgumentParser(description='maintain crontab files for individual users')
 

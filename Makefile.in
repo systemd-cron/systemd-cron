@@ -26,7 +26,8 @@ tarball		:= $(outdir)/dist/$(distname).tar.xz
 out_services	:= $(foreach schedule,$(schedules),$(builddir)/units/cron-$(schedule).service)
 out_timers		:= $(foreach schedule,$(schedules),$(builddir)/units/cron-$(schedule).timer)
 out_targets		:= $(foreach schedule,$(schedules),$(builddir)/units/cron-$(schedule).target)
-out_units		:= $(out_services) $(out_timers) $(out_targets) $(builddir)/units/cron.target
+out_units		:= $(out_services) $(out_timers) $(out_targets) $(builddir)/units/cron.target \
+                           $(builddir)/units/cron-update.path $(builddir)/units/cron-update.service
 out_manuals		:= $(patsubst $(srcdir)/man/%.in,$(builddir)/man/%,$(wildcard $(srcdir)/man/*))
 out_programs		:= $(patsubst $(srcdir)/bin/%,$(builddir)/bin/%,$(wildcard $(srcdir)/bin/*))
 outputs			:= $(out_units) $(out_manuals) $(out_programs)
@@ -46,6 +47,7 @@ define in2out
 	sed \
 		-e "s|\@package\@|$(package)|g" \
 		-e "s|\@confdir\@|$(confdir)|g" \
+		-e "s|\@statedir\@|$(statedir)|g" \
 		-e "s|\@runparts\@|$(runparts)|g" \
 		-e "s|\@version\@|$(version)|g" \
 		-e "s|\@persistent\@|$(persistent)|g" \
@@ -80,17 +82,19 @@ install: all
 	install -d $(DESTDIR)$(mandir)/man1
 	install -d $(DESTDIR)$(mandir)/man5
 	install -d $(DESTDIR)$(mandir)/man7
+	install -d $(DESTDIR)$(mandir)/man8
 
 	install -m755 $(builddir)/bin/crontab $(DESTDIR)$(bindir)/crontab
 	install -m755 $(builddir)/bin/systemd-crontab-generator $(DESTDIR)$(libdir)/systemd/system-generators/systemd-crontab-generator
-	install -m755 $(builddir)/bin/systemd-crontab-update $(DESTDIR)$(bindir)/systemd-crontab-update
 
 	install -m644 $(builddir)/man/systemd.cron.7 $(DESTDIR)$(mandir)/man7
 	install -m644 $(builddir)/man/crontab.1 $(DESTDIR)$(mandir)/man1
 	install -m644 $(builddir)/man/crontab.5 $(DESTDIR)$(mandir)/man5
-	install -m644 $(builddir)/man/systemd-crontab-generator.1 $(DESTDIR)$(mandir)/man1
+	install -m644 $(builddir)/man/systemd-crontab-generator.8 $(DESTDIR)$(mandir)/man8
 
 	install -m644 $(builddir)/units/cron.target $(DESTDIR)$(unitdir)
+	install -m644 $(builddir)/units/cron-update.path $(DESTDIR)$(unitdir)
+	install -m644 $(builddir)/units/cron-update.service $(DESTDIR)$(unitdir)
 
 	$(foreach schedule,$(schedules),\
 		install -m644 $(builddir)/units/cron-$(schedule).timer $(DESTDIR)$(unitdir)${\n})
@@ -100,12 +104,17 @@ install: all
 		install -m644 $(builddir)/units/cron-$(schedule).service $(DESTDIR)$(unitdir)${\n})
 
 uninstall:
+	rm -f $(DESTDIR)$(bindir)/crontab
+	rm -f $(DESTDIR)$(libdir)/systemd/system-generators/systemd-crontab-generator
+
 	rm -f $(DESTDIR)$(mandir)/man7/systemd.cron.7
 	rm -f $(DESTDIR)$(mandir)/man1/crontab.1
 	rm -f $(DESTDIR)$(mandir)/man5/crontab.5
-	rm -f $(DESTDIR)$(mandir)/man1/systemd-crontab-generator.1
+	rm -f $(DESTDIR)$(mandir)/man8/systemd-crontab-generator.8
 
 	rm -f $(DESTDIR)$(unitdir)/cron.target
+	rm -f $(DESTDIR)$(unitdir)/cron-update.path
+	rm -f $(DESTDIR)$(unitdir)/cron-update.service
 
 	$(foreach schedule,$(schedules),\
 		rm -f $(DESTDIR)$(unitdir)/cron-$(schedule).timer${\n})
@@ -113,6 +122,14 @@ uninstall:
 		rm -f $(DESTDIR)$(unitdir)/cron-$(schedule).target${\n})
 	$(foreach schedule,$(schedules),\
 		rm -f $(DESTDIR)$(unitdir)/cron-$(schedule).service${\n})
+
+
+
+$(builddir)/units/cron-update.path: $(srcdir)/units/cron-update.path.in
+	$(call in2out,$<,$@)
+
+$(builddir)/units/cron-update.service: $(srcdir)/units/cron-update.service.in
+	$(call in2out,$<,$@)
 
 $(builddir)/units/cron-%.service: $(srcdir)/units/cron-schedule.service.in
 	$(call in2out,$<,$@,$*)

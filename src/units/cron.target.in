@@ -2,6 +2,7 @@
 Description=@package@
 Documentation=man:systemd.cron(7)
 @requires@
+Wants=cron-update.path
 
 [Install]
 WantedBy=multi-user.target

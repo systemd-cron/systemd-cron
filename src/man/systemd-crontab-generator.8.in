@@ -1,0 +1,50 @@
+.TH SYSTEMD-CRONTAB-GENERATOR 8 "2014-06-29" "@package@ @version@" systemd-crontab-generator
+
+.SH NAME
+systemd-crontab-generator - translate cron schedules in systemd Units
+
+.SH SYNOPSIS
+systemd-crontab-generator folder
+
+.SH DESCRIPTION
+systemd-crontab-generator translates the legacy cron files (see FILES)
+into systemd units & timers.
+.PP
+It is run
+.TP
+*
+during early boot,
+.TP
+*
+after each manual updates to the cron files, (*)
+.TP
+*
+and when distribution packages add files in /etc/cron.d/. (*)
+.PP
+
+.B
+(*):
+those are monitored by cron-update.path
+
+.SH FILES
+.TP
+.B /etc/crontab
+System crontab.
+
+.TP
+.B /etc/cron.d
+Directory for system crontabs.
+
+.TP
+.B /etc/anacrontab
+
+.TP
+.B @statedir@
+Directory for users crontabs.
+.br
+
+.SH SEE ALSO
+\fBsystemd.cron\fR(5),\fBcrontab\fR(1),\fBsystemd.unit\fR(5),\fBsystemd.timer\fR(5)
+
+.SH AUTHOR
+Alexandre Detiste <alexandre@detiste.be>

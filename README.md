@@ -4,8 +4,8 @@ systemd-cron
 
 Description
 ---------------
-systemd units to provide cron daemon functionality by running scripts in cron directories.
-The crontabs are automaticaly translated using (/usr)/lib/[systemd-crontab-generator][6].
+systemd units to provide cron daemon functionality by running scripts in cron directories.  
+The crontabs are automaticaly translated using (/usr)/lib/systemd/system-generators/[systemd-crontab-generator][6].
 
 Usage
 ---------
