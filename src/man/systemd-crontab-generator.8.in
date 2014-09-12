@@ -39,7 +39,7 @@ Directory for system crontabs.
 .B /etc/anacrontab
 
 .TP
-.B /var/spool/cron
+.B @statedir@
 Directory for users crontabs.
 .br
 

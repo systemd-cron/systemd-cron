@@ -47,6 +47,7 @@ define in2out
 	sed \
 		-e "s|\@package\@|$(package)|g" \
 		-e "s|\@confdir\@|$(confdir)|g" \
+		-e "s|\@statedir\@|$(statedir)|g" \
 		-e "s|\@runparts\@|$(runparts)|g" \
 		-e "s|\@version\@|$(version)|g" \
 		-e "s|\@persistent\@|$(persistent)|g" \

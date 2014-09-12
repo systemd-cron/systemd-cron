@@ -10,4 +10,4 @@ Before=cron.target
 PathChanged=/etc/crontab
 PathChanged=/etc/cron.d
 PathChanged=/etc/anacrontab
-PathChanged=/var/spool/cron
+PathChanged=@statedir@

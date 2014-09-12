@@ -14,7 +14,7 @@ envvar_re = re.compile(r'^([A-Za-z_0-9]+)\s*=\s*(.*)$')
 
 CRONTAB_FILES = ['/etc/crontab'] + files('/etc/cron.d')
 ANACRONTAB_FILES = ['/etc/anacrontab']
-USERCRONTAB_FILES = files('/var/spool/cron')
+USERCRONTAB_FILES = files('@statedir@')
 
 TARGER_DIR = sys.argv[1]
 TIMERS_DIR = os.path.join(TARGER_DIR, 'cron.target.wants')
