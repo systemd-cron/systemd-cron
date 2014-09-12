@@ -92,6 +92,8 @@ install: all
 	install -m644 $(builddir)/man/systemd-crontab-generator.8 $(DESTDIR)$(mandir)/man8
 
 	install -m644 $(builddir)/units/cron.target $(DESTDIR)$(unitdir)
+	install -m644 $(builddir)/units/cron-update.path $(DESTDIR)$(unitdir)
+	install -m644 $(builddir)/units/cron-update.service $(DESTDIR)$(unitdir)
 
 	$(foreach schedule,$(schedules),\
 		install -m644 $(builddir)/units/cron-$(schedule).timer $(DESTDIR)$(unitdir)${\n})
@@ -101,12 +103,17 @@ install: all
 		install -m644 $(builddir)/units/cron-$(schedule).service $(DESTDIR)$(unitdir)${\n})
 
 uninstall:
+	rm -f $(DESTDIR)$(bindir)/crontab
+	rm -f $(DESTDIR)$(libdir)/systemd/system-generators/systemd-crontab-generator
+
 	rm -f $(DESTDIR)$(mandir)/man7/systemd.cron.7
 	rm -f $(DESTDIR)$(mandir)/man1/crontab.1
 	rm -f $(DESTDIR)$(mandir)/man5/crontab.5
 	rm -f $(DESTDIR)$(mandir)/man8/systemd-crontab-generator.8
 
 	rm -f $(DESTDIR)$(unitdir)/cron.target
+	rm -f $(DESTDIR)$(unitdir)/cron-update.path
+	rm -f $(DESTDIR)$(unitdir)/cron-update.service
 
 	$(foreach schedule,$(schedules),\
 		rm -f $(DESTDIR)$(unitdir)/cron-$(schedule).timer${\n})
