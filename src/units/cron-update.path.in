@@ -3,8 +3,6 @@ Description=@package@ path monitor
 Documentation=man:systemd.cron(7)
 RefuseManualStart=true
 RefuseManualStop=true
-After=basic.target
-Before=cron.target
 
 [Path]
 PathChanged=/etc/crontab
