@@ -75,7 +75,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                         's': environment['SHELL'],
                         'l': line,
                         'f': filename,
-                        'p': period,
+                        'p': period.lower(),
                         'd': delay,
                         'j': jobid,
                         'c': command,
@@ -102,7 +102,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                             's': environment['SHELL'],
                             'l': line,
                             'f': filename,
-                            'p': period,
+                            'p': period.lower(),
                             'u': user,
                             'c': command
                             }
@@ -175,10 +175,13 @@ def generate_timer_unit(job, seq):
 
     persistent=''
     persistent='@persistent@' #this can be removed by sed depending on build options
+    boot=''
 
     if 'p' in job:
         if job['p'] == 'reboot':
-            schedule = 'OnBootSec=%sm' % job.get('d', 5)
+            schedule = ''
+            boot = 'OnBootSec=%sm' % job.get('d', 5)
+            persistent = ''
         else:
             try:
                 schedule = 'OnCalendar=*-*-1/%s 0:%s:0' % (int(job['p']), job.get('d', 0))
@@ -220,7 +223,8 @@ Unit=%s.service
 %s
 #AccuracySec=%sm
 %s
-''' % (SELF, job['l'], job['f'], unit_name, schedule, accuracy, persistent))
+%s
+''' % (SELF, job['l'], job['f'], unit_name, schedule, accuracy, persistent, boot))
 
     try:
         os.symlink('%s/%s.timer' % (TARGER_DIR, unit_name), '%s/%s.timer' % (TIMERS_DIR, unit_name))
