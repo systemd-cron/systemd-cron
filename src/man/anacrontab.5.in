@@ -1,0 +1,76 @@
+.TH ANACRONTAB 5 "2014-09-16" "@package@ @version@" anacrontab
+
+.SH NAME
+/etc/anacrontab \- monotonic jobs
+
+.SH DESCRIPTION
+The file
+.I /etc/anacrontab
+follow the rules previously set by \fBanacron(8)\fR.
+.PP
+Lines starting with '#' are comments.
+.PP
+Environment variables can be set using 
+.B VAR=VALUE
+keypairs.
+.PP
+
+The special
+.B RANDOM_DELAY
+(in minutes) environment variable is translated to 
+.B AccuracySec=.
+
+The special
+.B START_HOURS_RANGE
+(in hours) environment variable is translated to the
+.I \'hour\'
+component of
+.B OnCalendar=.
+anacron expect a range in the format ##-##, systemd-crontab-generator
+only use the starting hour of the range as reference.
+
+The other lines are job-descriptions that follow this layout:
+.PP
+.B period  delay  job-identifier  command
+.PP
+.TP
+*
+.I period
+is a number of days to wait between each job execution, or special values @daily, @weekly, @monthly, @yearly
+.PP
+.TP
+*
+.I delay
+is a number of extra minutes to wait before starting job. It is translated in
+.B OnBootSec=
+.
+.PP
+.TP
+*
+.I job-identifier
+is a single word. It must be present for comptability, but is not processed by systemd-crontab-generator
+.PP
+.TP
+*
+.I command
+is the command that is run by a shell 
+
+.SH BUGS
+systemd-crontab-generator doesn't support multiline commands.
+.PP
+Any
+.I period
+greater than 30 is rounded to the closest month
+
+.SH DIAGNOSTICS
+After editing /etc/anacrontab, you can run 
+.I journalctl -n
+and
+.I systemctl list-timers
+to see if the timers have well been updated.
+
+.SH "SEE ALSO"
+.B systemd-crontab-generator(8), systemd.timer(5)
+
+.SH AUTHOR
+Alexandre Detiste <alexandre.detiste@gmail.com>
