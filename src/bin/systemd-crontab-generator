@@ -173,7 +173,8 @@ def generate_timer_unit(job, seq):
     n = next(seq)
     unit_name = "cron-%s-%s" % (job['u'], n)
 
-    persistent='@persistent@'
+    persistent=''
+    persistent='@persistent@' #this can be removed by sed depending on build options
 
     if 'p' in job:
         if job['p'] == 'reboot':

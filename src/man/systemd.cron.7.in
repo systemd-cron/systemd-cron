@@ -12,7 +12,7 @@ cron-monthly.service, cron-yearly.service
 .SH DESCRIPTION
 These units provide cron daemon functionality by running scripts in cron directories.
 .BR
-The crontabs are automaticaly translated by \fBsystemd-crontab-generator\fR(1) .
+The crontabs are automatically translated by \fBsystemd-crontab-generator\fR(1) .
 
 .SH FILES
 .TP
