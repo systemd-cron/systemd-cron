@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import tempfile
 import sys
@@ -44,7 +44,7 @@ args_parser.add_argument('-i', '--ask', dest='ask', action='store_true', default
 
 def confirm(message):
     while True:
-        answer = raw_input(message).lower()
+        answer = input(message).lower()
         if answer not in 'yn':
             print('Please reply "y" or "n"')
             continue
