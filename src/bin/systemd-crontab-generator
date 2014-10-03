@@ -36,7 +36,6 @@ except OSError as e:
 def parse_crontab(filename, withuser=True, monotonic=False):
     basename = os.path.basename(filename)
     environment = {
-        'SHELL': '/bin/sh',
         'PATH': '/usr/bin:/bin',
         }
     random_delay = 1
@@ -76,7 +75,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
 
                 yield {
                         'e': ' '.join('"%s=%s"' % kv for kv in environment.items()),
-                        's': environment['SHELL'],
+                        's': environment.get('SHELL','/bin/sh'),
                         'a': random_delay,
                         'l': line,
                         'f': filename,
@@ -102,7 +101,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
 
                     yield {
                             'e': ' '.join('"%s=%s"' % kv for kv in environment.items()),
-                            's': environment['SHELL'],
+                            's': environment.get('SHELL','/bin/sh'),
                             'a': random_delay,
                             'l': line,
                             'f': filename,
@@ -121,7 +120,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
 
                     yield {
                             'e': ' '.join('"%s=%s"' % kv for kv in environment.items()),
-                            's': environment['SHELL'],
+                            's': environment.get('SHELL','/bin/sh'),
                             'a': random_delay,
                             'l': line,
                             'f': filename,
