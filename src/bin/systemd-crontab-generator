@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 import sys
-import pwd
 import os
 import re
 from functools import reduce
@@ -27,8 +26,6 @@ DAYS_SET = list(range(0, 32))
 DOWS_SET = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 MONTHS_SET = list(range(0, 13))
 TIME_UNITS_SET = ['hourly', 'daily', 'weekly', 'monthly', 'yearly', 'annually']
-
-ROOT_USER = pwd.getpwnam('root')
 
 try:
     os.makedirs(TIMERS_DIR)
@@ -72,8 +69,6 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                         '31': 'monthly'
                         }.get(period, None) or period.lstrip('@')
 
-                environment['LOGNAME'] = environment['USER'] = 'root'
-                environment['HOME'] = ROOT_USER.pw_dir
                 yield {
                         'e': ' '.join('"%s=%s"' % kv for kv in environment.items()),
                         's': environment['SHELL'],
@@ -100,9 +95,6 @@ def parse_crontab(filename, withuser=True, monotonic=False):
 
                     user, command = (parts[1], ' '.join(parts[2:])) if withuser else (basename, ' '.join(parts[1:]))
 
-                    environment['LOGNAME'] = environment['USER'] = user
-                    environment['HOME'] = pwd.getpwnam(user).pw_dir
-
                     yield {
                             'e': ' '.join('"%s=%s"' % kv for kv in environment.items()),
                             's': environment['SHELL'],
@@ -121,9 +113,6 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                     minutes, hours, days = parts[0:3]
                     months, dows = parts[3:5]
                     user, command = (parts[5], ' '.join(parts[6:])) if withuser else (basename, ' '.join(parts[5:]))
-
-                    environment['LOGNAME'] = environment['USER'] = user
-                    environment['HOME'] = pwd.getpwnam(user).pw_dir
 
                     yield {
                             'e': ' '.join('"%s=%s"' % kv for kv in environment.items()),
