@@ -26,6 +26,7 @@ HOURS_SET = list(range(0, 24))
 DAYS_SET = list(range(0, 32))
 DOWS_SET = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 MONTHS_SET = list(range(0, 13))
+TIME_UNITS_SET = ['hourly', 'daily', 'weekly', 'monthly', 'yearly', 'annually']
 
 ROOT_USER = pwd.getpwnam('root')
 
@@ -40,6 +41,8 @@ def parse_crontab(filename, withuser=True, monotonic=False):
     environment = {
         'SHELL': '/bin/sh',
         'PATH': '/usr/bin:/bin',
+        'RANDOM_DELAY': '1',
+        'START_HOURS_RANGE': '0'
         }
     with open(filename, 'r') as f:
         for line in f.readlines():
@@ -74,10 +77,12 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                 yield {
                         'e': ' '.join('"%s=%s"' % kv for kv in environment.items()),
                         's': environment['SHELL'],
+                        'a': environment['RANDOM_DELAY'],
                         'l': line,
                         'f': filename,
                         'p': period.lower(),
                         'd': delay,
+                        'h': environment['START_HOURS_RANGE'],
                         'j': jobid,
                         'c': command,
                         'u': 'root'
@@ -101,9 +106,11 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                     yield {
                             'e': ' '.join('"%s=%s"' % kv for kv in environment.items()),
                             's': environment['SHELL'],
+                            'a': environment['RANDOM_DELAY'],
                             'l': line,
                             'f': filename,
                             'p': period.lower(),
+                            'h': environment['START_HOURS_RANGE'],
                             'u': user,
                             'c': command
                             }
@@ -121,6 +128,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                     yield {
                             'e': ' '.join('"%s=%s"' % kv for kv in environment.items()),
                             's': environment['SHELL'],
+                            'a': environment['RANDOM_DELAY'],
                             'l': line,
                             'f': filename,
                             'm': parse_time_unit(minutes, MINUTES_SET),
@@ -178,18 +186,104 @@ def generate_timer_unit(job, seq):
     persistent='@persistent@' #this can be removed by sed depending on build options
     boot=''
 
+    command=job['c']
+    parts = command.split()
+    testremoved = 0
+    if (len(parts) >= 5 and
+        parts[0] == '[' and
+        parts[1] in ['-x','-f','-e'] and
+        parts[2] == parts[5] and
+        parts[3] == ']' and
+        parts[4] == '&&' ):
+        if os.path.isfile(parts[2]):
+            command = ' '.join(parts[5:])
+            parts = command.split()
+            testremoved = 1
+        else:
+            return '%s.timer' % unit_name
+
+    if (len(parts) >= 4 and
+        parts[0] == 'test' and
+        parts[1] in ['-x','-f','-e'] and
+        parts[2] == parts[4] and
+        parts[3] == '&&' ):
+	if os.path.isfile(parts[2]):
+            command = ' '.join(parts[4:])
+            parts = command.split()
+            testremoved = 1
+        else:
+            return '%s.timer' % unit_name
+
+    if (len(parts) >= 3 and
+        parts[-2] == '>' and
+        parts[-1] == '/dev/null'):
+        command = ' '.join(parts[0:-2])
+        parts = command.split()
+        standardoutput='null';
+    else:
+        standardoutput='journal';
+
+    # TODO: translate  'command%line1%line2%line3
+    # in '/bin/echo -e line1\\nline2\\nline3 | command'
+    # to be POSIX compliant
+
+    if not (len(parts) == 1 and
+        os.path.isfile(command)):
+	command=job['s'] + " -c '" + command + "'"
+    elif testremoved:
+        command='-' + command
+
+    # validate user input
+    try:
+        accuracy = int(job['a'])
+    except ValueError:
+        accuracy = 1
+
     if 'p' in job:
+        try:
+           delay = int(job['d'])
+        except KeyError:
+           delay = 0
+        except ValueError:
+           delay = 0
+	if delay > 0:
+           boot = 'OnBootSec=%sm' % delay
+
+        try:
+           parts = job['h'].split('-')
+           hour = int(parts[0])
+        except ValueError:
+           hour = 0
+
         if job['p'] == 'reboot':
             schedule = ''
             boot = 'OnBootSec=%sm' % job.get('d', 5)
             persistent = ''
+        elif job ['p'] in TIME_UNITS_SET and delay == 0 and hour == 0:
+            schedule = 'OnCalendar=%s' % job['p']
+        elif job['p'] == 'hourly':
+            schedule = 'OnCalendar=*-*-* *:%s:0' % delay
+            boot = ''
+        elif job['p'] == 'daily':
+            schedule = 'OnCalendar=*-*-* %s:%s:0' % (hour, delay)
+        elif job['p'] == 'weekly':
+            schedule = 'OnCalendar=Mon *-*-* %s:%s:0' % (hour, delay)
+        elif job['p'] == 'monthly':
+            schedule = 'OnCalendar=*-*-1 %s:%s:0' % (hour, delay)
+        elif job['p'] == 'yearly' or job['p'] == 'annually':
+            schedule = 'OnCalendar=*-1-1 %s:%s:0' % (hour, delay)
         else:
             try:
-                schedule = 'OnCalendar=*-*-1/%s 0:%s:0' % (int(job['p']), job.get('d', 0))
+               if int(job['p']) > 31:
+                    # workaround for anacrontab
+                    schedule = 'OnCalendar=*-1/%s-1 %s:%s:0' % (int(round(int(job['p']))/30), hour, delay)
+               else:
+                    schedule = 'OnCalendar=*-*-1/%s %s:%s:0' % (int(job['p']), hour, delay)
             except ValueError:
-                schedule = 'OnCalendar=%s' % job['p']
-
-        accuracy = job.get('d', 1)
+                    # this record is invalid, pass it as-is to systemd
+                    # that will complain loudly in the journal;
+                    # but the other lines are not affected
+                    schedule = 'OnCalendar=%s' % job['p']
 
     else:
         dows = ','.join(job['w'])
@@ -197,7 +291,6 @@ def generate_timer_unit(job, seq):
 
         schedule = 'OnCalendar=%s*-%s-%s %s:%s:00' % (dows, ','.join(map(str, job['M'])),
                 ','.join(map(str, job['d'])), ','.join(map(str, job['h'])), ','.join(map(str, job['m'])))
-        accuracy = 1
 
     if 'p' in job and job['p'] == "hourly":
         persistent=''
@@ -222,7 +315,7 @@ SourcePath=%s
 [Timer]
 Unit=%s.service
 %s
-#AccuracySec=%sm
+AccuracySec=%sm
 %s
 %s
 ''' % (SELF, job['l'], job['f'], unit_name, schedule, accuracy, persistent, boot))
@@ -246,8 +339,9 @@ SourcePath=%s
 Type=oneshot
 User=%s
 Environment=%s
-ExecStart=%s -c '%s'
-''' % (SELF, job['l'], job['f'], job['u'], job['e'], job['s'], job['c']))
+ExecStart=%s
+StandardOutput=%s
+''' % (SELF, job['l'], job['f'], job['u'], job['e'], command, standardoutput))
 
     return '%s.timer' % unit_name
 
