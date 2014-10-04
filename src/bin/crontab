@@ -82,6 +82,9 @@ def replace(cron_file, args):
             out.write(inp.read())
 
 if __name__ == '__main__':
+    if not os.path.exists(CRONTAB_DIR):
+        os.makedirs(CRONTAB_DIR)
+
     args = args_parser.parse_args()
     cron_file = os.path.join(CRONTAB_DIR, args.user)
 
