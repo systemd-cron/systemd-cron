@@ -43,6 +43,22 @@ Directory for system crontabs.
 Directory for users crontabs.
 .br
 
+.SH DIAGNOSTICS
+With systemd >= 209, you can execute
+.B "systemctl list-timers"
+to have a overview of timers and know when they will elapse.
+.br
+
+If you get errors like
+.b
+.B /lib/systemd/system-generators/systemd-crontab-generator failed with error code 1.
+.br
+in the journal, you can manually run
+.br
+.B "/lib/systemd/system-generators/systemd-crontab-generator /tmp"
+.br
+to get a more verbose error message.
+
 .SH SEE ALSO
 \fBsystemd.cron\fR(5),\fBcrontab\fR(1),\fBsystemd.unit\fR(5),\fBsystemd.timer\fR(5)
 
