@@ -9,4 +9,3 @@ RefuseManualStop=yes
 @persistent@
 OnCalendar=@schedule@
 Unit=cron-@schedule@.target
-

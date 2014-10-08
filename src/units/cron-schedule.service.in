@@ -9,4 +9,3 @@ ConditionDirectoryNotEmpty=@confdir@/cron.@schedule@
 [Service]
 Type=oneshot
 ExecStart=@runparts@ @confdir@/cron.@schedule@
-

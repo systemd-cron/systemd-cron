@@ -3,4 +3,3 @@ Description=@package@ @schedule@ target
 Documentation=man:systemd.cron(7)
 Requires=cron-@schedule@.service
 StopWhenUnneeded=yes
-
