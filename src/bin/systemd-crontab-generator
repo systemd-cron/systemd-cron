@@ -200,7 +200,7 @@ def generate_timer_unit(job, seq):
         parts[1] in ['-x','-f','-e'] and
         parts[2] == parts[4] and
         parts[3] == '&&' ):
-	if os.path.isfile(parts[2]):
+        if os.path.isfile(parts[2]):
             command = ' '.join(parts[4:])
             parts = command.split()
             testremoved = 1
@@ -222,7 +222,7 @@ def generate_timer_unit(job, seq):
 
     if not (len(parts) == 1 and
         os.path.isfile(command)):
-	command=job['s'] + " -c '" + command + "'"
+        command=job['s'] + " -c '" + command + "'"
     elif testremoved:
         command='-' + command
 
@@ -239,7 +239,7 @@ def generate_timer_unit(job, seq):
            delay = 0
         except ValueError:
            delay = 0
-	if delay > 0:
+        if delay > 0:
            boot = 'OnBootSec=%sm' % delay
 
         try:
