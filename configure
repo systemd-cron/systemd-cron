@@ -23,6 +23,7 @@ enable_yearly=no
 
 # systemd ≥ 212
 enable_persistent=no
+stale_stamps='$(libdir)/$(package)/remove_stale_stamps'
 
 ARGS=$(getopt -n "$(basename "${0}")" -o '' -l '
 prefix:,
@@ -35,6 +36,7 @@ mandir:,
 docdir:,
 unitdir:,
 runparts:,
+stale-stamps:,
 enable-boot::,
 enable-hourly::,
 enable-daily::,
@@ -101,6 +103,10 @@ do
 
         '--runparts')
             runparts="${2}"
+            shift 2;;
+
+        '--stale-stamps')
+            stale_stamps="${2}"
             shift 2;;
 
         '--enable-boot')
@@ -171,5 +177,6 @@ s|@mandir@|${mandir}|g
 s|@docdir@|${docdir}|g
 s|@unitdir@|${unitdir}|g
 s|@runparts@|${runparts}|g
+s|@stale_stamps@|${stale_stamps}|g
 " Makefile.in >> Makefile
 
