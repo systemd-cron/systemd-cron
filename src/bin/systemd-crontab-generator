@@ -107,6 +107,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                             'f': filename,
                             'p': period.lower(),
                             'h': start_hours_range,
+                            'j': basename,
                             'u': user,
                             'c': command
                             }
@@ -129,6 +130,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                             'd': parse_time_unit(days, DAYS_SET),
                             'w': parse_time_unit(dows, DOWS_SET, dow_map),
                             'M': parse_time_unit(months, MONTHS_SET, month_map),
+                            'j': basename,
                             'u': user,
                             'c': command
                             }
@@ -173,7 +175,7 @@ def parse_period(mapping=int):
 
 def generate_timer_unit(job, seq):
     n = next(seq)
-    unit_name = "cron-%s-%s" % (job['u'], n)
+    unit_name = "cron-%s-%s-%s" % (job['j'],job['u'], n)
 
     persistent=''
     persistent='@persistent@' #this can be removed by sed depending on build options
@@ -350,21 +352,21 @@ def count():
 for filename in CRONTAB_FILES:
     try:
         for job in parse_crontab(filename, withuser=True):
-            generate_timer_unit(job, seqs.setdefault(job['u'], count()))
+            generate_timer_unit(job, seqs.setdefault(job['j']+job['u'], count()))
     except IOError:
         pass
 
 for filename in ANACRONTAB_FILES:
     try:
         for job in parse_crontab(filename, monotonic=True):
-            generate_timer_unit(job, seqs.setdefault(job['u'], count()))
+            generate_timer_unit(job, seqs.setdefault(job['j']+job['u'], count()))
     except IOError:
         pass
 
 for filename in USERCRONTAB_FILES:
     try:
         for job in parse_crontab(filename, withuser=False):
-            generate_timer_unit(job, seqs.setdefault(job['u'], count()))
+            generate_timer_unit(job, seqs.setdefault(job['j']+job['u'], count()))
     except IOError:
         pass
 
