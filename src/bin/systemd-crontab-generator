@@ -2,6 +2,7 @@
 import sys
 import os
 import re
+import string
 from functools import reduce
 
 def files(dirname):
@@ -72,6 +73,8 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                         '30': 'monthly',
                         '31': 'monthly'
                         }.get(period, None) or period.lstrip('@')
+                valid_chars = "-_%s%s" % (string.ascii_letters, string.digits)
+                jobid = ''.join(c for c in jobid if c in valid_chars)
 
                 yield {
                         'e': ' '.join('"%s=%s"' % kv for kv in environment.items()),
