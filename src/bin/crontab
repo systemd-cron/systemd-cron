@@ -61,8 +61,15 @@ def remove(cron_file, args):
 
 def edit(cron_file, args):
     with tempfile.NamedTemporaryFile() as tmp:
-        with open(cron_file, 'r') as inp:
-            tmp.file.write(inp.read())
+        try:
+            with open(cron_file, 'r') as inp:
+                tmp.file.write(inp.read())
+        except IOError as e:
+            if e.errno == os.errno.ENOENT:
+                 tmp.file.write('# min hour dom month dow command')
+                 pass
+            else:
+                 raise
 
         tmp.file.flush()
 
