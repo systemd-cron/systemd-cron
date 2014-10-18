@@ -64,7 +64,19 @@ def list(cron_file, args):
 
 def remove(cron_file, args):
     if not args.ask or confirm('Are you sure you want to delete %s (y/n)? ' % cron_file):
-        os.unlink(cron_file)
+        try:
+            os.unlink(cron_file)
+        except OSError as e:
+            if e.errno == os.errno.EACCES:
+                with open(cron_file, 'w') as out:
+                    out.write('')
+                sys.stderr.write("couldn't remove %s , wiped it instead\n" % cron_file)
+                pass
+            elif e.errno == os.errno.ENOENT:
+                sys.stderr.write("no crontab for %s\n" % args.user)
+                pass
+            else:
+                raise
 
 def edit(cron_file, args):
     with tempfile.NamedTemporaryFile() as tmp:
