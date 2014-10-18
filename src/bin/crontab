@@ -52,8 +52,15 @@ def confirm(message):
         return answer == 'y'
 
 def list(cron_file, args):
-    with open(cron_file, 'r') as f:
-        sys.stdout.write(f.read())
+    try:
+        with open(cron_file, 'r') as f:
+            sys.stdout.write(f.read())
+    except IOError as e:
+        if e.errno == os.errno.ENOENT:
+            sys.stderr.write('no crontab for %s\n' % args.user)
+            pass
+        else:
+            raise
 
 def remove(cron_file, args):
     if not args.ask or confirm('Are you sure you want to delete %s (y/n)? ' % cron_file):
