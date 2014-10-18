@@ -8,6 +8,25 @@ crontab [\-u user] file
 .br
 crontab [\-u user] [\-l | \-r | \-e] [\-i]
 
+.TP
+.B (blank)
+default operation is replace
+.TP
+.B -u, --user
+edit some other user's crontab
+.TP
+.B -l, --list
+list user's crontab
+.TP
+.B -r, --remove
+delete user's crontab
+.TP
+.B -e, --edit
+edit user's crontab
+.TP
+.B -i, --ask
+prompt before deleting user's crontab
+
 .SH DESCRIPTION
 Crontab is the program used to let users install, deinstall or list
 recurrent jobs in the legacy cron format.
@@ -27,6 +46,18 @@ Directory for users crontabs.
 The \-s flag (SELinux) is not supported.
 .br
 /etc/cron.allow & /etc/cron.deny are not supported.
+
+.SH BUGS
+This tool currently only work if you are root, because python scripts can't be setgid.
+.TP
+As a workaround, you can have root create first a blank crontab for you:
+.br
+sudo touch @statedir@/$USER
+.br
+sudo chown $USER @statedir@/$USER
+
+.TP
+Another workaround is to use the crontab binary from the original cron package.
 
 .SH AUTHOR
 Alexandre Detiste <alexandre@detiste.be>
