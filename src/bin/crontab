@@ -5,6 +5,7 @@ import sys
 import os
 import argparse
 import getpass
+import pwd
 
 EDITOR = (os.environ.get('EDITOR') or
           os.environ.get('VISUAL','/usr/bin/vim'))
@@ -113,6 +114,12 @@ if __name__ == '__main__':
 
     args = args_parser.parse_args()
     cron_file = os.path.join(CRONTAB_DIR, args.user)
+
+    try:
+        pwd.getpwnam(args.user)
+    except KeyError:
+        sys.stderr.write("user '%s' unknown\n" % args.user)
+        exit (1)
 
     action = {
             'list': list,
