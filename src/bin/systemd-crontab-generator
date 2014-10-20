@@ -40,7 +40,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
         'PATH': '/usr/bin:/bin',
         }
     random_delay = 1
-    start_hours_range = 0
+    start_hours_range = '0'
     with open(filename, 'r') as f:
         for line in f.readlines():
             if line.startswith('#'):
