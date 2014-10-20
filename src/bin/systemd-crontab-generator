@@ -64,7 +64,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                 if len(parts) < 4:
                     continue
 
-                period, delay, jobid = parts[0:3]
+                period, boot_delay, jobid = parts[0:3]
                 command = ' '.join(parts[3:])
                 period = {
                         '1': 'daily',
@@ -83,7 +83,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                         'l': line,
                         'f': filename,
                         'p': period.lower(),
-                        'd': delay,
+                        'b': boot_delay,
                         'h': start_hours_range,
                         'j': jobid,
                         'c': command,
@@ -180,14 +180,29 @@ def generate_timer_unit(job, seq):
     n = next(seq)
     unit_name = "cron-%s-%s-%s" % (job['j'],job['u'], n)
 
-    persistent=''
-    persistent='@persistent@' #this can be removed by sed depending on build options
-    boot=''
+    persistent = 0
+    persistent = 1 # '@persistent@' this line can be removed by sed depending on build options
 
     command=job['c']
     parts = command.split()
     testremoved = 0
-    if (len(parts) >= 5 and
+
+    standardoutput = ''
+
+    if (len(parts) >= 3 and
+        parts[-2] == '>' and
+        parts[-1] == '/dev/null'):
+        command = ' '.join(parts[0:-2])
+        parts = command.split()
+        standardoutput='null';
+
+    if (len(parts) >= 2 and
+        parts[-1] == '>/dev/null'):
+        command = ' '.join(parts[0:-1])
+        parts = command.split()
+        standardoutput='null';
+
+    if (len(parts) == 6 and
         parts[0] == '[' and
         parts[1] in ['-x','-f','-e'] and
         parts[2] == parts[5] and
@@ -200,7 +215,7 @@ def generate_timer_unit(job, seq):
         else:
             return '%s.timer' % unit_name
 
-    if (len(parts) >= 4 and
+    if (len(parts) == 5 and
         parts[0] == 'test' and
         parts[1] in ['-x','-f','-e'] and
         parts[2] == parts[4] and
@@ -212,24 +227,12 @@ def generate_timer_unit(job, seq):
         else:
             return '%s.timer' % unit_name
 
-    if (len(parts) >= 3 and
-        parts[-2] == '>' and
-        parts[-1] == '/dev/null'):
-        command = ' '.join(parts[0:-2])
-        parts = command.split()
-        standardoutput='null';
-    else:
-        standardoutput='journal';
-
     # TODO: translate  'command%line1%line2%line3
     # in '/bin/echo -e line1\\nline2\\nline3 | command'
     # to be POSIX compliant
 
-    if not (len(parts) == 1 and
-        os.path.isfile(command)):
+    if not (len(parts) == 1 and os.path.isfile(command)):
         command=job['s'] + " -c '" + command + "'"
-    elif testremoved:
-        command='-' + command
 
     # validate user input
     try:
@@ -237,16 +240,17 @@ def generate_timer_unit(job, seq):
     except ValueError:
         accuracy = 1
 
-    if 'p' in job:
-        try:
-           delay = int(job['d'])
-        except KeyError:
-           delay = 0
-        except ValueError:
-           delay = 0
-        if delay > 0:
-           boot = 'OnBootSec=%sm' % delay
+    try:
+       delay = int(job['b'])
+    except KeyError:
+       delay = 0
+    except ValueError:
+       delay = 0
+    if delay < 0:
+       delay = 0
 
+
+    if 'p' in job:
         try:
            parts = job['h'].split('-')
            hour = int(parts[0])
@@ -255,50 +259,46 @@ def generate_timer_unit(job, seq):
 
         if job['p'] == 'reboot':
             schedule = ''
-            boot = 'OnBootSec=%sm' % job.get('d', 5)
-            persistent = ''
+            persistent = 0
         elif job ['p'] in TIME_UNITS_SET and delay == 0 and hour == 0:
-            schedule = 'OnCalendar=%s' % job['p']
+            schedule = job['p']
+            if job['p'] == 'hourly': persistent = 0
         elif job['p'] == 'hourly':
-            schedule = 'OnCalendar=*-*-* *:%s:0' % delay
-            boot = ''
+            schedule = '*-*-* *:%s:0' % delay
+            persistent = 0
+            delay = 0
         elif job['p'] == 'daily':
-            schedule = 'OnCalendar=*-*-* %s:%s:0' % (hour, delay)
+            schedule = '*-*-* %s:%s:0' % (hour, delay)
         elif job['p'] == 'weekly':
-            schedule = 'OnCalendar=Mon *-*-* %s:%s:0' % (hour, delay)
+            schedule = 'Mon *-*-* %s:%s:0' % (hour, delay)
         elif job['p'] == 'monthly':
-            schedule = 'OnCalendar=*-*-1 %s:%s:0' % (hour, delay)
+            schedule = '*-*-1 %s:%s:0' % (hour, delay)
         elif job['p'] == 'yearly' or job['p'] == 'annually':
-            schedule = 'OnCalendar=*-1-1 %s:%s:0' % (hour, delay)
+            schedule = '*-1-1 %s:%s:0' % (hour, delay)
         else:
             try:
                if int(job['p']) > 31:
                     # workaround for anacrontab
-                    schedule = 'OnCalendar=*-1/%s-1 %s:%s:0' % (int(round(int(job['p']))/30), hour, delay)
+                    schedule = '*-1/%s-1 %s:%s:0' % (int(round(int(job['p']))/30), hour, delay)
                else:
-                    schedule = 'OnCalendar=*-*-1/%s %s:%s:0' % (int(job['p']), hour, delay)
+                    schedule = '*-*-1/%s %s:%s:0' % (int(job['p']), hour, delay)
             except ValueError:
                     # this record is invalid, pass it as-is to systemd
                     # that will complain loudly in the journal;
                     # but the other lines are not affected
-                    schedule = 'OnCalendar=%s' % job['p']
+                    schedule = job['p']
 
     else:
         dows = ','.join(job['w'])
         dows = '' if dows == '*' else dows + ' '
 
-        schedule = 'OnCalendar=%s*-%s-%s %s:%s:00' % (dows, ','.join(map(str, job['M'])),
+        schedule = '%s*-%s-%s %s:%s:00' % (dows, ','.join(map(str, job['M'])),
                 ','.join(map(str, job['d'])), ','.join(map(str, job['h'])), ','.join(map(str, job['m'])))
-
-    if 'p' in job and job['p'] == "hourly":
-        persistent=''
-
-    if ('p' not in job and
-       job['M'] == ['*'] and
-       job['w'] == ['*'] and
-       job['d'] == ['*'] and
-       job['h'] == ['*']):
-        persistent=''
+        if (job['M'] == ['*'] and
+         job['w'] == ['*'] and
+         job['d'] == ['*'] and
+         job['h'] == ['*']):
+            persistent = 0
 
     with open('%s/%s.timer' % (TARGER_DIR, unit_name), 'w') as f:
         f.write('''# Automatically generated by %s
@@ -309,14 +309,14 @@ PartOf=cron.target
 RefuseManualStart=true
 RefuseManualStop=true
 SourcePath=%s
-
-[Timer]
-Unit=%s.service
-%s
-AccuracySec=%sm
-%s
-%s
-''' % (SELF, job['l'], job['f'], unit_name, schedule, accuracy, persistent, boot))
+''' % (SELF, job['l'], job['f']))
+        if testremoved: f.write('ConditionFileIsExecutable=%s\n' % command)
+        f.write('\n[Timer]\n')
+        f.write('Unit=%s.service\n' % unit_name)
+        if schedule: f.write('OnCalendar=%s\n' % schedule)
+        if accuracy != 1: f.write('AccuraySec=%sm\n' % accuracy)
+        if persistent: f.write('Persistent=true\n')
+        if delay: f.write("OnBootSec=%sm\n" % delay)
 
     try:
         os.symlink('%s/%s.timer' % (TARGER_DIR, unit_name), '%s/%s.timer' % (TIMERS_DIR, unit_name))
@@ -338,8 +338,8 @@ Type=oneshot
 User=%s
 Environment=%s
 ExecStart=%s
-StandardOutput=%s
-''' % (SELF, job['l'], job['f'], job['u'], job['e'], command, standardoutput))
+''' % (SELF, job['l'], job['f'], job['u'], job['e'], command))
+        if standardoutput: f.write('StandardOutput=%s\n' % standardoutput)
 
     return '%s.timer' % unit_name
 
