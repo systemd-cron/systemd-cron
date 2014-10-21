@@ -129,3 +129,7 @@ if __name__ == '__main__':
 
     action(cron_file, args)
 
+    try:
+        os.chown(cron_file, pwd.getpwnam(args.user).pw_uid)
+    except:
+        pass
