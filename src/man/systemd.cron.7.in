@@ -4,10 +4,13 @@
 systemd.cron - systemd cron units
 
 .SH SYNOPSIS
-cron.target, cron-boot.timer, cron-hourly.timer, cron-daily.timer, cron-weekly.timer, cron-monthly.timer,
-cron-yearly.timer, cron-boot.target, cron-hourly.target, cron-daily.target, cron-weekly.target, cron-monthly.target,
-cron-yearly.target, cron-boot.service, cron-hourly.service, cron-daily.service, cron-weekly.service,
-cron-monthly.service, cron-yearly.service
+cron.target,
+cron-boot.timer, cron-boot.target, cron-boot.service,
+cron-hourly.timer, cron-hourly.target, cron-hourly.service,
+cron-daily.timer, cron-daily.target, cron-daily.service,
+cron-weekly.timer, cron-weekly.target, cron-weekly.service,
+cron-monthly.timer, cron-monthly.target, cron-monthly.service,
+cron-yearly.timer, cron-yearly.target, cron-yearly.service
 
 .SH DESCRIPTION
 These units provide cron daemon functionality by running scripts in cron directories.
@@ -84,6 +87,7 @@ executed multiple times.
 .SB # journalctl -u cron-monthly
 .br
 .SB # journalctl -u cron-yearly
+.br
 
 .IP "Example service file executed every hour"
 .SB [Unit]

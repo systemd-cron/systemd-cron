@@ -2,6 +2,7 @@ package		:= $(shell cat README.md | head -n1)
 version		:= $(shell cat VERSION)
 
 schedules			:= @schedules@
+schedules_not			:= @schedules_not@
 enable_persistent	:= @enable_persistent@
 
 prefix		:= @prefix@
@@ -153,6 +154,13 @@ $(builddir)/units/cron.target: $(srcdir)/units/cron.target.in
 
 $(builddir)/man/%: $(srcdir)/man/%.in
 	$(call in2out,$<,$@)
+
+$(builddir)/man/systemd.cron.7: $(srcdir)/man/systemd.cron.7.in
+	$(call in2out,$<,$@)
+	$(foreach schedule_not,$(schedules_not),\
+		sed -i $@ -e '/cron-$(schedule_not).timer/d' \
+	               -e '/cron\.$(schedule_not)/,+1d' \
+		       -e '/journalctl -u cron-$(schedule_not)/,+1d' ${\n})
 
 $(builddir)/bin/%: $(srcdir)/bin/%
 	$(call in2out,$<,$@)
