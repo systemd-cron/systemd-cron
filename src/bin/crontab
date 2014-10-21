@@ -80,7 +80,7 @@ def remove(cron_file, args):
                 raise
 
 def edit(cron_file, args):
-    with tempfile.NamedTemporaryFile() as tmp:
+    with tempfile.NamedTemporaryFile(mode='w+', encoding='UTF-8') as tmp:
         try:
             with open(cron_file, 'r') as inp:
                 tmp.file.write(inp.read())
