@@ -161,8 +161,8 @@ def parse_period(mapping=int):
         try:
             range, step = value.split('/')
         except ValueError:
-            value = mapping(value)
-            return slice(value, value + 1)
+            range = value
+            step = 1
 
         if range == '*':
             return slice(None, None, int(step))
@@ -170,9 +170,9 @@ def parse_period(mapping=int):
         try:
             start, end = range.split('-')
         except ValueError:
-            return slice(mapping(range), None, int(step))
+            start = end = range
 
-        return slice(mapping(start), mapping(end), int(step))
+        return slice(mapping(start), mapping(end) + 1, int(step))
 
     return parser
 
