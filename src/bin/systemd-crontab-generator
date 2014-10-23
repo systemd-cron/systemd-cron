@@ -353,6 +353,12 @@ def count():
 
 
 for filename in CRONTAB_FILES:
+    basename = os.path.basename(filename)
+    if (os.path.isfile('@unitdir@/' + basename + '.timer')
+     or os.path.isfile('/etc/systemd/system/' + basename + '.timer')):
+        with open('/dev/kmsg', 'w') as log:
+            log.write('%s ignoring %s\n' % (SELF , filename))
+        continue
     try:
         for job in parse_crontab(filename, withuser=True):
             generate_timer_unit(job, seqs.setdefault(job['j']+job['u'], count()))

@@ -29,7 +29,7 @@ those are monitored by cron-update.path
 .SH FILES
 .TP
 .B /etc/crontab
-System crontab.
+System crontab, see \fBcrontab\fR(5).
 
 .TP
 .B /etc/cron.d
@@ -37,11 +37,16 @@ Directory for system crontabs.
 
 .TP
 .B /etc/anacrontab
+See \fBanacrontab\fR(5).
 
 .TP
 .B @statedir@
 Directory for users crontabs.
 .br
+
+.TP
+.B /run/systemd/generator
+Directory where the generated units are stored.
 
 .SH DIAGNOSTICS
 With systemd >= 209, you can execute
@@ -60,7 +65,7 @@ in the journal, you can manually run
 to get a more verbose error message.
 
 .SH SEE ALSO
-\fBsystemd.cron\fR(5),\fBcrontab\fR(1),\fBsystemd.unit\fR(5),\fBsystemd.timer\fR(5)
+\fBsystemd.cron\fR(7),\fBcrontab\fR(5),\fBsystemd.unit\fR(5),\fBsystemd.timer\fR(5)
 
 .SH AUTHOR
 Alexandre Detiste <alexandre@detiste.be>

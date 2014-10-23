@@ -15,7 +15,7 @@ cron-yearly.timer, cron-yearly.target, cron-yearly.service
 .SH DESCRIPTION
 These units provide cron daemon functionality by running scripts in cron directories.
 .BR
-The crontabs are automatically translated by \fBsystemd-crontab-generator\fR(1) .
+The crontabs are automatically translated by \fBsystemd-crontab-generator\fR(8) .
 
 .SH FILES
 .TP
@@ -41,6 +41,18 @@ Directory for scripts to be executed every month.
 .TP
 .I @confdir@/cron.yearly
 Directory for scripts to be executed every year.
+
+.TP
+.I @confdir@/cron.d
+Directory for \fBcrontabs\fR to be executed on a custom schedule.
+The files in this folder must follow the \fBcrontab\fR(5) layout.
+.br
+If there exists a timer of the same name + '.timer' in @unitdir@ or /etc/systemd/system,
+this crontab will be ignored to enable a smooth migration to native timers.
+.br
+You can also use this to mask an unneeded crontab provide by a package:
+.br
+ln -s /dev/null /etc/systemd/system/[package].timer
 
 .SH SYSTEM UNITS
 .TP
@@ -127,6 +139,8 @@ timers and know when they will elapse.
 .BR systemd.target (5),
 .BR systemd.timer (5),
 .BR systemd.time (7),
+.BR systemd-crontab-generator (8),
+.BR crontab (5),
 .BR run-parts (8)
 
 .SH AUTHOR
