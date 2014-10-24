@@ -56,11 +56,11 @@ to have a overview of timers and know when they will elapse.
 
 If you get errors like
 .br
-.B /lib/systemd/system-generators/systemd-crontab-generator failed with error code 1.
+.B @libdir@/systemd/system-generators/systemd-crontab-generator failed with error code 1.
 .br
 in the journal, you can manually run
 .br
-.B "/lib/systemd/system-generators/systemd-crontab-generator /tmp"
+.B "@libdir@/systemd/system-generators/systemd-crontab-generator /tmp"
 .br
 to get a more verbose error message.
 
