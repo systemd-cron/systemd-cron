@@ -335,10 +335,10 @@ SourcePath=%s
 
 [Service]
 Type=oneshot
-User=%s
-Environment=%s
 ExecStart=%s
-''' % (SELF, job['l'], job['f'], job['u'], job['e'], command))
+''' % (SELF, job['l'], job['f'], command))
+        if job['e']: f.write('Environment=%s\n' % job['e'])
+        if job['u'] != 'root': f.write('User=%s\n' % job['u'])
         if standardoutput: f.write('StandardOutput=%s\n' % standardoutput)
 
     return '%s.timer' % unit_name
