@@ -305,6 +305,7 @@ def generate_timer_unit(job, seq):
 
 [Unit]
 Description=[Cron] "%s"
+Documentation=man:systemd-crontab-generator(8)
 PartOf=cron.target
 RefuseManualStart=true
 RefuseManualStop=true
@@ -329,6 +330,7 @@ SourcePath=%s
 
 [Unit]
 Description=[Cron] "%s"
+Documentation=man:systemd-crontab-generator(8)
 RefuseManualStart=true
 RefuseManualStop=true
 SourcePath=%s
