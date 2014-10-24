@@ -24,7 +24,7 @@ Dependencies
     * systemd ≥ 209, yearly timers
     * systemd ≥ 212, persistent timers
 * [run-parts][3]
-* python 2
+* python 3
 
 Installation
 ----------------
