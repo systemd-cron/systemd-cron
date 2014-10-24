@@ -5,21 +5,7 @@ import re
 import string
 from functools import reduce
 
-def files(dirname):
-    try:
-        return list(filter(os.path.isfile, [os.path.join(dirname, f) for f in os.listdir(dirname)]))
-    except OSError:
-        return []
-
 envvar_re = re.compile(r'^([A-Za-z_0-9]+)\s*=\s*(.*)$')
-
-CRONTAB_FILES = ['/etc/crontab'] + files('/etc/cron.d')
-ANACRONTAB_FILES = ['/etc/anacrontab']
-USERCRONTAB_FILES = files('@statedir@')
-
-TARGER_DIR = sys.argv[1]
-TIMERS_DIR = os.path.join(TARGER_DIR, 'cron.target.wants')
-SELF = os.path.basename(sys.argv[0])
 
 MINUTES_SET = list(range(0, 60))
 HOURS_SET = list(range(0, 24))
@@ -28,11 +14,11 @@ DOWS_SET = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 MONTHS_SET = list(range(0, 13))
 TIME_UNITS_SET = ['hourly', 'daily', 'weekly', 'monthly', 'yearly', 'annually']
 
-try:
-    os.makedirs(TIMERS_DIR)
-except OSError as e:
-    if e.errno != os.errno.EEXIST:
-        raise
+def files(dirname):
+    try:
+        return list(filter(os.path.isfile, [os.path.join(dirname, f) for f in os.listdir(dirname)]))
+    except OSError:
+        return []
 
 def parse_crontab(filename, withuser=True, monotonic=False):
     basename = os.path.basename(filename)
@@ -353,31 +339,49 @@ def count():
         yield n
         n += 1
 
+if __name__ == '__main__':
+    CRONTAB_FILES = files('/etc/cron.d')
+    USERCRONTAB_FILES = files('@statedir@')
 
-for filename in CRONTAB_FILES:
-    basename = os.path.basename(filename)
-    if (os.path.isfile('@unitdir@/' + basename + '.timer')
-     or os.path.isfile('/etc/systemd/system/' + basename + '.timer')):
-        with open('/dev/kmsg', 'w') as log:
-            log.write('%s ignoring %s\n' % (SELF , filename))
-        continue
+    TARGER_DIR = sys.argv[1]
+    TIMERS_DIR = os.path.join(TARGER_DIR, 'cron.target.wants')
+    SELF = os.path.basename(sys.argv[0])
+
     try:
-        for job in parse_crontab(filename, withuser=True):
+        os.makedirs(TIMERS_DIR)
+    except OSError as e:
+        if e.errno != os.errno.EEXIST:
+            raise
+
+    try:
+        for job in parse_crontab('/etc/crontab', withuser=True):
             generate_timer_unit(job, seqs.setdefault(job['j']+job['u'], count()))
     except IOError:
         pass
 
-for filename in ANACRONTAB_FILES:
+    for filename in CRONTAB_FILES:
+        basename = os.path.basename(filename)
+        if (os.path.isfile('@unitdir@/' + basename + '.timer')
+         or os.path.isfile('/etc/systemd/system/' + basename + '.timer')):
+            with open('/dev/kmsg', 'w') as log:
+                log.write('%s ignoring %s\n' % (SELF , filename))
+            continue
+        try:
+            for job in parse_crontab(filename, withuser=True):
+                generate_timer_unit(job, seqs.setdefault(job['j']+job['u'], count()))
+        except IOError:
+            pass
+
     try:
-        for job in parse_crontab(filename, monotonic=True):
+        for job in parse_crontab('/etc/anacrontab', monotonic=True):
             generate_timer_unit(job, seqs.setdefault(job['j']+job['u'], count()))
     except IOError:
         pass
 
-for filename in USERCRONTAB_FILES:
-    try:
-        for job in parse_crontab(filename, withuser=False):
-            generate_timer_unit(job, seqs.setdefault(job['j']+job['u'], count()))
-    except IOError:
-        pass
+    for filename in USERCRONTAB_FILES:
+        try:
+            for job in parse_crontab(filename, withuser=False):
+                generate_timer_unit(job, seqs.setdefault(job['j']+job['u'], count()))
+        except IOError:
+            pass
 
