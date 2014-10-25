@@ -321,7 +321,10 @@ def generate_timer_unit(job, seq):
         f.write('RefuseManualStart=true\n')
         f.write('RefuseManualStop=true\n')
         f.write('SourcePath=%s\n' % job['f'])
-        f.write('RequiresMountsFor=%s\n' % pwd.getpwnam(job['u']).pw_dir)
+        try:
+            f.write('RequiresMountsFor=%s\n' % pwd.getpwnam(job['u']).pw_dir)
+        except KeyError:
+            pass
 
         f.write('\n[Service]\n')
         f.write('Type=oneshot\n')
