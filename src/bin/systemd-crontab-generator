@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import sys
 import os
+import pwd
 import re
 import string
 from functools import reduce
@@ -12,7 +13,7 @@ HOURS_SET = list(range(0, 24))
 DAYS_SET = list(range(0, 32))
 DOWS_SET = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 MONTHS_SET = list(range(0, 13))
-TIME_UNITS_SET = ['hourly', 'daily', 'weekly', 'monthly', 'yearly', 'annually']
+TIME_UNITS_SET = ['hourly', 'daily', 'weekly', 'monthly', 'yearly']
 
 def files(dirname):
     try:
@@ -54,10 +55,12 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                 command = ' '.join(parts[3:])
                 period = {
                         '1': 'daily',
-                        '7': 'weekly',
                         '@midnight': 'daily',
+                        '7': 'weekly',
                         '30': 'monthly',
-                        '31': 'monthly'
+                        '31': 'monthly',
+                        '@anually': 'yearly',
+                        '@annually': 'yearly',
                         }.get(period, None) or period.lstrip('@')
                 valid_chars = "-_%s%s" % (string.ascii_letters, string.digits)
                 jobid = ''.join(c for c in jobid if c in valid_chars)
@@ -83,7 +86,9 @@ def parse_crontab(filename, withuser=True, monotonic=False):
 
                     period = parts[0]
                     period = {
-                            '@midnight': 'daily'
+                            '@midnight': 'daily',
+                            '@anually': 'yearly',
+                            '@annually': 'yearly',
                             }.get(period, None) or period.lstrip('@')
 
                     user, command = (parts[1], ' '.join(parts[2:])) if withuser else (basename, ' '.join(parts[1:]))
@@ -259,7 +264,7 @@ def generate_timer_unit(job, seq):
             schedule = 'Mon *-*-* %s:%s:0' % (hour, delay)
         elif job['p'] == 'monthly':
             schedule = '*-*-1 %s:%s:0' % (hour, delay)
-        elif job['p'] == 'yearly' or job['p'] == 'annually':
+        elif job['p'] == 'yearly':
             schedule = '*-1-1 %s:%s:0' % (hour, delay)
         else:
             try:
@@ -316,6 +321,7 @@ def generate_timer_unit(job, seq):
         f.write('RefuseManualStart=true\n')
         f.write('RefuseManualStop=true\n')
         f.write('SourcePath=%s\n' % job['f'])
+        f.write('RequiresMountsFor=%s\n' % pwd.getpwnam(job['u']).pw_dir)
 
         f.write('\n[Service]\n')
         f.write('Type=oneshot\n')
