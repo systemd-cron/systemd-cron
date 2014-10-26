@@ -300,6 +300,7 @@ def generate_timer_unit(job, seq):
         f.write('RefuseManualStop=true\n')
         f.write('SourcePath=%s\n' % job['f'])
         if testremoved: f.write('ConditionFileIsExecutable=%s\n' % command)
+        if job['u'] != 'root': f.write('After=systemd-user-sessions.service\n')
 
         f.write('\n[Timer]\n')
         f.write('Unit=%s.service\n' % unit_name)
