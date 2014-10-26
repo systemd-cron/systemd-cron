@@ -24,7 +24,6 @@ def files(dirname):
 def parse_crontab(filename, withuser=True, monotonic=False):
     basename = os.path.basename(filename)
     environment = {
-        'PATH': '/usr/bin:/bin',
         }
     random_delay = 1
     start_hours_range = '0'
