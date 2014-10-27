@@ -328,6 +328,7 @@ def generate_timer_unit(job, seq):
         f.write('RefuseManualStart=true\n')
         f.write('RefuseManualStop=true\n')
         f.write('SourcePath=%s\n' % job['f'])
+        f.write('OnFailure=cron-failure@%i.service\n')
         if home and (job['u'] != 'root' or job['f'] == '@statedir@/root'): f.write('RequiresMountsFor=%s\n' % home)
 
         f.write('\n[Service]\n')
