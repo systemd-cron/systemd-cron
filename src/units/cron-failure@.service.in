@@ -4,4 +4,4 @@ Documentation=man:systemd.cron(7)
 
 [Service]
 Type=oneshot
-ExecStart=@libdir@/systemd-cron/mail-on-failure.sh %i
+ExecStart=@libdir@/@package@/mail_on_failure %i
