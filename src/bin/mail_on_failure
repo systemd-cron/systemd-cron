@@ -21,13 +21,11 @@ for var in job_env.split(' '):
 
 if not mailto: exit(0)
 
-try:
-    hostname = os.environ['HOSTNAME']
-    if hostname: hostname = "[" + hostname + "] "
-except KeyError:
-    hostname = ""
+hostname = os.uname()[1]
 
-body = "Subject: " + hostname + "job " + job  + " failed\n"
+body = "From: root (systemd-cron)\n"
+body += "To: " + mailto + "\n"
+body += "Subject: [" + hostname + "] job " + job  + " failed\n"
 body += "MIME-Version: 1.0\n"
 body += "Content-Type: text/plain; charset=UTF-8\n"
 body += "Content-Transfer-Encoding: 8bit\n"
