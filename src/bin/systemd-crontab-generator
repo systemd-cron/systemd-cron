@@ -187,6 +187,9 @@ def generate_timer_unit(job, seq):
         home = ''
         pass
 
+    if home and command[0:2] == '~/':
+        command = home + command[1:]
+
     if (len(parts) >= 3 and
         parts[-2] == '>' and
         parts[-1] == '/dev/null'):
