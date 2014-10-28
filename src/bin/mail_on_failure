@@ -1,14 +1,45 @@
-#!/bin/bash
-JOB_ENV=$(systemctl show "$1" --property=Environment)
-MAILTO=$(echo $JOB_ENV | sed -r 's/.*MAILTO=([^"]*).*/\1/')
+#!/usr/bin/python3
+import sys
+import os
+import subprocess
+from subprocess import Popen, PIPE
 
-[ -z "$MAILTO" ] && MAILTO=root
+job = sys.argv[1]
 
-cat <<EOF | sendmail -i -B8BITMIME "$MAILTO"
-Subject: [$HOSTNAME] job "$1" failed
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+user = subprocess.check_output(['systemctl','show',job,'--property=User',], universal_newlines=True)
+user = user.lstrip("User=").rstrip('\n')
+if not user: user = 'root'
 
-$(systemctl status "$1")
-EOF
+mailto = user
+
+job_env = subprocess.check_output(['systemctl','show',job,'--property=Environment',], universal_newlines=True)
+job_env = job_env.lstrip("Environment=").rstrip('\n')
+
+for var in job_env.split(' '):
+    key , value = var.split('=')
+    if key == 'MAILTO': mailto = value
+
+if not mailto: exit(0)
+
+try:
+    hostname = os.environ['HOSTNAME']
+    if hostname: hostname = "[" + hostname + "] "
+except KeyError:
+    hostname = ""
+
+body = "Subject: " + hostname + "job " + job  + " failed\n"
+body += "MIME-Version: 1.0\n"
+body += "Content-Type: text/plain; charset=UTF-8\n"
+body += "Content-Transfer-Encoding: 8bit\n"
+body += "\n"
+
+try:
+    systemctl = subprocess.check_output(['systemctl','status',job], universal_newlines=True)
+except subprocess.CalledProcessError as e:
+    if e.returncode != 3:
+        raise
+    else:
+        body += e.output
+
+p = Popen(['sendmail','-i','-B8BITMIME',mailto], stdin=PIPE)
+p.communicate(bytes(body, 'UTF-8'))
