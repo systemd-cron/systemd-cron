@@ -6,18 +6,19 @@ from subprocess import Popen, PIPE
 
 job = sys.argv[1]
 
-user = subprocess.check_output(['systemctl','show',job,'--property=User',], universal_newlines=True)
+user = subprocess.check_output(['systemctl','show',job,'--property=User'], universal_newlines=True)
 user = user.lstrip("User=").rstrip('\n')
 if not user: user = 'root'
 
 mailto = user
 
-job_env = subprocess.check_output(['systemctl','show',job,'--property=Environment',], universal_newlines=True)
+job_env = subprocess.check_output(['systemctl','show',job,'--property=Environment'], universal_newlines=True)
 job_env = job_env.lstrip("Environment=").rstrip('\n')
 
-for var in job_env.split(' '):
-    key , value = var.split('=')
-    if key == 'MAILTO': mailto = value
+if job_env:
+    for var in job_env.split(' '):
+        key , value = var.split('=')
+        if key == 'MAILTO': mailto = value
 
 if not mailto: exit(0)
 
