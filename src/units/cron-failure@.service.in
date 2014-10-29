@@ -1,6 +1,8 @@
 [Unit]
 Description=@package@ OnFailure for %i
 Documentation=man:systemd.cron(7)
+RefuseManualStart=true
+RefuseManualStop=true
 
 [Service]
 Type=oneshot
