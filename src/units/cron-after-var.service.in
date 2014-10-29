@@ -8,4 +8,4 @@ ConditionPathExists=!@statedir@/.ok
 Type=oneshot
 ExecStartPre=/bin/rm -f /run/crond.reboot
 ExecStart=/bin/systemctl daemon-reload
-ExecStartPost=/bin/systemctl try-restart cron.target
+ExecStartPost=/bin/systemctl restart cron.target
