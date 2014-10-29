@@ -11,6 +11,8 @@ EDITOR = (os.environ.get('EDITOR') or
           os.environ.get('VISUAL','/usr/bin/vim'))
 CRONTAB_DIR = '@statedir@'
 
+REBOOT_FILE = '/run/crond.reboot'
+
 args_parser = argparse.ArgumentParser(description='maintain crontab files for individual users')
 
 args_parser.add_argument('-u', '--user', type=str, dest='user', default=getpass.getuser(),
@@ -131,5 +133,10 @@ if __name__ == '__main__':
 
     try:
         os.chown(cron_file, pwd.getpwnam(args.user).pw_uid)
+    except:
+        pass
+
+    try:
+        open(REBOOT_FILE,'a').close()
     except:
         pass
