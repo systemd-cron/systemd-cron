@@ -403,7 +403,7 @@ if __name__ == '__main__':
         pass
 
 
-    if os.path.isfile('@statedir@'):
+    if os.path.isdir('@statedir@'):
         # /var is avaible
         for filename in USERCRONTAB_FILES:
             try:
@@ -422,6 +422,7 @@ if __name__ == '__main__':
             f.write('[Unit]\n')
             f.write('Description=@package@ Rerun generator only if /var is a separate mount\n')
             f.write('Documentation=man:systemd.cron(7)\n')
+            f.write('DefaultDependencies=no\n')
             f.write('After=local-fs.target\n')
             f.write('Before=cron.target\n')
 
@@ -438,7 +439,7 @@ if __name__ == '__main__':
                raise
 
         try:
-            os.symlink('%s/cron-after-var.target' % TARGET_DIR, '%s/cron-after-var.target' % SYSINIT_DIR)
+            os.symlink('%s/cron-after-var.service' % TARGET_DIR, '%s/cron-after-var.service' % SYSINIT_DIR)
         except OSError as e:
             if e.errno != os.errno.EEXIST:
                 raise
