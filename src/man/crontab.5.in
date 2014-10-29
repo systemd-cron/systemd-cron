@@ -20,18 +20,15 @@
 .TH CRONTAB 5 "03 July 2014" "@package@ @version@" "crontab"
 .UC 4
 .SH NAME
-crontab \- tables for driving cron
+crontab \- tables for driving @package@
 .SH DESCRIPTION
 A
 .I crontab
-file contains instructions to the
-.IR cron (8)
-daemon of the general form: ``run this command at this time on this date''.
+file contains instructions to
+.IR @package@
+of the general form: ``run this command at this time on this date''.
 Each user has their own crontab, and commands in any given crontab will be
-executed as the user who owns the crontab.  Uucp and News will usually have
-their own crontabs, eliminating the need for explicitly running
-.IR su (1)
-as part of a cron command.
+executed as the user who owns the crontab.
 .PP
 Blank lines and leading spaces and tabs are ignored.  Lines whose first
 non-space character is a hash-sign (#) are comments, and are ignored.
@@ -54,9 +51,7 @@ will be part of the value assigned to
 The
 .I value
 string may be placed in quotes (single or double, but matching) to preserve
-leading or trailing blanks. To define an empty variable, quotes
-.B must
-be used. The
+leading or trailing blanks. The
 .I value
 string is
 .B not
@@ -82,71 +77,42 @@ for your tasks you can use this:
      SHELL=/bin/bash
      PATH=~/bin:/usr/bin/:/bin
 .PP
-Several environment variables are set up automatically by the
-.IR cron (8)
-daemon.
-SHELL is set to /bin/sh, and LOGNAME and HOME are set from the /etc/passwd
-line of the crontab's owner. PATH is set to "/usr/bin:/bin".
-HOME, SHELL, and PATH may be overridden by settings in the crontab;
-LOGNAME is the user that the job is running from, and may not be changed.
+Several environment variables are set up automatically by systemd itself, see
+.IR systemd.exec (5)
+.
+This includes these variables: SHELL, PATH, USER, LOGNAME, HOME, LANG.
+SHELL defaults to /bin/sh.
+SHELL and PATH may be overridden by settings in the crontab.
 .PP
-(Another note: the LOGNAME variable is sometimes called USER on BSD systems...
-on these systems, USER will be set also.)
+In addition to those,
+.IR system.cron (7)
+will look at MAILTO if a job failed. If MAILTO is defined (and non-empty),
+mail is sent to the user so named.
+MAILTO may also be used to direct mail to multiple
+recipients by separating recipient users with a comma. If MAILTO is defined
+but empty (MAILTO=""), no mail will be sent.  Otherwise mail is sent to the
+owner of the crontab.
 .PP
-systemd-crontab-generator doesn't set the MAILTO variable nor send
-any mails like vixie-cron. The output of jobs is written in the journal.
-.\"In addition to LOGNAME, HOME, and SHELL,
-.\".IR cron (8)
-.\"will look at MAILTO if it has any reason to send mail as a result of running
-.\"commands in ``this'' crontab.  If MAILTO is defined (and non-empty), mail is
-.\"sent to the user so named.  MAILTO may also be used to direct mail to multiple
-.\"recipients by separating recipient users with a comma. If MAILTO is defined
-.\"but empty (MAILTO=""), no mail will be sent.  Otherwise mail is sent to the
-.\"owner of the crontab.
-.\".PP
-.\"On the Debian GNU/Linux system, cron supports the
-.\".B pam_env
-.\"module, and loads the environment specified by
-.\".IR /etc/environment
-.\"and
-.\".IR /etc/security/pam_env.conf .
-.\"It also reads locale information from
-.\".IR /etc/default/locale .
-.\"However, the PAM settings do
-.\".B NOT
-.\"override the settings described above nor any settings in the
-.\".I crontab
-.\"file itself. Note in particular that if you want a PATH other than
-.\" "/usr/bin:/bin", you will need to set it in the crontab file.
-.\".PP
-.\"By default, cron will send mail using the mail "Content-Type:" header of
-.\" "text/plain" with the "charset=" parameter set to the charmap / codeset of the
-.\"locale in which
-.\".IR crond (8)
-.\"is started up - ie. either the default system locale, if no LC_* environment
-.\"variables are set, or the locale specified by the LC_* environment variables
-.\"( see
-.\".IR locale (7) ).
-.\"You can use different character encodings for mailed cron job output by
-.\"setting the CONTENT_TYPE and CONTENT_TRANSFER_ENCODING variables in crontabs,
-.\"to the correct values of the mail headers of those names.
+This mail only contains an small excerpt from the log, as seen when using
+.B systemctl status
+The full output remains avaible in the journal.
 .PP
-The format of a cron command is very much the V7 standard, with a number of
-upward-compatible extensions.  Each line has five time and date fields,
+The format of a
+.B cron command
+is the same as the one defined by the cron daemon.
+Each line has five time and date fields,
 followed by a command, followed by a newline character ('\\n').
-The system crontab (/etc/crontab) uses the same format, except that
-the username for the command is specified after the time and
+The system crontab (/etc/crontab) and the packages crontabs (/etc/cron.d/*)
+use the same format, except that the username for the command is specified after the time and
 date fields and before the command. The fields may be separated
 by spaces or tabs.
 .PP
 Commands are executed by
-.IR cron (8)
+.IR systemd
 when the minute, hour, and month of year fields match the current time,
 .I and
 when at least one of the two day fields (day of month, or day of week)
 match the current time (see ``Note'' below).
-.IR cron (8)
-examines cron entries once every minute.
 The time and date fields are:
 .IP
 .ta 1.5i
@@ -239,10 +205,8 @@ string	meaning
 @hourly	Run once an hour, "0 * * * *".
 .br
 .PP
-Please note that startup, as far as @reboot is concerned, is the time when
-the
-.IR cron (8)
-daemon startup.  In particular, it may be before some system daemons,
+Please note that startup, as far as @reboot is concerned,
+may be before some system daemons,
 or other facilities, were startup.  This is due to the boot order
 sequence of the machine.
 
@@ -254,8 +218,8 @@ The following lists an example of a user crontab file.
 
 # use /bin/bash to run commands, instead of the default /bin/sh
 SHELL=/bin/bash
-.\" # mail any output to `paul', no matter whose crontab this is
-.\" MAILTO=paul
+# mail errors to `paul', no matter whose crontab this is
+MAILTO=paul
 #
 # run five minutes after midnight, every day
 5 0 * * *       $HOME/bin/daily.job >> $HOME/tmp/out 2>&1
@@ -271,7 +235,7 @@ SHELL=/bin/bash
 .fi
 .SH EXAMPLE SYSTEM CRON FILE
 
-The following lists the content of a regular system-wide crontab file. Unlinke a
+The following lists the content of a regular system-wide crontab file. Unlike a
 user's crontab, this file has the username field, as used by /etc/crontab.
 
 .nf
@@ -291,33 +255,18 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 52 6 1 * *  root  test \-x /usr/sbin/anacron || ( cd / && run-parts \-\-report /etc/cron.monthly )
 #
 .fi
+This is only an example,
+.B SYSTEMD-CRON USE NATIVE UNITS INSTEAD FOR THOSE JOBS
+.br
+If you add those lines, your jobs will run twice.
+
 .SH SEE ALSO
-cron(8), crontab(1)
-.SH EXTENSIONS
-When specifying day of week, both day 0 and day 7 will be considered Sunday.
-BSD and AT&T seem to disagree about this.
-.PP
-Lists and ranges are allowed to co-exist in the same field.  "1-3,7-9" would
-be rejected by AT&T or BSD cron -- they want to see "1-3" or "7,8,9" ONLY.
-.PP
-Ranges can include "steps", so "1-9/2" is the same as "1,3,5,7,9".
-.PP
-Months or days of the week can be specified by name.
-.PP
-Environment variables can be set in the crontab.  In BSD or AT&T, the
-environment handed to child processes is basically the one from /etc/rc.
-.PP
-.\"Command output is mailed to the crontab owner (BSD can't do this), can be
-.\"mailed to a person other than the crontab owner (SysV can't do this), or the
-.\"feature can be turned off and no mail will be sent at all (SysV can't do this
-.\"either).
-.\".PP
-All of the `@' commands that can appear in place of the first five fields
-are extensions.
+systemd.cron(7), systemd-crontab-generator(8), crontab(1)
+
 .SH LIMITATIONS
 The
-.I cron
-daemon runs with a defined timezone. It currently does not support
+.I systemd-cron
+units runs with a defined timezone. It currently does not support
 per-user timezones. All the tasks: system's and user's will be run based on the
 configured timezone. Even if a user specifies the
 .I TZ
@@ -337,25 +286,13 @@ syntaxs the best approach would be to have the program itself check the
 date and time information and continue execution only if the period
 matches the desired one.
 
-If the program itself cannot do the checks then a wrapper script would be
-required. Useful tools that could be used for date analysis are
-.I ncal
-or
-.I calendar
-For example, to run a program the last Saturday of every month you could use
-the following wrapper code:
-
-.nf
-0 4 * * Sat   [ "$(date +\\%e)" = "`ncal | grep $(date +\\%a | sed  \-e 's/.$//') | sed \-e 's/^.*\\s\\([0-9]\\+\\)\\s*$/\\1/'`" ] && echo "Last Saturday" && program_to_run
-.fi
-
 .B systemd-crontab-generator
 doesn't support these
 .B vixie-cron
 features:
 .TP
 *
-sending emails with job output, the output is written to systemd journal
+spawning forking deamons, the 'Service' units are all set with 'Type=oneshot'
 .TP
 *
 multi-line jobs separated by the '%' character
@@ -367,11 +304,18 @@ consider the crontab (at least partially) broken.
 .br
 systemd-crontab-generator considers this crontab as valid
 
-.\".SH DIAGNOSTICS
+.SH DIAGNOSTICS
+You can see how your crontab where translated by typing:
+.br
+.B systemctl cat cron-<userid>-*
+.PP
+.B systemctl cat
+does support command-line completion.
 
 .SH AUTHOR
 Paul Vixie <paul@vix.com> is the author of
 .I cron
 and original creator of this manual page. This page has also been modified for
 Debian by Steve Greenland, Javier Fernandez-Sanguino and Christian Kastner.
-
+.br
+This page has been reworded by Alexandre Detiste for inclusion in systemd-cron.
