@@ -4,21 +4,28 @@ import os
 import subprocess
 from subprocess import Popen, PIPE
 
-job = sys.argv[1]
+try:
+    job = sys.argv[1]
+except IndexError:
+    print("Usage: %s <unit>" % sys.argv[0])
+    exit(1)
 
 user = subprocess.check_output(['systemctl','show',job,'--property=User'], universal_newlines=True)
-user = user.lstrip("User=").rstrip('\n')
+user = user.rstrip('\n').split('=')[1]
 if not user: user = 'root'
 
 mailto = user
 
 job_env = subprocess.check_output(['systemctl','show',job,'--property=Environment'], universal_newlines=True)
-job_env = job_env.lstrip("Environment=").rstrip('\n')
+job_env = job_env.rstrip('\n')[12:]
 
 if job_env:
     for var in job_env.split(' '):
-        key , value = var.split('=')
-        if key == 'MAILTO': mailto = value
+        try:
+            key , value = var.split('=')
+            if key == 'MAILTO': mailto = value
+        except ValueError:
+            pass
 
 if not mailto: exit(0)
 
