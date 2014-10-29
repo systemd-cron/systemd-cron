@@ -321,7 +321,6 @@ def generate_timer_unit(job, seq):
         f.write('RefuseManualStop=true\n')
         f.write('SourcePath=%s\n' % job['f'])
         if testremoved: f.write('ConditionFileIsExecutable=%s\n' % command)
-        if job['u'] != 'root' or job['f'] == '@statedir@/root': f.write('After=systemd-user-sessions.service\n')
 
         f.write('\n[Timer]\n')
         f.write('Unit=%s.service\n' % unit_name)
@@ -345,6 +344,7 @@ def generate_timer_unit(job, seq):
         f.write('SourcePath=%s\n' % job['f'])
         f.write('OnFailure=cron-failure@%i.service\n')
         if home and (job['u'] != 'root' or job['f'] == '@statedir@/root'): f.write('RequiresMountsFor=%s\n' % home)
+        if job['u'] != 'root' or job['f'] == '@statedir@/root': f.write('After=systemd-user-sessions.service\n')
 
         f.write('\n[Service]\n')
         f.write('Type=oneshot\n')
@@ -409,3 +409,12 @@ if __name__ == '__main__':
         except IOError:
             pass
 
+    try:
+        open(REBOOT_FILE,'a').close()
+    except:
+        pass
+
+    try:
+        open('@statedir@/.ok','a').close()
+    except:
+        pass

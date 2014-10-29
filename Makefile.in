@@ -30,7 +30,7 @@ out_timers		:= $(foreach schedule,$(schedules),$(builddir)/units/cron-$(schedule
 out_targets		:= $(foreach schedule,$(schedules),$(builddir)/units/cron-$(schedule).target)
 out_units		:= $(out_services) $(out_timers) $(out_targets) $(builddir)/units/cron.target \
                            $(builddir)/units/cron-update.path $(builddir)/units/cron-update.service \
-                           $(builddir)/units/cron-failure@.service
+                           $(builddir)/units/cron-failure@.service $(builddir)/units/cron-after-var.service
 out_manuals		:= $(patsubst $(srcdir)/man/%.in,$(builddir)/man/%,$(wildcard $(srcdir)/man/*))
 out_programs		:= $(patsubst $(srcdir)/bin/%,$(builddir)/bin/%,$(wildcard $(srcdir)/bin/*))
 outputs			:= $(out_units) $(out_manuals) $(out_programs)
@@ -104,6 +104,7 @@ install: all
 	install -m644 $(builddir)/units/cron-update.path $(DESTDIR)$(unitdir)
 	install -m644 $(builddir)/units/cron-update.service $(DESTDIR)$(unitdir)
 	install -m644 $(builddir)/units/cron-failure@.service $(DESTDIR)$(unitdir)
+	install -m644 $(builddir)/units/cron-after-var.service $(DESTDIR)$(unitdir)
 
 	$(foreach schedule,$(schedules),\
 		install -m644 $(builddir)/units/cron-$(schedule).timer $(DESTDIR)$(unitdir)${\n})
@@ -128,6 +129,7 @@ uninstall:
 	rm -f $(DESTDIR)$(unitdir)/cron-update.path
 	rm -f $(DESTDIR)$(unitdir)/cron-update.service
 	rm -f $(DESTDIR)$(unitdir)/cron-failure@.service
+	rm -f $(DESTDIR)$(unitdir)/cron-after-var.service
 
 	$(foreach schedule,$(schedules),\
 		rm -f $(DESTDIR)$(unitdir)/cron-$(schedule).timer${\n})
@@ -145,6 +147,9 @@ $(builddir)/units/cron-update.service: $(srcdir)/units/cron-update.service.in
 	$(call in2out,$<,$@)
 
 $(builddir)/units/cron-failure@.service: $(srcdir)/units/cron-failure@.service.in
+	$(call in2out,$<,$@)
+
+$(builddir)/units/cron-after-var.service: $(srcdir)/units/cron-after-var.service.in
 	$(call in2out,$<,$@)
 
 $(builddir)/units/cron-%.service: $(srcdir)/units/cron-schedule.service.in
