@@ -37,12 +37,14 @@ def parse_crontab(filename, withuser=True, monotonic=False):
             line = line.rstrip('\n')
             envvar = envvar_re.match(line)
             if envvar:
+                value = envvar.group(2)
+                value = value.strip("'").strip('"')
                 if envvar.group(1) == 'RANDOM_DELAY':
-                     random_delay = envvar.group(2)
+                     random_delay = value
                 elif envvar.group(1) == 'START_HOURS_RANGE':
-                     start_hours_range = envvar.group(2)
+                     start_hours_range = value
                 else:
-                    environment[envvar.group(1)] = envvar.group(2)
+                    environment[envvar.group(1)] = value
                 continue
 
             parts = line.split()
