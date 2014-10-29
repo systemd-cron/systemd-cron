@@ -13,7 +13,7 @@ HOURS_SET = list(range(0, 24))
 DAYS_SET = list(range(0, 32))
 DOWS_SET = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 MONTHS_SET = list(range(0, 13))
-TIME_UNITS_SET = ['hourly', 'daily', 'weekly', 'monthly', 'yearly']
+TIME_UNITS_SET = ['daily', 'weekly', 'monthly', 'quarterly', 'semi-annually', 'yearly']
 
 REBOOT_FILE = '/run/crond.reboot'
 
@@ -62,6 +62,9 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                         '7': 'weekly',
                         '30': 'monthly',
                         '31': 'monthly',
+                        '@biannually': 'semi-annually',
+                        '@bi-annually': 'semi-annually',
+                        '@semiannually': 'semi-annually',
                         '@anually': 'yearly',
                         '@annually': 'yearly',
                         }.get(period, None) or period.lstrip('@')
@@ -78,8 +81,8 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                         'b': boot_delay,
                         'h': start_hours_range,
                         'j': jobid,
-                        'c': command,
-                        'u': 'root'
+                        'u': 'root',
+                        'c': command
                         }
 
             else:
@@ -90,6 +93,9 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                     period = parts[0]
                     period = {
                             '@midnight': 'daily',
+                            '@biannually': 'semi-annually',
+                            '@bi-annually': 'semi-annually',
+                            '@semiannually': 'semi-annually',
                             '@anually': 'yearly',
                             '@annually': 'yearly',
                             }.get(period, None) or period.lstrip('@')
@@ -275,6 +281,10 @@ def generate_timer_unit(job, seq):
             schedule = 'Mon *-*-* %s:%s:0' % (hour, delay)
         elif job['p'] == 'monthly':
             schedule = '*-*-1 %s:%s:0' % (hour, delay)
+        elif job['p'] == 'quarterly':
+            schedule = '*-1,4,7,10-1 %s:%s:0' % (hour, delay)
+        elif job['p'] == 'semi-annually':
+            schedule = '*-1,7-1 %s:%s:0' % (hour, delay)
         elif job['p'] == 'yearly':
             schedule = '*-1-1 %s:%s:0' % (hour, delay)
         else:
