@@ -402,19 +402,43 @@ if __name__ == '__main__':
     except IOError:
         pass
 
-    for filename in USERCRONTAB_FILES:
+
+    if os.path.isfile('@statedir@'):
+        # /var is avaible
+        for filename in USERCRONTAB_FILES:
+            try:
+                for job in parse_crontab(filename, withuser=False):
+                    generate_timer_unit(job, seqs.setdefault(job['j']+job['u'], count()))
+            except IOError:
+                pass
+
         try:
-            for job in parse_crontab(filename, withuser=False):
-                generate_timer_unit(job, seqs.setdefault(job['j']+job['u'], count()))
-        except IOError:
+            open(REBOOT_FILE,'a').close()
+        except:
             pass
+    else:
+        # schedule rerun
+        with open('%s/cron-after-var.service' % TARGET_DIR, 'w') as f:
+            f.write('[Unit]\n')
+            f.write('Description=@package@ Rerun generator only if /var is a separate mount\n')
+            f.write('Documentation=man:systemd.cron(7)\n')
+            f.write('After=local-fs.target\n')
+            f.write('Before=cron.target\n')
 
-    try:
-        open(REBOOT_FILE,'a').close()
-    except:
-        pass
+            f.write('\n[Service]\n')
+            f.write('Type=oneshot\n')
+            f.write('ExecStart=/bin/systemctl daemon-reload\n')
 
-    try:
-        open('@statedir@/.ok','a').close()
-    except:
-        pass
+        SYSINIT_DIR = os.path.join(TARGET_DIR, 'sysinit.target.wants')
+
+        try:
+           os.makedirs(SYSINIT_DIR)
+        except OSError as e:
+           if e.errno != os.errno.EEXIST:
+               raise
+
+        try:
+            os.symlink('%s/cron-after-var.target' % TARGET_DIR, '%s/cron-after-var.target' % SYSINIT_DIR)
+        except OSError as e:
+            if e.errno != os.errno.EEXIST:
+                raise

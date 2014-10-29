@@ -3,7 +3,6 @@ Description=@package@
 Documentation=man:systemd.cron(7)
 @requires@
 Wants=cron-update.path
-Wants=cron-after-var.service
 
 [Install]
 WantedBy=multi-user.target
