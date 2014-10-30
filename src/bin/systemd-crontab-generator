@@ -268,6 +268,9 @@ def generate_timer_unit(job, seq):
             if delay == 0: delay = 1
             schedule = ''
             persistent = False
+        elif job['p'] == 'minutely':
+            schedule = job['p']
+            persistent = False
         elif job['p'] == 'hourly':
             if delay == 0: schedule = 'hourly'
             else: schedule = '*-*-* *:%s:0' % delay
@@ -295,8 +298,8 @@ def generate_timer_unit(job, seq):
                else:
                     schedule = '*-*-1/%s %s:%s:0' % (int(job['p']), hour, delay)
             except ValueError:
-                    # this record is invalid, pass it as-is to systemd
-                    # that will complain loudly in the journal;
+                    # this record is unexpected, pass it as-is to systemd
+                    # that will complain loudly in the journal if appropriate;
                     # but the other lines are not affected
                     schedule = job['p']
 
