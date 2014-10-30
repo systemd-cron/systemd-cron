@@ -422,24 +422,22 @@ if __name__ == '__main__':
             f.write('[Unit]\n')
             f.write('Description=@package@ Rerun generator only if /var is a separate mount\n')
             f.write('Documentation=man:systemd.cron(7)\n')
-            f.write('DefaultDependencies=no\n')
-            f.write('After=local-fs.target\n')
-            f.write('Before=cron.target\n')
+            f.write('After=cron.target\n')
 
             f.write('\n[Service]\n')
             f.write('Type=oneshot\n')
-            f.write('ExecStart=/bin/systemctl daemon-reload\n')
+            f.write('ExecStart=/bin/sh -c "/bin/systemctl daemon-reload ; /bin/systemctl try-restart cron.target"\n')
 
-        SYSINIT_DIR = os.path.join(TARGET_DIR, 'sysinit.target.wants')
+        MULTIUSER_DIR = os.path.join(TARGET_DIR, 'multi-user.target.wants')
 
         try:
-           os.makedirs(SYSINIT_DIR)
+           os.makedirs(MULTIUSER_DIR)
         except OSError as e:
            if e.errno != os.errno.EEXIST:
                raise
 
         try:
-            os.symlink('%s/cron-after-var.service' % TARGET_DIR, '%s/cron-after-var.service' % SYSINIT_DIR)
+            os.symlink('%s/cron-after-var.service' % TARGET_DIR, '%s/cron-after-var.service' % MULTIUSER_DIR)
         except OSError as e:
             if e.errno != os.errno.EEXIST:
                 raise
