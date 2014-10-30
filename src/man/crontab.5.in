@@ -77,25 +77,48 @@ for your tasks you can use this:
      SHELL=/bin/bash
      PATH=~/bin:/usr/bin/:/bin
 .PP
-Several environment variables are set up automatically by systemd itself, see
+
+.I Special variables:
+.TP
+.B SHELL, PATH, USER, LOGNAME, HOME, LANG
+Those are set up automatically by systemd itself, see
 .IR systemd.exec (5)
-.
-This includes these variables: SHELL, PATH, USER, LOGNAME, HOME, LANG.
 SHELL defaults to /bin/sh.
 SHELL and PATH may be overridden by settings in the crontab.
-.PP
-In addition to those,
-.IR system.cron (7)
-will look at MAILTO if a job failed. If MAILTO is defined (and non-empty),
-mail is sent to the user so named.
+
+.TP
+.B MAILTO
+.br
+On error
+.IR systemd.cron (7)
+will look at MAILTO. If MAILTO is defined mail is sent to this email address.
 MAILTO may also be used to direct mail to multiple
-recipients by separating recipient users with a comma. If MAILTO is defined
-but empty (MAILTO=""), no mail will be sent.  Otherwise mail is sent to the
-owner of the crontab.
-.PP
+recipients by separating recipient users with a comma.
+If MAILTO is defined but empty (MAILTO=""), no mail will be sent.
+Otherwise mail is sent to the owner of the crontab.
+.br
 This mail only contains an small excerpt from the log, as seen when using
 .B systemctl status
 The full output remains avaible in the journal.
+
+.TP
+.B RANDOM_DELAY
+(in minutes) environment variable is translated to
+.B AccuracySec=.
+
+.TP
+.B START_HOURS_RANGE
+(in hours) environment variable is translated to the
+.I \'hour\'
+component of
+.B OnCalendar=.
+This variable is inheritted from anacrontab(5), but also supported in crontab(5)
+by systemd-crontab-generator. Anacron expect a time range in the START-END format (eg: 6-9),
+systemd-crontab-generator will only use the starting hour of the range as reference.
+Unless you set this variable, all the @daily/@weekly/@monthly/@yearly jobs
+will run at midnight. If you set this variable and the system was off during
+the ours defined in the range, the (persitent) job will start at boot.
+
 .PP
 The format of a
 .B cron command
@@ -255,8 +278,10 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 52 6 1 * *  root  test \-x /usr/sbin/anacron || ( cd / && run-parts \-\-report /etc/cron.monthly )
 #
 .fi
+
+.PP
 This is only an example,
-.B SYSTEMD-CRON USE NATIVE UNITS INSTEAD FOR THOSE JOBS
+.B systemd-cron uses native units instead for those jobs.
 .br
 If you add those lines, your jobs will run twice.
 
