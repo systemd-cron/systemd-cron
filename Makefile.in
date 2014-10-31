@@ -78,6 +78,10 @@ distprep: $(distdir)
 
 dist: $(tarball)
 
+test: all
+	$(foreach manpage,$(out_manuals),\
+		man --warnings --encoding=utf8 --local-file $(manpage) 2>&1 > /dev/null${\n})
+
 install: all
 
 	install -d $(DESTDIR)$(bindir)
