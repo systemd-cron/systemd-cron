@@ -78,6 +78,11 @@ from these units.
 This cron replacement only send mails on failure. The log of jobs is saved in systemd journal.
 Do \fInot\fR use with a cron daemon or anacron, otherwise scripts may be
 executed multiple times.
+.br
+All services are run with
+.B
+Type=oneshot
+, that means you can't use systemd-cron to launch long lived forking daemons.
 
 .SH EXTENSIONS
 The generator will make persistent timers for all job with a frequency greater than hourly;
