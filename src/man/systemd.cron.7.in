@@ -75,9 +75,14 @@ units. These units cannot be controlled manually. You can use \fBjournalctl\fR(1
 from these units.
 
 .SH LIMITATIONS
-This cron replacement doesn't send any mails. The log of jobs is saved in systemd journal.
+This cron replacement only send mails on failure. The log of jobs is saved in systemd journal.
 Do \fInot\fR use with a cron daemon or anacron, otherwise scripts may be
 executed multiple times.
+
+.SH EXTENSIONS
+The generator will make persistent timers for all job with a frequency greater than hourly;
+while a regular cron+anacron setup won't catch-up the missed executions of jobs
+in /etc/cron.d/* on boot.
 
 .SH EXAMPLES
 
