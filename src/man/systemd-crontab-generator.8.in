@@ -16,6 +16,10 @@ It is run
 during early boot,
 .TP
 *
+a second time, only if /var is a separate mount, in order to process
+user crontabs in @statedir@,
+.TP
+*
 after each manual updates to the cron files, (*)
 .TP
 *
@@ -47,6 +51,10 @@ Directory for users crontabs.
 .TP
 .B /run/systemd/generator
 Directory where the generated units are stored.
+
+.TP
+.B /run/crond.reboot
+Flag used to avoid running @reboot jobs after boot.
 
 .SH DIAGNOSTICS
 With systemd >= 209, you can execute
