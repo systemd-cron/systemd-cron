@@ -52,7 +52,7 @@ this crontab will be ignored to enable a smooth migration to native timers.
 .br
 You can also use this to mask an unneeded crontab provide by a package:
 .br
-ln -s /dev/null /etc/systemd/system/[package].timer
+ln \-s /dev/null /etc/systemd/system/[package].timer
 
 .SH SYSTEM UNITS
 .TP
