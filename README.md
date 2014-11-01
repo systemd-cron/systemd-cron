@@ -11,6 +11,7 @@ Usage
 ---------
 Add executable scripts to the appropriate cron directory (e.g. `/etc/cron.daily`) and enable systemd-cron:
 
+    # systemctl daemon-reload
     # systemctl enable cron.target
     # systemctl start cron.target
 
@@ -87,6 +88,15 @@ Other options include:
 A typical configuration for the latest systemd would be:
 
     $ ./configure --prefix=/usr --confdir=/etc --enable-yearly --enable-persistent
+
+### Caveat
+
+Your package should also run these extra commands before starting cron.target
+to ensure that @reboot scripts doesn't trigger right away:
+
+    # touch /run/crond.reboot
+    # systemctl mask cron-boot.timer --runtime
+    # systemctl mask cron-boot.service --runtime
 
 See Also
 ------------
