@@ -185,7 +185,7 @@ def generate_timer_unit(job, seq):
 
     command=job['c']
     parts = command.split()
-    testremoved = False
+    testremoved = None
 
     standardoutput = ''
 
@@ -217,18 +217,18 @@ def generate_timer_unit(job, seq):
         parts[2] == parts[5] and
         parts[3] == ']' and
         parts[4] == '&&' ):
+            testremoved = parts[2]
             command = ' '.join(parts[5:])
             parts = command.split()
-            testremoved = True
 
     if (len(parts) == 5 and
         parts[0] == 'test' and
         parts[1] in ['-x','-f','-e'] and
         parts[2] == parts[4] and
         parts[3] == '&&' ):
+            testremoved = parts[2]
             command = ' '.join(parts[4:])
             parts = command.split()
-            testremoved = True
 
     if testremoved and not os.path.isfile(command):
             return '%s.timer' % unit_name
@@ -323,7 +323,7 @@ def generate_timer_unit(job, seq):
         f.write('RefuseManualStart=true\n')
         f.write('RefuseManualStop=true\n')
         f.write('SourcePath=%s\n' % job['f'])
-        if testremoved: f.write('ConditionFileIsExecutable=%s\n' % command)
+        if testremoved: f.write('ConditionFileIsExecutable=%s\n' % testremoved)
 
         f.write('\n[Timer]\n')
         f.write('Unit=%s.service\n' % unit_name)
@@ -346,8 +346,9 @@ def generate_timer_unit(job, seq):
         f.write('RefuseManualStop=true\n')
         f.write('SourcePath=%s\n' % job['f'])
         f.write('OnFailure=cron-failure@%i.service\n')
-        if home and (job['u'] != 'root' or job['f'] == '@statedir@/root'): f.write('RequiresMountsFor=%s\n' % home)
-        if job['u'] != 'root' or job['f'] == '@statedir@/root': f.write('After=systemd-user-sessions.service\n')
+        if job['u'] != 'root' or job['f'] == '@statedir@/root':
+            f.write('Requires=systemd-user-sessions.service\n')
+            if home: f.write('RequiresMountsFor=%s\n' % home)
 
         f.write('\n[Service]\n')
         f.write('Type=oneshot\n')
