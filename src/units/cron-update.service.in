@@ -5,5 +5,4 @@ Documentation=man:systemd.cron(7)
 [Service]
 Type=oneshot
 ExecStartPre=/usr/bin/touch /run/crond.reboot
-ExecStart=/bin/systemctl daemon-reload
-ExecStartPost=/bin/systemctl try-restart cron.target
+ExecStart=/bin/sh -c '/bin/systemctl daemon-reload ; sleep 1 ; /bin/systemctl try-restart cron.target'
