@@ -230,8 +230,7 @@ def generate_timer_unit(job, seq):
             command = ' '.join(parts[4:])
             parts = command.split()
 
-    if testremoved and not os.path.isfile(command):
-            return '%s.timer' % unit_name
+    if testremoved and not os.path.isfile(testremoved): return
 
     # TODO: translate  'command%line1%line2%line3
     # in '/bin/echo -e line1\\nline2\\nline3 | command'
@@ -264,7 +263,7 @@ def generate_timer_unit(job, seq):
            hour = 0
 
         if job['p'] == 'reboot':
-            if os.path.isfile(REBOOT_FILE): return '%s.timer' % unit_name
+            if os.path.isfile(REBOOT_FILE): return
             if delay == 0: delay = 1
             schedule = ''
             persistent = False
