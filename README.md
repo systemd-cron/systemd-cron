@@ -24,6 +24,7 @@ Dependencies
 * systemd ≥ 197
     * systemd ≥ 209, yearly timers
     * systemd ≥ 212, persistent timers
+    * systemd ≥ 217, minutely , quarterly & semi-annually timers
 * [run-parts][3]
 * python 3
 
@@ -72,6 +73,8 @@ Other options include:
   Default: `<prefix>/bin/run-parts`.
 * `--enable-boot[=yes|no]` Include support for the boot timer.
   Default: `yes`.
+* `--enable-minutely[=yes|no]` Include support for the minutely timer. Requires systemd ≥ 217.
+  Default: `no`.
 * `--enable-hourly[=yes|no]` Include support for the hourly timer.
   Default: `yes`.
 * `--enable-daily[=yes|no]` Include support for the daily timer.
@@ -80,6 +83,10 @@ Other options include:
   Default: `yes`.
 * `--enable-monthly[=yes|no]` Include support for the monthly timer.
   Default: `yes`.
+* `--enable-quarterly[=yes|no]` Include support for the quarterly timer. Requires systemd ≥ 217.
+  Default: `no`.
+* `--enable-semi_annually[=yes|no]` Include support for the semi-annually timer. Requires systemd ≥ 217.
+  Default: `no`.
 * `--enable-yearly[=yes|no]` Include support for the yearly timer. Requires systemd ≥ 209.
   Default: `no`.
 * `--enable-persistent[=yes|no]` Make timers [persistent][5]. Requires systemd ≥ 212.
