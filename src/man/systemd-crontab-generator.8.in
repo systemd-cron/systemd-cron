@@ -4,11 +4,11 @@
 systemd-crontab-generator - translate cron schedules in systemd Units
 
 .SH SYNOPSIS
-systemd-crontab-generator folder
+@libdir@/systemd/system-generators/systemd-crontab-generator output_folder
 
 .SH DESCRIPTION
-systemd-crontab-generator translates the legacy cron files (see FILES)
-into systemd units & timers.
+systemd-crontab-generator is a generator that translates the legacy cron files (see FILES)
+into native systemd units & timers.
 .PP
 It is run
 .TP
@@ -16,8 +16,8 @@ It is run
 during early boot,
 .TP
 *
-a second time, only if /var is a separate mount, in order to process
-user crontabs in @statedir@,
+a second time by cron-after-var.service, only if /var is a separate mount,
+in order to process user crontabs in @statedir@; if any,
 .TP
 *
 after each manual updates to the cron files, (*)
@@ -30,6 +30,11 @@ and when distribution packages add files in /etc/cron.d/. (*)
 (*):
 those are monitored by cron-update.path
 
+.PP
+systemd\-crontab\-generator
+implements the
+\m[blue]\fBgenerator specification\fR\m[]\&\s-2\u[1]\d\s+2\&.
+
 .SH FILES
 .TP
 .B /etc/crontab
@@ -37,7 +42,7 @@ System crontab, see \fBcrontab\fR(5).
 
 .TP
 .B /etc/cron.d
-Directory for system crontabs.
+Directory for system crontabs provided by packages.
 
 .TP
 .B /etc/anacrontab
@@ -81,5 +86,13 @@ to get a more verbose error message.
 .SH SEE ALSO
 \fBsystemd.cron\fR(7),\fBcrontab\fR(5),\fBsystemd.unit\fR(5),\fBsystemd.timer\fR(5)
 
+.SH "NOTES"
+.IP " 1." 4
+generator specification
+.RS 4
+\%http://www.freedesktop.org/wiki/Software/systemd/Generators
+.RE
+
 .SH AUTHOR
-Alexandre Detiste <alexandre@detiste.be>
+Konstantin Stepanov <me@kstep.me> for the generator
+Alexandre Detiste <alexandre@detiste.be> for this man page
