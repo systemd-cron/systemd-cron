@@ -154,6 +154,9 @@ $(builddir)/units/cron-failure@.service: $(srcdir)/units/cron-failure@.service.i
 $(builddir)/units/cron-%.service: $(srcdir)/units/cron-schedule.service.in
 	$(call in2out,$<,$@,$*)
 
+$(builddir)/units/cron-boot.service: $(srcdir)/units/cron-boot.service.in
+	$(call in2out,$<,$@,boot)
+
 $(builddir)/units/cron-%.timer: $(srcdir)/units/cron-schedule.timer.in
 	$(call in2out,$<,$@,$*)
 
