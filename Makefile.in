@@ -176,7 +176,7 @@ $(builddir)/man/systemd.cron.7: $(srcdir)/man/systemd.cron.7.in
 	$(call in2out,$<,$@)
 	$(foreach schedule_not,$(schedules_not),\
 		sed -i $@ -e '/cron-$(schedule_not).timer/d' \
-	               -e '/cron\.$(schedule_not)/,+1d' \
+	               -e '/cron\.$(schedule_not)/,+3d' \
 		       -e '/journalctl -u cron-$(schedule_not)/,+1d' ${\n})
 
 $(builddir)/bin/%: $(srcdir)/bin/%

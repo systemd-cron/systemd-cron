@@ -18,7 +18,7 @@ cron-update.path, cron-update.service.
 
 .SH DESCRIPTION
 These units provide cron daemon functionality by running scripts in cron directories.
-.BR
+.br
 The crontabs are monitored by cron-update.path and are automatically translated by \fBsystemd-crontab-generator\fR(8) .
 
 .SH FILES
