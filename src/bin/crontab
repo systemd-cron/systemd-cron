@@ -63,7 +63,7 @@ def list(cron_file, args):
     except IOError as e:
         if e.errno == os.errno.ENOENT:
             sys.stderr.write('no crontab for %s\n' % args.user)
-            pass
+            exit(1)
         else:
             raise
 
@@ -117,6 +117,11 @@ if __name__ == '__main__':
         os.makedirs(CRONTAB_DIR)
 
     args = args_parser.parse_args()
+
+    # deluser in adduser package expect this behaviour
+    if args.file != '-' and args.action in ['list', 'edit', 'remove']:
+        args.user = args.file
+
     cron_file = os.path.join(CRONTAB_DIR, args.user)
 
     try:
