@@ -95,8 +95,7 @@ Your package should also run these extra commands before starting cron.target
 to ensure that @reboot scripts doesn't trigger right away:
 
     # touch /run/crond.reboot
-    # systemctl mask cron-boot.timer --runtime
-    # systemctl mask cron-boot.service --runtime
+    # touch /run/crond.bootdir
 
 See Also
 ------------
