@@ -56,6 +56,12 @@ Directory where the generated units are stored.
 .B /run/crond.reboot
 Flag used to avoid running @reboot jobs again after boot.
 
+.TP
+.B /var/lib/systemd/timers
+Directory where systemd store time stamps needed for the
+.I Persistent
+feature.
+
 .SH DIAGNOSTICS
 With systemd >= 209, you can execute
 .B "systemctl list-timers"
