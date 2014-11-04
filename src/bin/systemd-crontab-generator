@@ -30,9 +30,10 @@ def parse_crontab(filename, withuser=True, monotonic=False):
         }
     random_delay = 1
     start_hours_range = '0'
+    persistent = monotonic
     with open(filename, 'r') as f:
         for line in f.readlines():
-            line = line.rstrip()
+            line = line.strip()
             if not line or line.startswith('#'):
                 continue
 
@@ -44,6 +45,8 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                      random_delay = value
                 elif envvar.group(1) == 'START_HOURS_RANGE':
                      start_hours_range = value
+                elif envvar.group(1) == 'PERSISTENT':
+                     persistent = bool(int(value))
                 else:
                     environment[envvar.group(1)] = value
                 continue
@@ -84,21 +87,15 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                         'j': jobid,
                         'u': 'root',
                         'c': command,
-                        'P': True
+                        'P': persistent
                         }
 
             else:
-                if parts[0] in ['@persist', '@persistent']:
-                    persistent = True
-                    parts = parts[1:]
-                else:
-                    persistent = False
-
                 if line.startswith('@'):
                     if len(parts) < 2 + int(withuser):
                         continue
 
-                    period = parts[0]
+                    period = parts.pop(0)
                     period = {
                             '@midnight': 'daily',
                             '@biannually': 'semi-annually',
@@ -108,7 +105,14 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                             '@annually': 'yearly',
                             }.get(period, None) or period.lstrip('@')
 
-                    user, command = (parts[1], ' '.join(parts[2:])) if withuser else (basename, ' '.join(parts[1:]))
+                    user = parts.pop(0) if withuser else basename
+
+                    if parts[0] in ['@persistent', '@volatile']:
+                        job_persistent = (parts.pop(0) == '@persistent')
+                    else:
+                        job_persistent = persistent
+
+                    command = ' '.join(parts)
 
                     yield {
                             'e': ' '.join('"%s=%s"' % kv for kv in environment.items()),
@@ -121,7 +125,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                             'j': basename,
                             'u': user,
                             'c': command,
-                            'P': persistent
+                            'P': job_persistent
                             }
                 else:
                     if len(parts) < 6 + int(withuser):
@@ -129,7 +133,15 @@ def parse_crontab(filename, withuser=True, monotonic=False):
 
                     minutes, hours, days = parts[0:3]
                     months, dows = parts[3:5]
-                    user, command = (parts[5], ' '.join(parts[6:])) if withuser else (basename, ' '.join(parts[5:]))
+                    parts = parts[5:]
+                    user = parts.pop(0) if withuser else basename
+
+                    if parts[0] in ['@persistent', '@volatile']:
+                        job_persistent = (parts.pop(0) == '@persistent')
+                    else:
+                        job_persistent = persistent
+
+                    command = ' '.join(parts)
 
                     yield {
                             'e': ' '.join('"%s=%s"' % kv for kv in environment.items()),
@@ -145,7 +157,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                             'j': basename,
                             'u': user,
                             'c': command,
-                            'P': persistent
+                            'P': job_persistent
                             }
 
 def parse_time_unit(value, values, mapping=int):
