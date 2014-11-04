@@ -15,6 +15,8 @@ REBOOT_FILE = '/run/crond.reboot'
 
 args_parser = argparse.ArgumentParser(description='maintain crontab files for individual users')
 
+group = args_parser.add_mutually_exclusive_group()
+
 args_parser.add_argument('-u', '--user', type=str, dest='user', default=getpass.getuser(),
         help='''It specifies the name of the user whose crontab is to be
  tweaked. If this option is not given, crontab examines "your" crontab, i.e., the crontab of the person
@@ -24,13 +26,13 @@ args_parser.add_argument('-u', '--user', type=str, dest='user', default=getpass.
 
 args_parser.add_argument('file', type=str, default='-', nargs='?')
 
-args_parser.add_argument('-l', '--list', dest='action', action='store_const', const='list',
+group.add_argument('-l', '--list', dest='action', action='store_const', const='list',
         help='''The current crontab will be displayed on standard output.''')
 
-args_parser.add_argument('-r', '--remove', dest='action', action='store_const', const='remove',
+group.add_argument('-r', '--remove', dest='action', action='store_const', const='remove',
         help='''The current crontab will be removed.''')
 
-args_parser.add_argument('-e', '--edit', dest='action', action='store_const', const='edit',
+group.add_argument('-e', '--edit', dest='action', action='store_const', const='edit',
         help='''This option is used to edit the current crontab using the editor
  specified by the VISUAL or EDITOR environment variables. After
  you exit from the editor, the modified crontab will be installed
