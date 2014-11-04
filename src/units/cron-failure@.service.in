@@ -7,3 +7,5 @@ RefuseManualStop=true
 [Service]
 Type=oneshot
 ExecStart=@libdir@/@package@/mail_on_failure %i
+User=nobody
+Group=systemd-journal
