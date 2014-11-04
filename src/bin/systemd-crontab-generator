@@ -5,6 +5,7 @@ import pwd
 import re
 import string
 from functools import reduce
+import hashlib
 
 envvar_re = re.compile(r'^([A-Za-z_0-9]+)\s*=\s*(.*)$')
 
@@ -29,12 +30,13 @@ def parse_crontab(filename, withuser=True, monotonic=False):
         }
     random_delay = 1
     start_hours_range = '0'
+    persistent = monotonic
     with open(filename, 'r') as f:
         for line in f.readlines():
-            if line.startswith('#'):
+            line = line.strip()
+            if not line or line.startswith('#'):
                 continue
 
-            line = line.rstrip('\n')
             envvar = envvar_re.match(line)
             if envvar:
                 value = envvar.group(2)
@@ -43,6 +45,8 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                      random_delay = value
                 elif envvar.group(1) == 'START_HOURS_RANGE':
                      start_hours_range = value
+                elif envvar.group(1) == 'PERSISTENT':
+                     persistent = bool(int(value))
                 else:
                     environment[envvar.group(1)] = value
                 continue
@@ -82,7 +86,8 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                         'h': start_hours_range,
                         'j': jobid,
                         'u': 'root',
-                        'c': command
+                        'c': command,
+                        'P': persistent
                         }
 
             else:
@@ -90,7 +95,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                     if len(parts) < 2 + int(withuser):
                         continue
 
-                    period = parts[0]
+                    period = parts.pop(0)
                     period = {
                             '@midnight': 'daily',
                             '@biannually': 'semi-annually',
@@ -100,7 +105,14 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                             '@annually': 'yearly',
                             }.get(period, None) or period.lstrip('@')
 
-                    user, command = (parts[1], ' '.join(parts[2:])) if withuser else (basename, ' '.join(parts[1:]))
+                    user = parts.pop(0) if withuser else basename
+
+                    if parts[0] in ['@persistent', '@volatile']:
+                        job_persistent = (parts.pop(0) == '@persistent')
+                    else:
+                        job_persistent = persistent
+
+                    command = ' '.join(parts)
 
                     yield {
                             'e': ' '.join('"%s=%s"' % kv for kv in environment.items()),
@@ -112,7 +124,8 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                             'h': start_hours_range,
                             'j': basename,
                             'u': user,
-                            'c': command
+                            'c': command,
+                            'P': job_persistent
                             }
                 else:
                     if len(parts) < 6 + int(withuser):
@@ -120,7 +133,15 @@ def parse_crontab(filename, withuser=True, monotonic=False):
 
                     minutes, hours, days = parts[0:3]
                     months, dows = parts[3:5]
-                    user, command = (parts[5], ' '.join(parts[6:])) if withuser else (basename, ' '.join(parts[5:]))
+                    parts = parts[5:]
+                    user = parts.pop(0) if withuser else basename
+
+                    if parts[0] in ['@persistent', '@volatile']:
+                        job_persistent = (parts.pop(0) == '@persistent')
+                    else:
+                        job_persistent = persistent
+
+                    command = ' '.join(parts)
 
                     yield {
                             'e': ' '.join('"%s=%s"' % kv for kv in environment.items()),
@@ -135,7 +156,8 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                             'M': parse_time_unit(months, MONTHS_SET, month_map),
                             'j': basename,
                             'u': user,
-                            'c': command
+                            'c': command,
+                            'P': job_persistent
                             }
 
 def parse_time_unit(value, values, mapping=int):
@@ -177,11 +199,8 @@ def parse_period(mapping=int):
     return parser
 
 def generate_timer_unit(job, seq):
-    n = next(seq)
-    unit_name = "cron-%s-%s-%s" % (job['j'],job['u'], n)
-
-    persistent = False
     persistent = True # '@persistent@' this line can be removed by sed depending on build options
+    persistent &= job['P']
 
     command=job['c']
     parts = command.split()
@@ -266,14 +285,11 @@ def generate_timer_unit(job, seq):
             if os.path.isfile(REBOOT_FILE): return
             if delay == 0: delay = 1
             schedule = ''
-            persistent = False
         elif job['p'] == 'minutely':
             schedule = job['p']
-            persistent = False
         elif job['p'] == 'hourly':
             if delay == 0: schedule = 'hourly'
             else: schedule = '*-*-* *:%s:0' % delay
-            persistent = False
             delay = 0
         elif job ['p'] in TIME_UNITS_SET and hour == 0 and delay == 0:
             schedule = job['p']
@@ -305,14 +321,17 @@ def generate_timer_unit(job, seq):
     else:
         dows = ','.join(job['w'])
         dows = '' if dows == '*' else dows + ' '
-
         schedule = '%s*-%s-%s %s:%s:00' % (dows, ','.join(map(str, job['M'])),
                 ','.join(map(str, job['d'])), ','.join(map(str, job['h'])), ','.join(map(str, job['m'])))
-        if (job['M'] == ['*'] and
-         job['w'] == ['*'] and
-         job['d'] == ['*'] and
-         job['h'] == ['*']):
-            persistent = False
+
+    # unit id
+    if not persistent:
+        unit_id = next(seq)
+    else:
+        unit_id = hashlib.md5()
+        unit_id.update(bytes('\0'.join([schedule, command]), 'utf-8'))
+        unit_id = unit_id.hexdigest()
+    unit_name = "cron-%s-%s-%s" % (job['j'], job['u'], unit_id)
 
     with open('%s/%s.timer' % (TARGET_DIR, unit_name), 'w') as f:
         f.write('[Unit]\n')
