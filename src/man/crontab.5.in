@@ -119,6 +119,10 @@ Unless you set this variable, all the @daily/@weekly/@monthly/@yearly jobs
 will run at midnight. If you set this variable and the system was off during
 the ours defined in the range, the (persitent) job will start at boot.
 
+.TP
+.B PERSISTENT
+With this boolean flag, you can overide the generator default heuristic.
+
 .PP
 The format of a
 .B cron command

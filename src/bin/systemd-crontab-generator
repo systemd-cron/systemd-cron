@@ -25,10 +25,11 @@ def files(dirname):
 
 def parse_crontab(filename, withuser=True, monotonic=False):
     basename = os.path.basename(filename)
-    environment = {
-        }
+    environment = { }
     random_delay = 1
     start_hours_range = '0'
+    persistent = False
+    persistent = True # '@persistent@' this line can be removed by sed depending on build options
     with open(filename, 'r') as f:
         for line in f.readlines():
             line = line.strip()
@@ -43,6 +44,8 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                      random_delay = value
                 elif envvar.group(1) == 'START_HOURS_RANGE':
                      start_hours_range = value
+                elif envvar.group(1) == 'PERSISTENT':
+                     persistent = {'true': True, 'yes': True, '1': True}.get(value.lower(), False)
                 else:
                     environment[envvar.group(1)] = value
                 continue
@@ -80,6 +83,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                         'p': period.lower(),
                         'b': boot_delay,
                         'h': start_hours_range,
+                        'P': persistent,
                         'j': jobid,
                         'u': 'root',
                         'c': command
@@ -110,6 +114,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                             'f': filename,
                             'p': period.lower(),
                             'h': start_hours_range,
+                            'P': persistent,
                             'j': basename,
                             'u': user,
                             'c': command
@@ -133,6 +138,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                             'd': parse_time_unit(days, DAYS_SET),
                             'w': parse_time_unit(dows, DOWS_SET, dow_map),
                             'M': parse_time_unit(months, MONTHS_SET, month_map),
+                            'P': persistent,
                             'j': basename,
                             'u': user,
                             'c': command
@@ -180,8 +186,7 @@ def generate_timer_unit(job, seq):
     n = next(seq)
     unit_name = "cron-%s-%s-%s" % (job['j'],job['u'], n)
 
-    persistent = False
-    persistent = True # '@persistent@' this line can be removed by sed depending on build options
+    persistent = job['P']
 
     command=job['c']
     parts = command.split()
