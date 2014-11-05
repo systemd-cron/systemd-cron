@@ -24,6 +24,18 @@ def files(dirname):
     except OSError:
         return []
 
+def expand_home_path(path, user):
+    try:
+        home = pwd.getpwnam(user).pw_dir
+    except KeyError:
+        return path
+
+    parts = path.split(':')
+    for i, part in enumerate(parts):
+        if part.startswith('~/'):
+            parts[i] = home + part[1:]
+    return ':'.join(parts)
+
 def parse_crontab(filename, withuser=True, monotonic=False):
     basename = os.path.basename(filename)
     environment = { }
@@ -47,8 +59,10 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                      start_hours_range = value
                 elif envvar.group(1) == 'PERSISTENT':
                      persistent = {'true': True, 'yes': True, '1': True}.get(value.lower(), False)
+                elif not withuser and envvar.group(1) == 'PATH':
+                     environment['PATH'] = expand_home_path(value, basename)
                 else:
-                    environment[envvar.group(1)] = value
+                     environment[envvar.group(1)] = value
                 continue
 
             parts = line.split()
