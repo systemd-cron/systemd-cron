@@ -367,12 +367,14 @@ def count():
         n += 1
 
 if __name__ == '__main__':
-    CRONTAB_FILES = files('/etc/cron.d')
-    USERCRONTAB_FILES = files('@statedir@')
+    try:
+        TARGET_DIR = sys.argv[1]
+    except IndexError:
+        print("Usage: %s <destination_folder>" % sys.argv[0])
+        exit(1)
 
-    TARGET_DIR = sys.argv[1]
-    TIMERS_DIR = os.path.join(TARGET_DIR, 'cron.target.wants')
     SELF = os.path.basename(sys.argv[0])
+    TIMERS_DIR = os.path.join(TARGET_DIR, 'cron.target.wants')
 
     try:
         os.makedirs(TIMERS_DIR)
@@ -386,6 +388,7 @@ if __name__ == '__main__':
     except IOError:
         pass
 
+    CRONTAB_FILES = files('/etc/cron.d')
     for filename in CRONTAB_FILES:
         basename = os.path.basename(filename)
         if (os.path.isfile('@unitdir@/' + basename + '.timer')
@@ -408,6 +411,7 @@ if __name__ == '__main__':
 
     if os.path.isdir('@statedir@'):
         # /var is avaible
+        USERCRONTAB_FILES = files('@statedir@')
         for filename in USERCRONTAB_FILES:
             try:
                 for job in parse_crontab(filename, withuser=False):
