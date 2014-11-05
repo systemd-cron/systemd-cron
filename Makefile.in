@@ -42,7 +42,7 @@ endef
 
 null :=
 requires = $(subst ${null} ${null},\n,$(foreach schedule,$(schedules),Requires=cron-$(schedule).timer))
-persistent = $(if $(filter $(enable_persistent),yes),Persistent=true,\@DELETEME\@)
+persistent = $(if $(filter $(enable_persistent),yes),True,False)
 
 # $(call in2out,$input,$output,$schedule,$requires)
 define in2out
@@ -59,8 +59,6 @@ define in2out
 		-e "s|\@schedule\@|$3|g" \
 		-e "s|\@requires\@|$4|g" \
 		$1 > $2
-
-	sed -i '/\@DELETEME\@/d' $2
 endef
 
 all: $(builddir) $(outputs)
@@ -159,6 +157,9 @@ $(builddir)/units/cron-boot.service: $(srcdir)/units/cron-boot.service.in
 
 $(builddir)/units/cron-%.timer: $(srcdir)/units/cron-schedule.timer.in
 	$(call in2out,$<,$@,$*)
+ifneq ($(enable_persistent),yes)
+	sed -i -e '/^Persistent=/d' $@
+endif
 
 $(builddir)/units/cron-boot.timer: $(srcdir)/units/cron-boot.timer.in
 	$(call in2out,$<,$@,boot)
