@@ -53,7 +53,10 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                 value = envvar.group(2)
                 value = value.strip("'").strip('"')
                 if envvar.group(1) == 'RANDOM_DELAY':
-                     random_delay = value
+                     try:
+                         random_delay = int(value)
+                     except ValueError:
+                         pass
                 elif envvar.group(1) == 'START_HOURS_RANGE':
                      start_hours_range = value
                 elif envvar.group(1) == 'PERSISTENT':
@@ -260,12 +263,6 @@ def generate_timer_unit(job, seq):
     if not (len(parts) == 1 and os.path.isfile(command)):
         command=job['s'] + " -c '" + command + "'"
 
-    # validate user input
-    try:
-        accuracy = int(job['a'])
-    except ValueError:
-        accuracy = 1
-
     try:
        delay = int(job['b'])
     except KeyError:
@@ -348,7 +345,7 @@ def generate_timer_unit(job, seq):
         f.write('\n[Timer]\n')
         f.write('Unit=%s.service\n' % unit_name)
         if schedule: f.write('OnCalendar=%s\n' % schedule)
-        if accuracy != 1: f.write('AccuraySec=%sm\n' % accuracy)
+        if job['a'] != 1: f.write('AccuracySec=%sm\n' % job['a'])
         if @persistent@ and persistent: f.write('Persistent=true\n')
         if delay: f.write("OnBootSec=%sm\n" % delay)
 
