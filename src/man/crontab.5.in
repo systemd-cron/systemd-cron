@@ -121,7 +121,16 @@ the ours defined in the range, the (persitent) job will start at boot.
 
 .TP
 .B PERSISTENT
-With this boolean flag, you can overide the generator default heuristic.
+With this flag, you can overide the generator default heuristic.
+.br
+.B 'yes':
+force all further jobs to be persistent
+.br
+.B 'auto':
+only recognize @ keywords to be persistent
+.br
+.B 'no':
+force all further jobs not to be persistent
 
 .PP
 The format of a
