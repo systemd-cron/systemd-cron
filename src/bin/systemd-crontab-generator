@@ -41,8 +41,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
     environment = { }
     random_delay = 1
     start_hours_range = '0'
-    persistent = False
-    persistent = True # '@persistent@' this line can be removed by sed depending on build options
+    persistent = True
     with open(filename, 'r') as f:
         for line in f.readlines():
             line = line.strip()
@@ -350,7 +349,7 @@ def generate_timer_unit(job, seq):
         f.write('Unit=%s.service\n' % unit_name)
         if schedule: f.write('OnCalendar=%s\n' % schedule)
         if accuracy != 1: f.write('AccuraySec=%sm\n' % accuracy)
-        if persistent: f.write('Persistent=true\n')
+        if @persistent@ and persistent: f.write('Persistent=true\n')
         if delay: f.write("OnBootSec=%sm\n" % delay)
 
     try:

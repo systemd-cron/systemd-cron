@@ -6,6 +6,6 @@ RefuseManualStart=yes
 RefuseManualStop=yes
 
 [Timer]
-@persistent@
+Persistent=true
 OnCalendar=@schedule@
 Unit=cron-@schedule@.target
