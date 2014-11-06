@@ -27,7 +27,7 @@ class Persistent(object):
         value = value.strip().lower()
         if value in ['yes', 'true', '1']:
             return cls.yes
-        elif value == 'auto':
+        elif value in ['auto', '']:
             return cls.auto
         else:
             return cls.no
@@ -106,6 +106,12 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                         '@anually': 'yearly',
                         '@annually': 'yearly',
                         }.get(period, None) or period.lstrip('@')
+                try:
+                    boot_delay = int(boot_delay)
+                except ValueError:
+                    boot_delay = 0
+                if boot_delay < 0: boot_delay = 0
+
                 valid_chars = "-_%s%s" % (string.ascii_letters, string.digits)
                 jobid = ''.join(c for c in jobid if c in valid_chars)
 
@@ -148,6 +154,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                             'l': line,
                             'f': filename,
                             'p': period.lower(),
+                            'b': 0,
                             'h': start_hours_range,
                             'P': False if persistent == Persistent.no else True,
                             'j': basename,
@@ -168,6 +175,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                             'a': random_delay,
                             'l': line,
                             'f': filename,
+                            'b': 0,
                             'm': parse_time_unit(minutes, MINUTES_SET),
                             'h': parse_time_unit(hours, HOURS_SET),
                             'd': parse_time_unit(days, DAYS_SET),
@@ -281,15 +289,7 @@ def generate_timer_unit(job, seq):
     if not (len(parts) == 1 and os.path.isfile(command)):
         command=job['s'] + " -c '" + command + "'"
 
-    try:
-       delay = int(job['b'])
-    except KeyError:
-       delay = 0
-    except ValueError:
-       delay = 0
-    if delay < 0:
-       delay = 0
-
+    delay = job['b']
 
     if 'p' in job:
         hour = job['h']
