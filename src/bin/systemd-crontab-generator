@@ -40,7 +40,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
     basename = os.path.basename(filename)
     environment = { }
     random_delay = 1
-    start_hours_range = '0'
+    start_hours_range = 0
     persistent = True
     with open(filename, 'r') as f:
         for line in f.readlines():
@@ -58,7 +58,10 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                      except ValueError:
                          pass
                 elif envvar.group(1) == 'START_HOURS_RANGE':
-                     start_hours_range = value
+                     try:
+                         start_hours_range = value.split('-')[0]
+                     except ValueError:
+                         pass
                 elif envvar.group(1) == 'PERSISTENT':
                      persistent = {'true': True, 'yes': True, '1': True}.get(value.lower(), False)
                 elif not withuser and envvar.group(1) == 'PATH':
@@ -274,11 +277,7 @@ def generate_timer_unit(job, seq):
 
 
     if 'p' in job:
-        try:
-           parts = job['h'].split('-')
-           hour = int(parts[0])
-        except ValueError:
-           hour = 0
+        hour = job['h']
 
         if job['p'] == 'reboot':
             if os.path.isfile(REBOOT_FILE): return
