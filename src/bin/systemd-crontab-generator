@@ -18,6 +18,21 @@ TIME_UNITS_SET = ['daily', 'weekly', 'monthly', 'quarterly', 'semi-annually', 'y
 KSH_SHELLS = ['/bin/sh', '/bin/dash', '/bin/ksh', '/bin/bash', '/usr/bin/zsh']
 REBOOT_FILE = '/run/crond.reboot'
 
+
+class Persistent(object):
+    yes, no, auto = range(3)
+
+    @classmethod
+    def parse(cls, value):
+        value = value.strip().lower()
+        if value in ['yes', 'true', '1']:
+            return cls.yes
+        elif value == 'auto':
+            return cls.auto
+        else:
+            return cls.no
+
+
 def files(dirname):
     try:
         return list(filter(os.path.isfile, [os.path.join(dirname, f) for f in os.listdir(dirname)]))
@@ -41,7 +56,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
     environment = { }
     random_delay = 1
     start_hours_range = 0
-    persistent = True
+    persistent = Persistent.yes if monotonic else Persistent.auto
     with open(filename, 'r') as f:
         for line in f.readlines():
             line = line.strip()
@@ -63,7 +78,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                      except ValueError:
                          pass
                 elif envvar.group(1) == 'PERSISTENT':
-                     persistent = {'true': True, 'yes': True, '1': True}.get(value.lower(), False)
+                     persistent = Persistent.parse(value)
                 elif not withuser and envvar.group(1) == 'PATH':
                      environment['PATH'] = expand_home_path(value, basename)
                 else:
@@ -103,7 +118,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                         'p': period.lower(),
                         'b': boot_delay,
                         'h': start_hours_range,
-                        'P': persistent,
+                        'P': False if persistent == Persistent.no else True,
                         'j': jobid,
                         'u': 'root',
                         'c': command
@@ -134,7 +149,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                             'f': filename,
                             'p': period.lower(),
                             'h': start_hours_range,
-                            'P': persistent,
+                            'P': False if persistent == Persistent.no else True,
                             'j': basename,
                             'u': user,
                             'c': command
@@ -158,7 +173,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                             'd': parse_time_unit(days, DAYS_SET),
                             'w': parse_time_unit(dows, DOWS_SET, dow_map),
                             'M': parse_time_unit(months, MONTHS_SET, month_map),
-                            'P': persistent,
+                            'P': True if persistent == Persistent.yes else False,
                             'j': basename,
                             'u': user,
                             'c': command
@@ -290,7 +305,6 @@ def generate_timer_unit(job, seq):
         elif job['p'] == 'hourly':
             if delay == 0: schedule = 'hourly'
             else: schedule = '*-*-* *:%s:0' % delay
-            persistent = False
             delay = 0
         elif job ['p'] in TIME_UNITS_SET and hour == 0 and delay == 0:
             schedule = job['p']
@@ -322,14 +336,8 @@ def generate_timer_unit(job, seq):
     else:
         dows = ','.join(job['w'])
         dows = '' if dows == '*' else dows + ' '
-
         schedule = '%s*-%s-%s %s:%s:00' % (dows, ','.join(map(str, job['M'])),
                 ','.join(map(str, job['d'])), ','.join(map(str, job['h'])), ','.join(map(str, job['m'])))
-        if (job['M'] == ['*'] and
-         job['w'] == ['*'] and
-         job['d'] == ['*'] and
-         job['h'] == ['*']):
-            persistent = False
 
     with open('%s/%s.timer' % (TARGET_DIR, unit_name), 'w') as f:
         f.write('[Unit]\n')
