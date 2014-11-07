@@ -107,6 +107,14 @@ The full output remains avaible in the journal.
 .B AccuracySec=.
 
 .TP
+.B DELAY
+(in minutes) environment variable is translated to
+.B OnBootSec=.
+This works like the 'delay' field of anacrontab(5) and make systemd wait # minutes
+after boot before starting the unit. This value can also be used to spread out
+the start times of @daily/@weekly/@monthly... jobs on a 24/24 system.
+
+.TP
 .B START_HOURS_RANGE
 (in hours) environment variable is translated to the
 .I \'hour\'

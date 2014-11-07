@@ -56,6 +56,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
     environment = { }
     random_delay = 1
     start_hours_range = 0
+    boot_delay = 0
     persistent = Persistent.yes if monotonic else Persistent.auto
     with open(filename, 'r') as f:
         for line in f.readlines():
@@ -74,7 +75,12 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                          pass
                 elif envvar.group(1) == 'START_HOURS_RANGE':
                      try:
-                         start_hours_range = value.split('-')[0]
+                         start_hours_range = int(value.split('-')[0])
+                     except ValueError:
+                         pass
+                elif envvar.group(1) == 'DELAY':
+                     try:
+                         boot_delay = int(value)
                      except ValueError:
                          pass
                 elif envvar.group(1) == 'PERSISTENT':
@@ -92,7 +98,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                 if len(parts) < 4:
                     continue
 
-                period, boot_delay, jobid = parts[0:3]
+                period, delay, jobid = parts[0:3]
                 command = ' '.join(parts[3:])
                 period = {
                         '1': 'daily',
@@ -107,7 +113,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                         '@annually': 'yearly',
                         }.get(period, None) or period.lstrip('@')
                 try:
-                    boot_delay = int(boot_delay)
+                    boot_delay = int(delay)
                 except ValueError:
                     boot_delay = 0
                 if boot_delay < 0: boot_delay = 0
@@ -154,7 +160,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                             'l': line,
                             'f': filename,
                             'p': period.lower(),
-                            'b': 0,
+                            'b': boot_delay,
                             'h': start_hours_range,
                             'P': False if persistent == Persistent.no else True,
                             'j': basename,
@@ -175,7 +181,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                             'a': random_delay,
                             'l': line,
                             'f': filename,
-                            'b': 0,
+                            'b': boot_delay,
                             'm': parse_time_unit(minutes, MINUTES_SET),
                             'h': parse_time_unit(hours, HOURS_SET),
                             'd': parse_time_unit(days, DAYS_SET),
