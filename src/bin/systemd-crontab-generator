@@ -5,6 +5,7 @@ import pwd
 import re
 import string
 from functools import reduce
+import hashlib
 
 envvar_re = re.compile(r'^([A-Za-z_0-9]+)\s*=\s*(.*)$')
 
@@ -232,9 +233,6 @@ def parse_period(mapping=int):
     return parser
 
 def generate_timer_unit(job, seq):
-    n = next(seq)
-    unit_name = "cron-%s-%s-%s" % (job['j'],job['u'], n)
-
     persistent = job['P']
 
     command=job['c']
@@ -344,6 +342,14 @@ def generate_timer_unit(job, seq):
         dows = '' if dows == '*' else dows + ' '
         schedule = '%s*-%s-%s %s:%s:00' % (dows, ','.join(map(str, job['M'])),
                 ','.join(map(str, job['d'])), ','.join(map(str, job['h'])), ','.join(map(str, job['m'])))
+
+    if not persistent:
+        unit_id = next(seq)
+    else:
+        unit_id = hashlib.md5()
+        unit_id.update(bytes('\0'.join([schedule, command]), 'utf-8'))
+        unit_id = unit_id.hexdigest()
+    unit_name = "cron-%s-%s-%s" % (job['j'], job['u'], unit_id)
 
     with open('%s/%s.timer' % (TARGET_DIR, unit_name), 'w') as f:
         f.write('[Unit]\n')
