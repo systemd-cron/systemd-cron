@@ -1,0 +1,50 @@
+#!/bin/bash
+# wait for local apt-cacher-ng proxy to come online
+# before starting unattended-upgrades
+# (that may well never happen before shutdown,
+# but can happen later on the same day)
+#
+# /etc/cron.daily/0wait
+rollback()
+{
+	echo "0wait aborted"
+	touch -t 201401010000 /var/lib/systemd/timers/stamp-cron-daily.timer
+	sleep 1
+        killall run-parts
+        exit 0
+}
+
+trap "rollback" TERM INT QUIT HUP
+
+while true
+do
+	ping -qc 1 antec > /dev/null && exit 0
+	sleep 300
+done
+
+# there should be a more systemd-ish way to do this
+#
+#systemd
+#  |-atd -f
+#  |-dbus-daemon --system --address=systemd: --nofork --nopidfile --systemd-activation
+#  |-fancontrol /usr/sbin/fancontrol
+#  |   `-sleep 60
+#  |-kdm -nodaemon
+#  |   |-Xorg :0 vt7 -br -nolisten tcp -auth /var/run/xauth/A:0-86s7nb
+#  |   `-kdm
+#  |       `-kdm_greet
+#  |           `-{QProcessManager}
+#  |-nullmailer-send
+#  |-run-parts --report /etc/cron.daily
+#  |   `-0wait /etc/cron.daily/0wait
+#  |       `-sleep 300
+#  |-sshd
+#  |   `-sshd
+#  |       `-su -
+#  |           `-bash
+#  |               `-pstree -a
+#  |-systemd --user
+#  |   `-(sd-pam)
+#  |-systemd-journal
+#  |-systemd-logind
+#  `-systemd-udevd
