@@ -73,16 +73,19 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                      try:
                          random_delay = int(value)
                      except ValueError:
+                         print ('%s: invalid RANDOM_DELAY in %s: %s' % (SELF, filename, line))
                          pass
                 elif envvar.group(1) == 'START_HOURS_RANGE':
                      try:
                          start_hours_range = int(value.split('-')[0])
                      except ValueError:
+                         print ('%s: invalid START_HOURS_RANGE in %s: %s' % (SELF, filename, line))
                          pass
                 elif envvar.group(1) == 'DELAY':
                      try:
                          boot_delay = int(value)
                      except ValueError:
+                         print ('%s: invalid DELAY in %s: %s' % (SELF, filename, line))
                          pass
                 elif envvar.group(1) == 'PERSISTENT':
                      persistent = Persistent.parse(value)
@@ -97,6 +100,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
 
             if monotonic:
                 if len(parts) < 4:
+                    print ('%s: truncated line in %s: %s' % (SELF, filename, line))
                     continue
 
                 period, delay, jobid = parts[0:3]
@@ -116,6 +120,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                 try:
                     boot_delay = int(delay)
                 except ValueError:
+                    print ('%s: invalid DELAY in %s: %s' % (SELF, filename, line))
                     boot_delay = 0
                 if boot_delay < 0: boot_delay = 0
 
@@ -140,6 +145,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
             else:
                 if line.startswith('@'):
                     if len(parts) < 2 + int(withuser):
+                        print ('%s: truncated line in %s: %s' % (SELF, filename, line))
                         continue
 
                     period = parts[0]
@@ -170,6 +176,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                             }
                 else:
                     if len(parts) < 6 + int(withuser):
+                        print ('%s: truncated line in %s: %s' % (SELF, filename, line))
                         continue
 
                     minutes, hours, days = parts[0:3]
@@ -332,9 +339,7 @@ def generate_timer_unit(job, seq):
                else:
                     schedule = '*-*-1/%s %s:%s:0' % (int(job['p']), hour, delay)
             except ValueError:
-                    # this record is unexpected, pass it as-is to systemd
-                    # that will complain loudly in the journal if appropriate;
-                    # but the other lines are not affected
+                    print ('%s: unknown schedule in %s: %s' % (SELF, job['f'], job['l']))
                     schedule = job['p']
 
     else:
@@ -410,6 +415,9 @@ if __name__ == '__main__':
         print("Usage: %s <destination_folder>" % sys.argv[0])
         exit(1)
 
+    if len(sys.argv) == 4:
+        sys.stdout =  open('/dev/kmsg', 'w')
+
     SELF = os.path.basename(sys.argv[0])
     TIMERS_DIR = os.path.join(TARGET_DIR, 'cron.target.wants')
 
@@ -428,8 +436,7 @@ if __name__ == '__main__':
         basename = os.path.basename(filename)
         if (os.path.isfile('@unitdir@/' + basename + '.timer')
          or os.path.isfile('/etc/systemd/system/' + basename + '.timer')):
-            with open('/dev/kmsg', 'w') as log:
-                log.write('%s ignoring %s\n' % (SELF , filename))
+            print('%s: ignoring %s because native timer is present' % (SELF , filename))
             continue
         else:
             for job in parse_crontab(filename, withuser=True):
