@@ -208,8 +208,7 @@ def parse_time_unit(filename, line, value, values, mapping=int):
         result = sorted(reduce(lambda a, i: a.union(set(i)), list(map(values.__getitem__,
         list(map(parse_period(mapping), value.split(','))))), set()))
     except ValueError:
-        print ('%s: garbled time in %s [%s]: %s' % (SELF, filename, line, value))
-        return []
+        result = []
     if not len(result): print ('%s: garbled time in %s [%s]: %s' % (SELF, filename, line, value))
     return result
 
