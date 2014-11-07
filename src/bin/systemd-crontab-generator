@@ -190,22 +190,28 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                             'l': line,
                             'f': filename,
                             'b': boot_delay,
-                            'm': parse_time_unit(minutes, MINUTES_SET),
-                            'h': parse_time_unit(hours, HOURS_SET),
-                            'd': parse_time_unit(days, DAYS_SET),
-                            'w': parse_time_unit(dows, DOWS_SET, dow_map),
-                            'M': parse_time_unit(months, MONTHS_SET, month_map),
+                            'm': parse_time_unit(filename, line, minutes, MINUTES_SET),
+                            'h': parse_time_unit(filename, line, hours, HOURS_SET),
+                            'd': parse_time_unit(filename, line, days, DAYS_SET),
+                            'w': parse_time_unit(filename, line, dows, DOWS_SET, dow_map),
+                            'M': parse_time_unit(filename, line, months, MONTHS_SET, month_map),
                             'P': True if persistent == Persistent.yes else False,
                             'j': basename,
                             'u': user,
                             'c': command
                             }
 
-def parse_time_unit(value, values, mapping=int):
+def parse_time_unit(filename, line, value, values, mapping=int):
     if value == '*':
         return ['*']
-    return sorted(list(reduce(lambda a, i: a.union(set(i)), list(map(values.__getitem__,
-        list(map(parse_period(mapping), value.split(','))))), set())))
+    try:
+        result = sorted(reduce(lambda a, i: a.union(set(i)), list(map(values.__getitem__,
+        list(map(parse_period(mapping), value.split(','))))), set()))
+    except ValueError:
+        print ('%s: garbled time in %s [%s]: %s' % (SELF, filename, line, value))
+        return []
+    if not len(result): print ('%s: garbled time in %s [%s]: %s' % (SELF, filename, line, value))
+    return result
 
 def month_map(month):
     try:
@@ -346,7 +352,6 @@ def generate_timer_unit(job, seq):
         dows = ','.join(job['w'])
         dows = '' if dows == '*' else dows + ' '
         if not len(job['M']) or not len(job['d']) or not len(job['h']) or not len(job['m']):
-            print ("%s: garbled time in %s: %s" % (SELF, job['f'], job['l']))
             return
         schedule = '%s*-%s-%s %s:%s:00' % (dows, ','.join(map(str, job['M'])),
                 ','.join(map(str, job['d'])), ','.join(map(str, job['h'])), ','.join(map(str, job['m'])))
