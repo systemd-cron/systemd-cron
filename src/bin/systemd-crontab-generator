@@ -375,7 +375,7 @@ def generate_timer_unit(job, seq):
         f.write('RefuseManualStart=true\n')
         f.write('RefuseManualStop=true\n')
         f.write('SourcePath=%s\n' % job['f'])
-        f.write('OnFailure=cron-failure@%i.service\n')
+        if '"MAILTO="' not in job['e']: f.write('OnFailure=cron-failure@%i.service\n')
         if job['u'] != 'root' or job['f'] == '@statedir@/root':
             f.write('Requires=systemd-user-sessions.service\n')
             if home: f.write('RequiresMountsFor=%s\n' % home)
