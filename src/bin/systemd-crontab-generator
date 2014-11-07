@@ -413,11 +413,9 @@ if __name__ == '__main__':
         if e.errno != os.errno.EEXIST:
             raise
 
-    try:
+    if os.path.isfile('/etc/crontab'):
         for job in parse_crontab('/etc/crontab', withuser=True):
             generate_timer_unit(job, seqs.setdefault(job['j']+job['u'], count()))
-    except IOError:
-        pass
 
     CRONTAB_FILES = files('/etc/cron.d')
     for filename in CRONTAB_FILES:
@@ -427,28 +425,21 @@ if __name__ == '__main__':
             with open('/dev/kmsg', 'w') as log:
                 log.write('%s ignoring %s\n' % (SELF , filename))
             continue
-        try:
+        else:
             for job in parse_crontab(filename, withuser=True):
                 generate_timer_unit(job, seqs.setdefault(job['j']+job['u'], count()))
-        except IOError:
-            pass
 
-    try:
+    if os.path.isfile('/etc/anacrontab'):
         for job in parse_crontab('/etc/anacrontab', monotonic=True):
             generate_timer_unit(job, seqs.setdefault(job['j']+job['u'], count()))
-    except IOError:
-        pass
 
 
     if os.path.isdir('@statedir@'):
         # /var is avaible
         USERCRONTAB_FILES = files('@statedir@')
         for filename in USERCRONTAB_FILES:
-            try:
-                for job in parse_crontab(filename, withuser=False):
-                    generate_timer_unit(job, seqs.setdefault(job['j']+job['u'], count()))
-            except IOError:
-                pass
+            for job in parse_crontab(filename, withuser=False):
+                generate_timer_unit(job, seqs.setdefault(job['j']+job['u'], count()))
 
         try:
             open(REBOOT_FILE,'a').close()
