@@ -345,6 +345,9 @@ def generate_timer_unit(job, seq):
     else:
         dows = ','.join(job['w'])
         dows = '' if dows == '*' else dows + ' '
+        if not len(job['M']) or not len(job['d']) or not len(job['h']) or not len(job['m']):
+            print ("%s: garbled time in %s: %s" % (SELF, job['f'], job['l']))
+            return
         schedule = '%s*-%s-%s %s:%s:00' % (dows, ','.join(map(str, job['M'])),
                 ','.join(map(str, job['d'])), ','.join(map(str, job['h'])), ','.join(map(str, job['m'])))
 
