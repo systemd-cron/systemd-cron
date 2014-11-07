@@ -48,7 +48,10 @@ is a number of extra minutes to wait before starting job. It is translated in
 .TP
 *
 .I job-identifier
-is a single word. It must be present for comptability, but is not processed by systemd-crontab-generator
+is a single word. systemd-crontab-generator uses it to construct the dynamic unit names:
+.I cron-<job-identifier>-root-0.timer
+and matching
+.I cron-<job-identifier>-root-0.service
 .PP
 .TP
 *
@@ -61,6 +64,18 @@ systemd-crontab-generator doesn't support multiline commands.
 Any
 .I period
 greater than 30 is rounded to the closest month
+.PP
+There are subtle differences on how anacron & systemd handle persistente timers:
+anacron will run a weekly job at most once a week, with allways a minimum delay of 6 days
+between runs; where systemd will try to run it every monday at 00:00;
+or as soon the system boot. In the most extreme case, if a system was only started on sunday;
+a weekly job will run this day and the again the next (mon)day.
+.br
+With carefull manual settings, it would be possible to run the
+real anacron binary (not your distro's package) with systemd-cron;
+if you need an identical behaviour.
+.br
+There is no difference for the daily job.
 
 .SH DIAGNOSTICS
 After editing /etc/anacrontab, you can run 
