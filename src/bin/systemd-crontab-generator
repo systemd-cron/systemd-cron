@@ -307,11 +307,13 @@ def generate_timer_unit(job, seq):
 
     delay = job['b']
 
+    daemon_reload = os.path.isfile(REBOOT_FILE)
+
     if 'p' in job:
         hour = job['h']
 
         if job['p'] == 'reboot':
-            if os.path.isfile(REBOOT_FILE): return
+            if daemon_reload: return
             if delay == 0: delay = 1
             schedule = ''
             persistent = False
@@ -378,7 +380,7 @@ def generate_timer_unit(job, seq):
         if schedule: f.write('OnCalendar=%s\n' % schedule)
         if job['a'] != 1: f.write('AccuracySec=%sm\n' % job['a'])
         if @persistent@ and persistent: f.write('Persistent=true\n')
-        if delay: f.write("OnBootSec=%sm\n" % delay)
+        if delay and not daemon_reload: f.write("OnBootSec=%sm\n" % delay)
 
     try:
         os.symlink('%s/%s.timer' % (TARGET_DIR, unit_name), '%s/%s.timer' % (TIMERS_DIR, unit_name))
