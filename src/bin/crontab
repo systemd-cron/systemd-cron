@@ -61,6 +61,7 @@ def list(cron_file, args):
     try:
         with open(cron_file, 'r') as f:
             sys.stdout.write(f.read())
+        for job in parser.parse_crontab(cron_file, withuser=False): job
     except IOError as e:
         if e.errno == os.errno.ENOENT:
             sys.stderr.write('no crontab for %s\n' % args.user)
