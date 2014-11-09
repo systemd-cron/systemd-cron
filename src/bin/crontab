@@ -6,6 +6,7 @@ import os
 import argparse
 import getpass
 import pwd
+import importlib.machinery
 
 EDITOR = (os.environ.get('EDITOR') or
           os.environ.get('VISUAL','/usr/bin/vim'))
@@ -97,10 +98,15 @@ def edit(cron_file, args):
 
         tmp.file.flush()
 
-        if os.system("'%s' '%s'" % (EDITOR, tmp.name)) == 0:
-            tmp.file.seek(0)
-            with open(cron_file, 'w') as out:
-                out.write(tmp.file.read())
+        if os.system("'%s' '%s'" % (EDITOR, tmp.name)) != 0:
+            sys.stderr.write('edit aborted\n')
+            exit(1)
+
+        for job in parser.parse_crontab(tmp.name, withuser=False): job
+
+        tmp.file.seek(0)
+        with open(cron_file, 'w') as out:
+            out.write(tmp.file.read())
 
 def replace(cron_file, args):
     infile = args.file
@@ -111,6 +117,8 @@ def replace(cron_file, args):
     else:
         with open(cron_file, 'w'), open(infile, 'r') as out, inp:
             out.write(inp.read())
+
+    for job in parser.parse_crontab(cron_file, withuser=False): job
 
 if __name__ == '__main__':
     if not os.path.exists(CRONTAB_DIR):
@@ -135,6 +143,9 @@ if __name__ == '__main__':
             'edit': edit,
             'remove': remove,
             }.get(args.action, replace)
+
+    loader = importlib.machinery.SourceFileLoader('name', '/lib/systemd/system-generators/systemd-crontab-generator')
+    parser = loader.load_module()
 
     action(cron_file, args)
 

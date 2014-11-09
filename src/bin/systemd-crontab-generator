@@ -19,6 +19,7 @@ TIME_UNITS_SET = ['daily', 'weekly', 'monthly', 'quarterly', 'semi-annually', 'y
 KSH_SHELLS = ['/bin/sh', '/bin/dash', '/bin/ksh', '/bin/bash', '/usr/bin/zsh']
 REBOOT_FILE = '/run/crond.reboot'
 
+SELF = os.path.basename(sys.argv[0])
 
 class Persistent(object):
     yes, no, auto = range(3)
@@ -427,7 +428,6 @@ if __name__ == '__main__':
     if len(sys.argv) == 4:
         sys.stdout =  open('/dev/kmsg', 'w')
 
-    SELF = os.path.basename(sys.argv[0])
     TIMERS_DIR = os.path.join(TARGET_DIR, 'cron.target.wants')
 
     try:
