@@ -96,6 +96,10 @@ A typical configuration for the latest systemd would be:
 
     $ ./configure --prefix=/usr --confdir=/etc --enable-yearly --enable-persistent
 
+If you only want the generator (you'll have to provide your own `/etc/crontab` to drive /etc/cron.daily/ etc...):
+
+    $ ./configure --enable-boot=no --enable-hourly=no --enable-daily=no --enable-weekly=no --enable-month=no --enable-persistent --prefix=/usr --confdir=/etc
+
 ### Caveat
 
 Your package should also run these extra commands before starting cron.target
