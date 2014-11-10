@@ -70,7 +70,10 @@ def check(cron_file):
                                 'semi-annually', 'semiannually', 'bi-annually', 'biannually',
                                 'annually', 'yearly']:
                 good = False
-                print("%s: unknown schedule in %s: %s\n" % (SELF, job['f'], job['l']))
+                print("%s: unknown schedule in %s: %s" % (SELF, job['f'], job['l']))
+        elif 0 in job['M'] or 0 in job['d']:
+                good = False
+                print("%s: month and day can't be 0 in %s: %s" % (SELF, job['f'], job['l']))
         else:
             if not len(job['M']) or not len(job['d']) or not len(job['h']) or not len(job['m']):
                 good = False
