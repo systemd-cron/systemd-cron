@@ -108,7 +108,6 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                 command = ' '.join(parts[3:])
                 period = {
                         '1': 'daily',
-                        '@midnight': 'daily',
                         '7': 'weekly',
                         '30': 'monthly',
                         '31': 'monthly',
@@ -151,7 +150,6 @@ def parse_crontab(filename, withuser=True, monotonic=False):
 
                     period = parts[0]
                     period = {
-                            '@midnight': 'daily',
                             '@biannually': 'semi-annually',
                             '@bi-annually': 'semi-annually',
                             '@semiannually': 'semi-annually',
@@ -321,10 +319,15 @@ def generate_timer_unit(job, seq):
         elif job['p'] == 'minutely':
             schedule = job['p']
             persistent = False
+        elif job['p'] == 'hourly' and delay == 0:
+            schedule = 'hourly'
         elif job['p'] == 'hourly':
-            if delay == 0: schedule = 'hourly'
-            else: schedule = '*-*-* *:%s:0' % delay
+            schedule = '*-*-* *:%s:0' % delay
             delay = 0
+        elif job['p'] == 'midnight' and delay == 0:
+            schedule = 'daily'
+        elif job['p'] == 'midnight':
+            schedule = '*-*-* 0:%s:0' % delay
         elif job ['p'] in TIME_UNITS_SET and hour == 0 and delay == 0:
             schedule = job['p']
         elif job['p'] == 'daily':
