@@ -57,6 +57,28 @@ def confirm(message):
 
         return answer == 'y'
 
+def check(cron_file):
+    good = True
+    sys.stdout = sys.__stderr__
+    for job in parser.parse_crontab(cron_file, withuser=False):
+        if 'c' not in job:
+            good = False
+            print('%s: truncated line in %s: %s' % (SELF, job['f'], job['l']))
+        elif 'p' in job:
+            if job['p'] not in ['reboot', 'minutely', 'hourly', 'midnight', 'weekly',
+                                'monthly', 'quarterly',
+                                'semi-annually', 'semiannually', 'bi-annually', 'biannually',
+                                'annually', 'yearly']:
+                good = False
+                print("%s: unknown schedule in %s: %s\n" % (SELF, job['f'], job['l']))
+        else:
+            if not len(job['M']) or not len(job['d']) or not len(job['h']) or not len(job['m']):
+                good = False
+    sys.stdout = sys.__stdout__
+    if good == False:
+        sys.stderr.write("not replacing crontab\n")
+        exit (1)
+
 def list(cron_file, args):
     try:
         with open(cron_file, 'r') as f:
@@ -103,7 +125,7 @@ def edit(cron_file, args):
             sys.stderr.write('edit aborted\n')
             exit(1)
 
-        for job in parser.parse_crontab(tmp.name, withuser=False): job
+        check(tmp.name)
 
         tmp.file.seek(0)
         with open(cron_file, 'w') as out:
@@ -112,16 +134,22 @@ def edit(cron_file, args):
 def replace(cron_file, args):
     infile = args.file
     if infile == '-':
-        with open(cron_file, 'w') as out:
-            out.write(sys.stdin.read())
+        with tempfile.NamedTemporaryFile(mode='w+', encoding='UTF-8') as tmp:
+            tmp.write(sys.stdin.read())
+            tmp.file.flush()
+            tmp.file.seek(0)
+            check(tmp.name)
+            tmp.file.seek(0)
+            with open(cron_file, 'w') as out:
+                out.write(tmp.file.read())
 
     else:
+        check(infile)
         with open(cron_file, 'w'), open(infile, 'r') as out, inp:
             out.write(inp.read())
 
-    for job in parser.parse_crontab(cron_file, withuser=False): job
-
 if __name__ == '__main__':
+    SELF = os.path.basename(sys.argv[0])
     if not os.path.exists(CRONTAB_DIR):
         os.makedirs(CRONTAB_DIR)
 

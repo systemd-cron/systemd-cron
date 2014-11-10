@@ -101,7 +101,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
 
             if monotonic:
                 if len(parts) < 4:
-                    print ('%s: truncated line in %s: %s' % (SELF, filename, line))
+                    yield { 'f': filename, 'l': line, 'j': '-', 'u': '-' }
                     continue
 
                 period, delay, jobid = parts[0:3]
@@ -145,7 +145,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
             else:
                 if line.startswith('@'):
                     if len(parts) < 2 + int(withuser):
-                        print ('%s: truncated line in %s: %s' % (SELF, filename, line))
+                        yield { 'f': filename, 'l': line, 'j': '-', 'u': '-' }
                         continue
 
                     period = parts[0]
@@ -175,7 +175,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                             }
                 else:
                     if len(parts) < 6 + int(withuser):
-                        print ('%s: truncated line in %s: %s' % (SELF, filename, line))
+                        yield { 'f': filename, 'l': line, 'j': '-', 'u': '-' }
                         continue
 
                     minutes, hours, days = parts[0:3]
@@ -244,6 +244,10 @@ def parse_period(mapping=int):
     return parser
 
 def generate_timer_unit(job, seq):
+    if 'c' not in job:
+        print ('%s: truncated line in %s: %s' % (SELF, job['f'], job['l']))
+        return
+
     persistent = job['P']
 
     command=job['c']
