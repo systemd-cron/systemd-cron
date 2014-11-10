@@ -75,15 +75,13 @@ def check(cron_file):
             if not len(job['M']) or not len(job['d']) or not len(job['h']) or not len(job['m']):
                 good = False
     sys.stdout = sys.__stdout__
-    if good == False:
-        sys.stderr.write("not replacing crontab\n")
-        exit (1)
+    return good
 
 def list(cron_file, args):
     try:
         with open(cron_file, 'r') as f:
             sys.stdout.write(f.read())
-        for job in parser.parse_crontab(cron_file, withuser=False): job
+        check(cron_file)
     except IOError as e:
         if e.errno == os.errno.ENOENT:
             sys.stderr.write('no crontab for %s\n' % args.user)
@@ -125,7 +123,9 @@ def edit(cron_file, args):
             sys.stderr.write('edit aborted\n')
             exit(1)
 
-        check(tmp.name)
+        if not check(tmp.name):
+            sys.stderr.write("not replacing crontab\n")
+            exit (1)
 
         tmp.file.seek(0)
         with open(cron_file, 'w') as out:
@@ -138,13 +138,17 @@ def replace(cron_file, args):
             tmp.write(sys.stdin.read())
             tmp.file.flush()
             tmp.file.seek(0)
-            check(tmp.name)
+            if not check(tmp.name):
+                sys.stderr.write("not replacing crontab\n")
+                exit (1)
             tmp.file.seek(0)
             with open(cron_file, 'w') as out:
                 out.write(tmp.file.read())
 
     else:
-        check(infile)
+        if not check(infile):
+            sys.stderr.write("not replacing crontab\n")
+            exit (1)
         with open(cron_file, 'w'), open(infile, 'r') as out, inp:
             out.write(inp.read())
 
