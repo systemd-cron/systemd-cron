@@ -74,19 +74,19 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                      try:
                          random_delay = int(value)
                      except ValueError:
-                         print ('%s: invalid RANDOM_DELAY in %s: %s' % (SELF, filename, line))
+                         log(3, 'invalid RANDOM_DELAY in %s: %s' % (filename, line))
                          pass
                 elif envvar.group(1) == 'START_HOURS_RANGE':
                      try:
                          start_hours_range = int(value.split('-')[0])
                      except ValueError:
-                         print ('%s: invalid START_HOURS_RANGE in %s: %s' % (SELF, filename, line))
+                         log(3, 'invalid START_HOURS_RANGE in %s: %s' % (filename, line))
                          pass
                 elif envvar.group(1) == 'DELAY':
                      try:
                          boot_delay = int(value)
                      except ValueError:
-                         print ('%s: invalid DELAY in %s: %s' % (SELF, filename, line))
+                         log(3, 'invalid DELAY in %s: %s' % (filename, line))
                          pass
                 elif envvar.group(1) == 'PERSISTENT':
                      persistent = Persistent.parse(value)
@@ -120,7 +120,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                 try:
                     boot_delay = int(delay)
                 except ValueError:
-                    print ('%s: invalid DELAY in %s: %s' % (SELF, filename, line))
+                    log(3, 'invalid DELAY in %s: %s' % (filename, line))
                     boot_delay = 0
                 if boot_delay < 0: boot_delay = 0
 
@@ -208,7 +208,7 @@ def parse_time_unit(filename, line, value, values, mapping=int):
         list(map(parse_period(mapping), value.split(','))))), set()))
     except ValueError:
         result = []
-    if not len(result): print ('%s: garbled time in %s [%s]: %s' % (SELF, filename, line, value))
+    if not len(result): log(3, 'garbled time in %s [%s]: %s' % (filename, line, value))
     return result
 
 def month_map(month):
@@ -245,7 +245,7 @@ def parse_period(mapping=int):
 
 def generate_timer_unit(job, seq):
     if 'c' not in job:
-        print ('%s: truncated line in %s: %s' % (SELF, job['f'], job['l']))
+        log(3, 'truncated line in %s: %s' % (job['f'], job['l']))
         return
 
     persistent = job['P']
@@ -354,7 +354,7 @@ def generate_timer_unit(job, seq):
                else:
                     schedule = '*-*-1/%s %s:%s:0' % (int(job['p']), hour, delay)
             except ValueError:
-                    print ('%s: unknown schedule in %s: %s' % (SELF, job['f'], job['l']))
+                    log(3, 'unknown schedule in %s: %s' % (job['f'], job['l']))
                     schedule = job['p']
 
     else:
@@ -419,6 +419,12 @@ def generate_timer_unit(job, seq):
 
     return '%s.timer' % unit_name
 
+def log(level, message):
+    if len(sys.argv) == 4:
+        with open('/dev/kmsg', 'w') as kmsg:
+            kmsg.write('<%s> %s[%s]: %s\n' % (level, SELF, os.getpid(), message))
+    else:
+        sys.stderr.write('%s: %s\n' % (SELF, message))
 
 seqs = {}
 def count():
@@ -433,9 +439,6 @@ if __name__ == '__main__':
     except IndexError:
         print("Usage: %s <destination_folder>" % sys.argv[0])
         exit(1)
-
-    if len(sys.argv) == 4:
-        sys.stdout =  open('/dev/kmsg', 'w')
 
     TIMERS_DIR = os.path.join(TARGET_DIR, 'cron.target.wants')
 
@@ -452,9 +455,9 @@ if __name__ == '__main__':
     CRONTAB_FILES = files('/etc/cron.d')
     for filename in CRONTAB_FILES:
         basename = os.path.basename(filename)
-        if (os.path.isfile('@unitdir@/' + basename + '.timer')
-         or os.path.isfile('/etc/systemd/system/' + basename + '.timer')):
-            print('%s: ignoring %s because native timer is present' % (SELF , filename))
+        if (os.path.exists('@unitdir@/%s.timer' % basename)
+         or os.path.exists('/etc/systemd/system/%s.timer' % basename)):
+            log(4, 'ignoring %s because native timer is present' % filename)
             continue
         else:
             for job in parse_crontab(filename, withuser=True):
