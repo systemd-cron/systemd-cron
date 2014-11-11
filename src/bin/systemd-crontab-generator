@@ -388,9 +388,9 @@ def generate_timer_unit(job, seq):
         f.write('\n[Timer]\n')
         f.write('Unit=%s.service\n' % unit_name)
         if schedule: f.write('OnCalendar=%s\n' % schedule)
+        else:        f.write('OnBootSec=%sm\n' % delay)
         if job['a'] != 1: f.write('AccuracySec=%sm\n' % job['a'])
         if @persistent@ and persistent: f.write('Persistent=true\n')
-        if delay and not daemon_reload: f.write("OnBootSec=%sm\n" % delay)
 
     try:
         os.symlink('%s/%s.timer' % (TARGET_DIR, unit_name), '%s/%s.timer' % (TIMERS_DIR, unit_name))
@@ -412,6 +412,7 @@ def generate_timer_unit(job, seq):
 
         f.write('\n[Service]\n')
         f.write('Type=oneshot\n')
+        if schedule and delay: f.write('ExecStartPre=-@libdir@/@package@/boot_delay %s\n' % delay)
         f.write('ExecStart=%s\n' % command)
         if job['e']: f.write('Environment=%s\n' % job['e'])
         if job['u'] != 'root': f.write('User=%s\n' % job['u'])

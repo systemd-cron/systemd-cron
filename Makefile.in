@@ -95,6 +95,7 @@ install: all
 	install -m755 $(builddir)/bin/systemd-crontab-generator $(DESTDIR)$(libdir)/systemd/system-generators/systemd-crontab-generator
 	install -m755 -D $(builddir)/bin/remove_stale_stamps $(DESTDIR)$(stale_stamps)
 	install -m755 -D $(builddir)/bin/mail_on_failure $(DESTDIR)$(libdir)/$(package)/mail_on_failure
+	install -m755 -D $(builddir)/bin/boot_delay $(DESTDIR)$(libdir)/$(package)/boot_delay
 
 	install -m644 $(builddir)/man/systemd.cron.7 $(DESTDIR)$(mandir)/man7
 	install -m644 $(builddir)/man/crontab.1 $(DESTDIR)$(mandir)/man1
@@ -119,6 +120,7 @@ uninstall:
 	rm -f $(DESTDIR)$(libdir)/systemd/system-generators/systemd-crontab-generator
 	rm -f $(DESTDIR)$(stale_stamps)
 	rm -f $(DESTDIR)$(libdir)/$(package)/mail_on_failure
+	rm -f $(DESTDIR)$(libdir)/$(package)/boot_delay
 
 	rm -f $(DESTDIR)$(mandir)/man7/systemd.cron.7
 	rm -f $(DESTDIR)$(mandir)/man1/crontab.1
