@@ -17,12 +17,12 @@ if not user: user = 'root'
 mailto = user
 
 job_env = subprocess.check_output(['systemctl','show',job,'--property=Environment'], universal_newlines=True)
-job_env = job_env.rstrip('\n')[12:]
+job_env = job_env.rstrip('\n').split('=', 1)[1]
 
 if job_env:
     for var in job_env.split(' '):
         try:
-            key , value = var.split('=')
+            key , value = var.split('=', 1)
             if key == 'MAILTO': mailto = value
         except ValueError:
             pass
