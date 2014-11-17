@@ -51,6 +51,7 @@ define in2out
 		-e "s|\@package\@|$(package)|g" \
 		-e "s|\@confdir\@|$(confdir)|g" \
 		-e "s|\@statedir\@|$(statedir)|g" \
+		-e "s|\@bindir\@|$(bindir)|g" \
 		-e "s|\@libdir\@|$(libdir)|g" \
 		-e "s|\@unitdir\@|$(unitdir)|g" \
 		-e "s|\@runparts\@|$(runparts)|g" \
