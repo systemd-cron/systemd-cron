@@ -460,6 +460,9 @@ if __name__ == '__main__':
          or os.path.exists('/etc/systemd/system/%s.timer' % basename)):
             log(4, 'ignoring %s because native timer is present' % filename)
             continue
+        elif '.dpkg-' in basename:
+            log(5, 'ignoring %s' % filename)
+            continue
         else:
             for job in parse_crontab(filename, withuser=True):
                 generate_timer_unit(job, seqs.setdefault(job['j']+job['u'], count()))
