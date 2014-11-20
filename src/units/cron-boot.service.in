@@ -10,5 +10,6 @@ OnFailure=cron-failure@%i.service
 
 [Service]
 Type=oneshot
+IgnoreSIGPIPE=false
 ExecStart=@runparts@ @confdir@/cron.@schedule@
 ExecStartPost=/usr/bin/touch /run/crond.bootdir

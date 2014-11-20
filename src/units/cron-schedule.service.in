@@ -9,4 +9,5 @@ OnFailure=cron-failure@%i.service
 
 [Service]
 Type=oneshot
+IgnoreSIGPIPE=false
 ExecStart=@runparts@ @confdir@/cron.@schedule@

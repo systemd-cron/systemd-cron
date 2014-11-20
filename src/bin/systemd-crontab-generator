@@ -332,7 +332,7 @@ def generate_timer_unit(job, seq):
             schedule = 'daily'
         elif job['p'] == 'midnight':
             schedule = '*-*-* 0:%s:0' % delay
-        elif job ['p'] in TIME_UNITS_SET and hour == 0 and delay == 0:
+        elif job['p'] in TIME_UNITS_SET and hour == 0 and delay == 0:
             schedule = job['p']
         elif job['p'] == 'daily':
             schedule = '*-*-* %s:%s:0' % (hour, delay)
@@ -412,6 +412,7 @@ def generate_timer_unit(job, seq):
 
         f.write('\n[Service]\n')
         f.write('Type=oneshot\n')
+        f.write('IgnoreSIGPIPE=false\n')
         if schedule and delay: f.write('ExecStartPre=-@libdir@/@package@/boot_delay %s\n' % delay)
         f.write('ExecStart=%s\n' % command)
         if job['e']: f.write('Environment=%s\n' % job['e'])
