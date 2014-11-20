@@ -37,6 +37,7 @@ body += "Subject: [" + hostname + "] job " + job  + " failed\n"
 body += "MIME-Version: 1.0\n"
 body += "Content-Type: text/plain; charset=UTF-8\n"
 body += "Content-Transfer-Encoding: 8bit\n"
+body += "Auto-Submitted: auto-generated\n"
 body += "\n"
 
 try:
