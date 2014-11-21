@@ -305,9 +305,6 @@ def generate_timer_unit(job, seq):
         # in '/bin/echo -e line1\\nline2\\nline3 | command'
         # to be POSIX compliant
 
-    if not (len(parts) == 1 and os.path.isfile(command)):
-        command=job['s'] + " -c '" + command + "'"
-
     delay = job['b']
 
     daemon_reload = os.path.isfile(REBOOT_FILE)
@@ -374,6 +371,16 @@ def generate_timer_unit(job, seq):
         unit_id.update(bytes('\0'.join([schedule, command]), 'utf-8'))
         unit_id = unit_id.hexdigest()
     unit_name = "cron-%s-%s-%s" % (job['j'], job['u'], unit_id)
+
+    if not (len(parts) == 1 and os.path.isfile(command)):
+        if "'" not in command:
+            command=job['s'] + " -c '" + command + "'"
+        elif '"' not in command:
+            command=job['s'] + ' -c "' + command + '"'
+        else:
+            with open('%s/%s.sh' % (TARGET_DIR, unit_name), 'w') as f:
+                f.write(command)
+            command=job['s'] + ' ' + TARGET_DIR + '/' + unit_name + '.sh'
 
     with open('%s/%s.timer' % (TARGET_DIR, unit_name), 'w') as f:
         f.write('[Unit]\n')
