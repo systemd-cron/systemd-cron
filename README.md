@@ -27,6 +27,7 @@ Dependencies
     * systemd ≥ 217, minutely , quarterly & semi-annually timers
 * [run-parts][3]
 * python 3
+* /usr/sbin/sendmail (optional, evaluated at runtime)
 
 Installation
 ----------------
