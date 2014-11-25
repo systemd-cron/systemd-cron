@@ -3,6 +3,7 @@ Description=@package@ OnFailure for %i
 Documentation=man:systemd.cron(7)
 RefuseManualStart=true
 RefuseManualStop=true
+ConditionFileIsExecutable=/usr/sbin/sendmail
 
 [Service]
 Type=oneshot
