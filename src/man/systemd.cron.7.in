@@ -101,9 +101,9 @@ Type=oneshot
 , that means you can't use systemd-cron to launch long lived forking daemons.
 
 .SH EXTENSIONS
-The generator will make persistent timers for all job with a frequency greater than hourly;
-while a regular cron+anacron setup won't catch-up the missed executions of jobs
-in /etc/cron.d/* on boot.
+The generator can optionally turn all crontabs in persistent timers with the
+.B PERSISTENT=true
+flag, while a regular cron+anacron setup won't catch-up the missed executions of crontabs on boot.
 
 .SH EXAMPLES
 
