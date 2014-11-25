@@ -82,32 +82,22 @@ test: all
 		man --warnings --encoding=utf8 --local-file $(manpage) 2>&1 > /dev/null${\n})
 
 install: all
-
-	install -d $(DESTDIR)$(bindir)
-	install -d $(DESTDIR)$(libdir)/systemd/system-generators/
-	install -d $(DESTDIR)$(unitdir)
-	install -d $(DESTDIR)$(mandir)
-	install -d $(DESTDIR)$(mandir)/man1
-	install -d $(DESTDIR)$(mandir)/man5
-	install -d $(DESTDIR)$(mandir)/man7
-	install -d $(DESTDIR)$(mandir)/man8
-
-	install -m755 $(builddir)/bin/crontab $(DESTDIR)$(bindir)/crontab
-	install -m755 $(builddir)/bin/systemd-crontab-generator $(DESTDIR)$(libdir)/systemd/system-generators/systemd-crontab-generator
+	install -m755 -D $(builddir)/bin/crontab $(DESTDIR)$(bindir)/crontab
+	install -m755 -D $(builddir)/bin/systemd-crontab-generator $(DESTDIR)$(libdir)/systemd/system-generators/systemd-crontab-generator
 	install -m755 -D $(builddir)/bin/remove_stale_stamps $(DESTDIR)$(stale_stamps)
 	install -m755 -D $(builddir)/bin/mail_on_failure $(DESTDIR)$(libdir)/$(package)/mail_on_failure
 	install -m755 -D $(builddir)/bin/boot_delay $(DESTDIR)$(libdir)/$(package)/boot_delay
 
-	install -m644 $(builddir)/man/systemd.cron.7 $(DESTDIR)$(mandir)/man7
-	install -m644 $(builddir)/man/crontab.1 $(DESTDIR)$(mandir)/man1
-	install -m644 $(builddir)/man/crontab.5 $(DESTDIR)$(mandir)/man5
-	install -m644 $(builddir)/man/anacrontab.5 $(DESTDIR)$(mandir)/man5
-	install -m644 $(builddir)/man/systemd-crontab-generator.8 $(DESTDIR)$(mandir)/man8
+	install -m644 -D $(builddir)/man/systemd.cron.7 $(DESTDIR)$(mandir)/man7
+	install -m644 -D $(builddir)/man/crontab.1 $(DESTDIR)$(mandir)/man1
+	install -m644 -D $(builddir)/man/crontab.5 $(DESTDIR)$(mandir)/man5
+	install -m644 -D $(builddir)/man/anacrontab.5 $(DESTDIR)$(mandir)/man5
+	install -m644 -D $(builddir)/man/systemd-crontab-generator.8 $(DESTDIR)$(mandir)/man8
 
-	install -m644 $(builddir)/units/cron.target $(DESTDIR)$(unitdir)
-	install -m644 $(builddir)/units/cron-update.path $(DESTDIR)$(unitdir)
-	install -m644 $(builddir)/units/cron-update.service $(DESTDIR)$(unitdir)
-	install -m644 $(builddir)/units/cron-failure@.service $(DESTDIR)$(unitdir)
+	install -m644 -D $(builddir)/units/cron.target $(DESTDIR)$(unitdir)
+	install -m644 -D $(builddir)/units/cron-update.path $(DESTDIR)$(unitdir)
+	install -m644 -D $(builddir)/units/cron-update.service $(DESTDIR)$(unitdir)
+	install -m644 -D $(builddir)/units/cron-failure@.service $(DESTDIR)$(unitdir)
 
 	$(foreach schedule,$(schedules),\
 		install -m644 $(builddir)/units/cron-$(schedule).timer $(DESTDIR)$(unitdir)${\n})
