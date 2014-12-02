@@ -74,19 +74,19 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                      try:
                          random_delay = int(value)
                      except ValueError:
-                         log(3, 'invalid RANDOM_DELAY in %s: %s' % (filename, line))
+                         log(4, 'invalid RANDOM_DELAY in %s: %s' % (filename, line))
                          pass
                 elif envvar.group(1) == 'START_HOURS_RANGE':
                      try:
                          start_hours_range = int(value.split('-')[0])
                      except ValueError:
-                         log(3, 'invalid START_HOURS_RANGE in %s: %s' % (filename, line))
+                         log(4, 'invalid START_HOURS_RANGE in %s: %s' % (filename, line))
                          pass
                 elif envvar.group(1) == 'DELAY':
                      try:
                          boot_delay = int(value)
                      except ValueError:
-                         log(3, 'invalid DELAY in %s: %s' % (filename, line))
+                         log(4, 'invalid DELAY in %s: %s' % (filename, line))
                          pass
                 elif envvar.group(1) == 'PERSISTENT':
                      persistent = Persistent.parse(value)
@@ -120,7 +120,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                 try:
                     boot_delay = int(delay)
                 except ValueError:
-                    log(3, 'invalid DELAY in %s: %s' % (filename, line))
+                    log(4, 'invalid DELAY in %s: %s' % (filename, line))
                     boot_delay = 0
                 if boot_delay < 0: boot_delay = 0
 
