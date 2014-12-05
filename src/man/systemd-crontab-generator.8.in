@@ -10,6 +10,8 @@ systemd-crontab-generator - translate cron schedules in systemd Units
 systemd-crontab-generator is a generator that translates the legacy cron files (see FILES)
 into native systemd units & timers.
 .PP
+It is not meant to be run manually, it is called automatically by systemd.
+.PP
 It is run
 .TP
 *
