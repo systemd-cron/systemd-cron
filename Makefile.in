@@ -32,7 +32,7 @@ out_units		:= $(out_services) $(out_timers) $(out_targets) $(builddir)/units/cro
                            $(builddir)/units/cron-update.path $(builddir)/units/cron-update.service \
                            $(builddir)/units/cron-failure@.service
 out_manuals		:= $(patsubst $(srcdir)/man/%.in,$(builddir)/man/%,$(wildcard $(srcdir)/man/*))
-out_programs		:= $(patsubst $(srcdir)/bin/%,$(builddir)/bin/%,$(wildcard $(srcdir)/bin/*))
+out_programs		:= $(patsubst $(srcdir)/bin/%.py,$(builddir)/bin/%,$(wildcard $(srcdir)/bin/*.py))
 outputs			:= $(out_units) $(out_manuals) $(out_programs)
 
 define \n
@@ -173,7 +173,7 @@ $(builddir)/man/systemd.cron.7: $(srcdir)/man/systemd.cron.7.in
 	               -e '/cron\.$(schedule_not)/,+3d' \
 		       -e '/journalctl -u cron-$(schedule_not)/,+1d' ${\n})
 
-$(builddir)/bin/%: $(srcdir)/bin/%
+$(builddir)/bin/%: $(srcdir)/bin/%.py
 	$(call in2out,$<,$@)
 	chmod +x $@
 
