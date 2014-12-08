@@ -1,9 +1,13 @@
+CFLAGS ?= -O2
+CFLAGS += -Wall
+
 package		:= $(shell cat README.md | head -n1)
 version		:= $(shell cat VERSION)
 
 schedules			:= @schedules@
 schedules_not			:= @schedules_not@
 enable_persistent	:= @enable_persistent@
+enable_setuid		:= @enable_setuid@
 
 prefix		:= @prefix@
 bindir		:= @bindir@
@@ -32,7 +36,8 @@ out_units		:= $(out_services) $(out_timers) $(out_targets) $(builddir)/units/cro
                            $(builddir)/units/cron-update.path $(builddir)/units/cron-update.service \
                            $(builddir)/units/cron-failure@.service
 out_manuals		:= $(patsubst $(srcdir)/man/%.in,$(builddir)/man/%,$(wildcard $(srcdir)/man/*))
-out_programs		:= $(patsubst $(srcdir)/bin/%.py,$(builddir)/bin/%,$(wildcard $(srcdir)/bin/*.py))
+out_programs		:= $(patsubst $(srcdir)/bin/%.py,$(builddir)/bin/%,$(wildcard $(srcdir)/bin/*.py)) \
+                           $(builddir)/bin/crontab_setuid
 outputs			:= $(out_units) $(out_manuals) $(out_programs)
 
 define \n
@@ -87,6 +92,7 @@ install: all
 	install -m755 -D $(builddir)/bin/remove_stale_stamps $(DESTDIR)$(stale_stamps)
 	install -m755 -D $(builddir)/bin/mail_on_failure $(DESTDIR)$(libdir)/$(package)/mail_on_failure
 	install -m755 -D $(builddir)/bin/boot_delay $(DESTDIR)$(libdir)/$(package)/boot_delay
+	install -m4755 -D $(builddir)/bin/crontab_setuid $(DESTDIR)$(libdir)/$(package)/crontab_setuid
 
 	install -m644 -D $(builddir)/man/systemd.cron.7 $(DESTDIR)$(mandir)/man7
 	install -m644 -D $(builddir)/man/crontab.1 $(DESTDIR)$(mandir)/man1
@@ -112,6 +118,7 @@ uninstall:
 	rm -f $(DESTDIR)$(stale_stamps)
 	rm -f $(DESTDIR)$(libdir)/$(package)/mail_on_failure
 	rm -f $(DESTDIR)$(libdir)/$(package)/boot_delay
+	rm -f $(DESTDIR)$(libdir)/$(package)/crontab_setuid
 
 	rm -f $(DESTDIR)$(mandir)/man7/systemd.cron.7
 	rm -f $(DESTDIR)$(mandir)/man1/crontab.1
@@ -176,6 +183,11 @@ $(builddir)/man/systemd.cron.7: $(srcdir)/man/systemd.cron.7.in
 $(builddir)/bin/%: $(srcdir)/bin/%.py
 	$(call in2out,$<,$@)
 	chmod +x $@
+
+$(builddir)/bin/crontab_setuid: $(srcdir)/bin/crontab_setuid.c
+ifneq ($(enable_setuid),no)
+	$(CC) $(CFLAGS) $(LDFLAGS) $< -DCRONTAB_DIR='"$(statedir)"' -o $@
+endif
 
 $(outputs): | $(builddir)
 
