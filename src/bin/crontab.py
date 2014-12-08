@@ -95,13 +95,13 @@ def remove(cron_file, args):
         try:
             os.unlink(cron_file)
         except OSError as e:
-            if e.errno == os.errno.EACCES:
+            if e.errno == os.errno.ENOENT:
+                sys.stderr.write("no crontab for %s\n" % args.user)
+                pass
+            elif e.errno == os.errno.EACCES:
                 with open(cron_file, 'w') as out:
                     out.write('')
                 sys.stderr.write("couldn't remove %s , wiped it instead\n" % cron_file)
-                pass
-            elif e.errno == os.errno.ENOENT:
-                sys.stderr.write("no crontab for %s\n" % args.user)
                 pass
             else:
                 raise
@@ -126,7 +126,7 @@ def edit(cron_file, args):
 
         if not check(tmp.name):
             sys.stderr.write("not replacing crontab\n")
-            exit (1)
+            exit(1)
 
         tmp.file.seek(0)
         with open(cron_file, 'w') as out:
@@ -141,7 +141,7 @@ def replace(cron_file, args):
             tmp.file.seek(0)
             if not check(tmp.name):
                 sys.stderr.write("not replacing crontab\n")
-                exit (1)
+                exit(1)
             tmp.file.seek(0)
             with open(cron_file, 'w') as out:
                 out.write(tmp.file.read())
@@ -149,7 +149,7 @@ def replace(cron_file, args):
     else:
         if not check(infile):
             sys.stderr.write("not replacing crontab\n")
-            exit (1)
+            exit(1)
         with open(cron_file, 'w'), open(infile, 'r') as out, inp:
             out.write(inp.read())
 
@@ -170,7 +170,7 @@ if __name__ == '__main__':
         pwd.getpwnam(args.user)
     except KeyError:
         sys.stderr.write("user '%s' unknown\n" % args.user)
-        exit (1)
+        exit(1)
 
     action = {
             'list': list,
@@ -178,7 +178,7 @@ if __name__ == '__main__':
             'remove': remove,
             }.get(args.action, replace)
 
-    loader = importlib.machinery.SourceFileLoader('name', '/lib/systemd/system-generators/systemd-crontab-generator')
+    loader = importlib.machinery.SourceFileLoader('name', '@libdir@/systemd/system-generators/systemd-crontab-generator')
     parser = loader.load_module()
 
     action(cron_file, args)
