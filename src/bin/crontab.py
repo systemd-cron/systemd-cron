@@ -6,6 +6,7 @@ import os
 import argparse
 import getpass
 import pwd
+import subprocess
 import importlib.machinery
 
 EDITOR = (os.environ.get('EDITOR') or
@@ -97,6 +98,12 @@ def remove(cron_file, args):
         except OSError as e:
             if e.errno == os.errno.ENOENT:
                 sys.stderr.write("no crontab for %s\n" % args.user)
+                pass
+            elif args.user != getpass.getuser():
+                sys.stderr.write("you can not delete %s's crontab\n" % args.user)
+                exit(1)
+            elif os.path.exists('@libdir@/@package@/crontab_setuid'):
+                subprocess.check_output(['@libdir@/@package@/crontab_setuid','d'], universal_newlines=True)
                 pass
             elif e.errno == os.errno.EACCES:
                 with open(cron_file, 'w') as out:
