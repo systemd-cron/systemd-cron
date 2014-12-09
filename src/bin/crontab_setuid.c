@@ -51,7 +51,10 @@ int main(int argc, char *argv[]) {
 			break;
 		case 'd':
 			if (unlink(crontab) == -1) {
-				if(errno == ENOENT) return 0;
+				if(errno == ENOENT) {
+					fprintf(stderr, "no crontab for %s\n", pw->pw_name);
+					return 0;
+				}
 				perror("Cannot delete file");
 				return 1;
 			};
