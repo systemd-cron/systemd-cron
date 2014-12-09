@@ -88,6 +88,20 @@ def list(cron_file, args):
         if e.errno == os.errno.ENOENT:
             sys.stderr.write('no crontab for %s\n' % args.user)
             exit(1)
+        elif args.user != getpass.getuser():
+            sys.stderr.write("you can not display %s's crontab\n" % args.user)
+            exit(1)
+        elif os.path.exists('@libdir@/@package@/crontab_setuid'):
+            try:
+                sys.stdout.write(subprocess.check_output(['@libdir@/@package@/crontab_setuid','r'],
+                                                         universal_newlines=True))
+            except subprocess.CalledProcessError as f:
+                if f.returncode == os.errno.ENOENT:
+                    sys.stderr.write('no crontab for %s\n' % args.user)
+                    exit(1)
+                else:
+                    raise
+            pass
         else:
             raise
 

@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
 		case 'r':
 			file = fopen(crontab, "r");
 			if (file == NULL) {
-				if(errno == ENOENT) return 0;
+				if(errno == ENOENT) return ENOENT;
 				perror("Cannot open input file");
 				return 1;
 			};
