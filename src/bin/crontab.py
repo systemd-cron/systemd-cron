@@ -7,6 +7,7 @@ import argparse
 import getpass
 import pwd
 import subprocess
+from subprocess import Popen, PIPE
 import importlib.machinery
 
 EDITOR = (os.environ.get('EDITOR') or
@@ -136,6 +137,20 @@ def edit(cron_file, args):
             if e.errno == os.errno.ENOENT:
                  tmp.file.write('# min hour dom month dow command')
                  pass
+            elif args.user != getpass.getuser():
+                sys.stderr.write("you can not edit %s's crontab\n" % args.user)
+                exit(1)
+            elif os.path.exists('@libdir@/@package@/crontab_setuid'):
+                try:
+                    tmp.file.write(subprocess.check_output(['@libdir@/@package@/crontab_setuid','r'],
+                                                           universal_newlines=True))
+                except subprocess.CalledProcessError as f:
+                    if f.returncode == os.errno.ENOENT:
+                        tmp.file.write('# min hour dom month dow command')
+                        pass
+                    else:
+                        raise
+                pass
             else:
                  raise
 
@@ -150,8 +165,16 @@ def edit(cron_file, args):
             exit(1)
 
         tmp.file.seek(0)
-        with open(cron_file, 'w') as out:
-            out.write(tmp.file.read())
+        try:
+            with open(cron_file, 'w') as out:
+                out.write(tmp.file.read())
+        except IOError as e:
+            if os.path.exists('@libdir@/@package@/crontab_setuid'):
+                p = Popen(['@libdir@/@package@/crontab_setuid','w'], stdin=PIPE)
+                p.communicate(bytes(tmp.file.read(), 'UTF-8'))
+            else:
+                raise
+
 
 def replace(cron_file, args):
     infile = args.file
