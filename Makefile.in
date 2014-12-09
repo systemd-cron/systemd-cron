@@ -86,6 +86,10 @@ test: all
 	$(foreach manpage,$(out_manuals),\
 		man --warnings --encoding=utf8 --local-file $(manpage) 2>&1 > /dev/null${\n})
 
+setuid: $(builddir)/bin/crontab_setuid
+	sudo chown root:root out/build/bin/crontab_setuid
+	sudo chmod 4755 out/build/bin/crontab_setuid
+
 install: all
 	install -m755 -D $(builddir)/bin/crontab $(DESTDIR)$(bindir)/crontab
 	install -m755 -D $(builddir)/bin/systemd-crontab-generator $(DESTDIR)$(libdir)/systemd/system-generators/systemd-crontab-generator
