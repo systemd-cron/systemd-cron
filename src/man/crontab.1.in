@@ -1,4 +1,4 @@
-.TH "CRONTAB" "1" "2014-06-26" "@package@ @version@" "crontab"
+.TH "CRONTAB" "1" "2014-12-10" "@package@ @version@" "crontab"
 
 .SH NAME
 crontab - maintain crontab files for individual users
@@ -47,17 +47,7 @@ The \-s flag (SELinux) is not supported.
 .br
 /etc/cron.allow & /etc/cron.deny are not supported.
 
-.SH BUGS
-This tool currently only work if you are root, because python scripts can't be setgid.
-.TP
-As a workaround, you can have root create first a blank crontab for you:
-.br
-sudo touch @statedir@/$USER
-.br
-sudo chown $USER @statedir@/$USER
-
-.TP
-Another workaround is to use the crontab binary from the original cron package.
-
 .SH AUTHOR
-Alexandre Detiste <alexandre@detiste.be>
+Konstantin Stepanov <me@kstep.me>
+.br
+Alexandre Detiste <alexandre@detiste.be> for this manpage & setuid helper

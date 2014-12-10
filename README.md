@@ -28,6 +28,7 @@ Dependencies
 * [run-parts][3]
 * python 3
 * /usr/sbin/sendmail (optional, evaluated at runtime)
+* gcc or clang (needed to build `crontab_setuid.c`; this helper is optional and evaluated at runtime)
 
 Installation
 ----------------
