@@ -4,6 +4,8 @@
 #include <pwd.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <bits/local_lim.h>
+#define	MAX_COMMAND	1000
 
 void end(char * msg){
 	fprintf(stderr,"ERROR: %s,aborting\n", msg);
@@ -17,11 +19,11 @@ int main(int argc, char *argv[]) {
 	pw = getpwuid(getuid());
 	if (!pw) end("user doesn't exist");
 
-	char crontab[256];
+	char crontab[sizeof CRONTAB_DIR + LOGIN_NAME_MAX];
 	snprintf(crontab, sizeof crontab, "%s/%s", CRONTAB_DIR, pw->pw_name);
 	FILE *file;
 
-        char buffer[512];
+	char buffer[MAX_COMMAND];
 
 	switch(argv[1][0]) {
 		case 'r':
@@ -45,7 +47,10 @@ int main(int argc, char *argv[]) {
 			}
 			while(!feof(stdin)) {
 				if (fgets(buffer, sizeof(buffer), stdin))
-					fprintf(file, "%s", buffer);
+					if (fprintf(file, "%s", buffer) < 0) {
+						perror("Cannot write to file");
+						return 1;
+					};
 			}
 			fclose(file);
 			break;
