@@ -177,30 +177,51 @@ def edit(cron_file, args):
 
 
 def replace(cron_file, args):
-    infile = args.file
-    if infile == '-':
-        with tempfile.NamedTemporaryFile(mode='w+', encoding='UTF-8') as tmp:
-            tmp.write(sys.stdin.read())
-            tmp.file.flush()
-            tmp.file.seek(0)
-            if not check(tmp.name):
-                sys.stderr.write("not replacing crontab\n")
-                exit(1)
-            tmp.file.seek(0)
-            with open(cron_file, 'w') as out:
-                out.write(tmp.file.read())
-
+    if args.file == '-':
+        crontab = sys.stdin.read()
+        tmp = tempfile.NamedTemporaryFile(mode='w+', encoding='UTF-8')
+        tmp.write(crontab)
+        tmp.file.flush()
+        tmp.file.seek(0)
+        infile = tmp.name
     else:
-        if not check(infile):
-            sys.stderr.write("not replacing crontab\n")
-            exit(1)
-        with open(cron_file, 'w'), open(infile, 'r') as out, inp:
-            out.write(inp.read())
+        infile = args.file
+        try:
+            with open(infile, 'r') as inp:
+                crontab = inp.read()
+        except IOError as e:
+            if e.errno == os.errno.ENOENT:
+                sys.stderr.write("file %s doesn't exists\n" % infile)
+                exit(1)
+            elif e.errno == os.errno.EACCES:
+                sys.stderr.write("you can't read file %s\n" % infile)
+                exit(1)
+            else:
+                raise
+
+    if not check(infile):
+        sys.stderr.write("not replacing crontab\n")
+        exit(1)
+
+    try:
+        with open(cron_file, 'w') as out:
+            out.write(crontab)
+    except IOError as e:
+        if os.path.exists('@libdir@/@package@/crontab_setuid'):
+            p = Popen(['@libdir@/@package@/crontab_setuid','w'], stdin=PIPE)
+            p.communicate(bytes(crontab, 'UTF-8'))
+        else:
+            raise
+
 
 if __name__ == '__main__':
     SELF = os.path.basename(sys.argv[0])
-    if not os.path.exists(CRONTAB_DIR):
-        os.makedirs(CRONTAB_DIR)
+    try:
+        if not os.path.exists(CRONTAB_DIR):
+            os.makedirs(CRONTAB_DIR)
+    except:
+        sys.stderr.write("%s doesn't exists!\n" % CRONTAB_DIR)
+        exit(1)
 
     args = args_parser.parse_args()
 
