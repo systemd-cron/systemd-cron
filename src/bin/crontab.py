@@ -223,7 +223,10 @@ def replace(cron_file, args):
         except PermissionError:
             pass
     except IOError as e:
-        if HAS_SETUID:
+        if args.user != getpass.getuser():
+            sys.stderr.write("you can not replace %s's crontab\n" % args.user)
+            exit(1)
+        elif HAS_SETUID:
             p = Popen([SETUID_HELPER,'w'], stdin=PIPE)
             p.communicate(bytes(crontab, 'UTF-8'))
         else:
