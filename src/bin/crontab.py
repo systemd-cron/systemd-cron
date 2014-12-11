@@ -250,13 +250,13 @@ if __name__ == '__main__':
     action(cron_file, args)
 
     try:
-        os.chown(cron_file, pwd.getpwnam(args.user).pw_uid)
-    except:
+        os.chown(cron_file, pwd.getpwnam(args.user).pw_uid, 0)
+    except PermissionError:
         pass
 
     try:
         os.chmod(cron_file, stat.S_IRUSR | stat.S_IWUSR)
-    except:
+    except PermissionError:
         pass
 
     try:
