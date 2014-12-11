@@ -93,6 +93,8 @@ Other options include:
   Default: `no`.
 * `--enable-persistent[=yes|no]` Make timers [persistent][5]. Requires systemd ≥ 212.
   Default: `no`.
+* `--enable-setuid[=yes|no]` Compile setuid C helper for crontab. Needs GCC or Clang.
+  Default: `no`.
 
 A typical configuration for the latest systemd would be:
 
