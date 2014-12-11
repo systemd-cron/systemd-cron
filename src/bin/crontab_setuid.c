@@ -6,6 +6,7 @@
 #include <errno.h>
 #include <bits/local_lim.h>
 #define	MAX_COMMAND	1000
+#define	MAX_LINES	1000
 
 void end(char * msg){
 	fprintf(stderr,"ERROR: %s,aborting\n", msg);
@@ -45,12 +46,15 @@ int main(int argc, char *argv[]) {
 				perror("Cannot open output file");
 				return 1;
 			}
+			int lines=0;
 			while(!feof(stdin)) {
-				if (fgets(buffer, sizeof(buffer), stdin))
-					if (fprintf(file, "%s", buffer) < 0) {
-						perror("Cannot write to file");
-						return 1;
-					};
+				if (!fgets(buffer, sizeof(buffer), stdin)) break;
+				lines++;
+				if (fprintf(file, "%s", buffer) < 0) {
+					perror("Cannot write to file");
+					return 1;
+				};
+				if (lines > MAX_LINES) end("maximum lines reached");
 			}
 			fclose(file);
 			break;
