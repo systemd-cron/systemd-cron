@@ -35,8 +35,8 @@ int main(int argc, char *argv[]) {
 				return 1;
 			};
 			while(!feof(file)) {
-				if (fgets(buffer, sizeof(buffer), file))
-					fprintf(stdout, "%s", buffer);
+				if (!fgets(buffer, sizeof(buffer), file)) break;
+				printf("%s", buffer);
 			}
 			fclose(file);
 			break;
