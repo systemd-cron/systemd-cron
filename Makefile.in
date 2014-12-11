@@ -96,7 +96,9 @@ install: all
 	install -m755 -D $(builddir)/bin/remove_stale_stamps $(DESTDIR)$(stale_stamps)
 	install -m755 -D $(builddir)/bin/mail_on_failure $(DESTDIR)$(libdir)/$(package)/mail_on_failure
 	install -m755 -D $(builddir)/bin/boot_delay $(DESTDIR)$(libdir)/$(package)/boot_delay
+ifneq ($(enable_setuid),no)
 	install -m4755 -D $(builddir)/bin/crontab_setuid $(DESTDIR)$(libdir)/$(package)/crontab_setuid
+endif
 
 	install -m644 -D $(builddir)/man/systemd.cron.7 $(DESTDIR)$(mandir)/man7
 	install -m644 -D $(builddir)/man/crontab.1 $(DESTDIR)$(mandir)/man1
