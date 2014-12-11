@@ -174,6 +174,11 @@ def edit(cron_file, args):
         try:
             with open(cron_file, 'w') as out:
                 out.write(tmp.file.read())
+            try:
+                os.chown(cron_file, pwd.getpwnam(args.user).pw_uid, 0)
+                os.chmod(cron_file, stat.S_IRUSR | stat.S_IWUSR)
+            except PermissionError:
+                pass
         except IOError as e:
             if HAS_SETUID:
                 p = Popen([SETUID_HELPER,'w'], stdin=PIPE)
@@ -212,6 +217,11 @@ def replace(cron_file, args):
     try:
         with open(cron_file, 'w') as out:
             out.write(crontab)
+        try:
+            os.chown(cron_file, pwd.getpwnam(args.user).pw_uid, 0)
+            os.chmod(cron_file, stat.S_IRUSR | stat.S_IWUSR)
+        except PermissionError:
+            pass
     except IOError as e:
         if HAS_SETUID:
             p = Popen([SETUID_HELPER,'w'], stdin=PIPE)
@@ -243,6 +253,11 @@ if __name__ == '__main__':
         sys.stderr.write("user '%s' unknown\n" % args.user)
         exit(1)
 
+    try:
+        open(REBOOT_FILE,'a').close()
+    except:
+        pass
+
     action = {
             'list': list,
             'edit': edit,
@@ -253,18 +268,3 @@ if __name__ == '__main__':
     parser = loader.load_module()
 
     action(cron_file, args)
-
-    try:
-        os.chown(cron_file, pwd.getpwnam(args.user).pw_uid, 0)
-    except PermissionError:
-        pass
-
-    try:
-        os.chmod(cron_file, stat.S_IRUSR | stat.S_IWUSR)
-    except PermissionError:
-        pass
-
-    try:
-        open(REBOOT_FILE,'a').close()
-    except:
-        pass

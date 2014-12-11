@@ -57,6 +57,7 @@ int main(int argc, char *argv[]) {
 				};
 				if (lines > MAX_LINES) end("maximum lines reached");
 			}
+			fchown(fileno(file),getuid(),0);
 			fchmod(fileno(file),0600);
 			fclose(file);
 			break;
