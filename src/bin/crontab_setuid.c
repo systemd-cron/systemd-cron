@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <bits/local_lim.h>
+#include <sys/stat.h>
 #define	MAX_COMMAND	1000
 #define	MAX_LINES	1000
 
@@ -56,6 +57,7 @@ int main(int argc, char *argv[]) {
 				};
 				if (lines > MAX_LINES) end("maximum lines reached");
 			}
+			fchmod(fileno(file),0600);
 			fclose(file);
 			break;
 		case 'd':

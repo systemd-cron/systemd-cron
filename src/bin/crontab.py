@@ -3,6 +3,7 @@
 import tempfile
 import sys
 import os
+import stat
 import argparse
 import getpass
 import pwd
@@ -250,6 +251,11 @@ if __name__ == '__main__':
 
     try:
         os.chown(cron_file, pwd.getpwnam(args.user).pw_uid)
+    except:
+        pass
+
+    try:
+        os.chmod(cron_file, stat.S_IRUSR | stat.S_IWUSR)
     except:
         pass
 
