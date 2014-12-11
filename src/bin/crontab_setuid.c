@@ -4,7 +4,7 @@
 #include <pwd.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <bits/local_lim.h>
+#include <limits.h>
 #include <sys/stat.h>
 #define	MAX_COMMAND	1000
 #define	MAX_LINES	1000
@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
 	pw = getpwuid(getuid());
 	if (!pw) end("user doesn't exist");
 
-	char crontab[sizeof CRONTAB_DIR + LOGIN_NAME_MAX];
+	char crontab[sizeof CRONTAB_DIR + 1 + LOGIN_NAME_MAX];
 	snprintf(crontab, sizeof crontab, "%s/%s", CRONTAB_DIR, pw->pw_name);
 	FILE *file;
 
@@ -35,8 +35,7 @@ int main(int argc, char *argv[]) {
 				perror("Cannot open input file");
 				return 1;
 			};
-			while(!feof(file)) {
-				if (!fgets(buffer, sizeof(buffer), file)) break;
+			while(fgets(buffer, sizeof(buffer), file)) {
 				printf("%s", buffer);
 			}
 			fclose(file);
@@ -48,8 +47,7 @@ int main(int argc, char *argv[]) {
 				return 1;
 			}
 			int lines=0;
-			while(!feof(stdin)) {
-				if (!fgets(buffer, sizeof(buffer), stdin)) break;
+			while(fgets(buffer, sizeof(buffer), stdin)) {
 				lines++;
 				if (fprintf(file, "%s", buffer) < 0) {
 					perror("Cannot write to file");
