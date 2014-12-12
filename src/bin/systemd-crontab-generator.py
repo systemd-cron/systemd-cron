@@ -489,9 +489,12 @@ if __name__ == '__main__':
         # /var is avaible
         USERCRONTAB_FILES = files('@statedir@')
         for filename in USERCRONTAB_FILES:
-            for job in parse_crontab(filename, withuser=False):
-                generate_timer_unit(job, seqs.setdefault(job['j']+job['u'], count()))
-
+            basename = os.path.basename(filename)
+            if '.' in basename:
+                continue
+            else:
+                for job in parse_crontab(filename, withuser=False):
+                    generate_timer_unit(job, seqs.setdefault(job['j']+job['u'], count()))
         try:
             open(REBOOT_FILE,'a').close()
         except:

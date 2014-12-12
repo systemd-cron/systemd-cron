@@ -22,6 +22,8 @@ int main(int argc, char *argv[]) {
 	if (!pw) end("user doesn't exist");
 
 	char crontab[sizeof CRONTAB_DIR + 1 + LOGIN_NAME_MAX];
+	char temp[sizeof crontab + 7];
+
 	snprintf(crontab, sizeof crontab, "%s/%s", CRONTAB_DIR, pw->pw_name);
 	FILE *file;
 
@@ -41,7 +43,9 @@ int main(int argc, char *argv[]) {
 			fclose(file);
 			break;
 		case 'w':
-			file = fopen(crontab, "w");
+			snprintf(temp, sizeof temp, "%s.XXXXXX", crontab);
+			int fd = mkstemp(temp);
+			file = fdopen(fd, "w");
 			if (file == NULL) {
 				perror("Cannot open output file");
 				return 1;
@@ -51,13 +55,20 @@ int main(int argc, char *argv[]) {
 				lines++;
 				if (fprintf(file, "%s", buffer) < 0) {
 					perror("Cannot write to file");
+					fclose(file);
+					unlink(temp);
 					return 1;
 				};
-				if (lines > MAX_LINES) end("maximum lines reached");
+				if (lines > MAX_LINES) {
+					fclose(file);
+					unlink(temp);
+					end("maximum lines reached");
+				}
 			}
-			fchown(fileno(file),getuid(),0);
-			fchmod(fileno(file),0600);
+			fchown(fd,getuid(),0);
+			fchmod(fd,0600);
 			fclose(file);
+			rename(temp,crontab);
 			break;
 		case 'd':
 			if (unlink(crontab) == -1) {
