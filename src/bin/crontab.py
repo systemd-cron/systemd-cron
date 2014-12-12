@@ -201,14 +201,18 @@ def edit(cron_file, args):
             os.unlink(new.name)
             tmp.close()
             exit(1)
+        elif args.user != getpass.getuser():
+            sys.stderr.write("you can not edit %s's crontab, your edit is kept here:%s\n" % (args.user, tmp.name))
+            tmp.close()
+            exit(1)
         elif HAS_SETUID:
             p = Popen([SETUID_HELPER,'w'], stdin=PIPE)
             p.communicate(bytes(tmp.file.read(), 'UTF-8'))
             if p.returncode: sys.stderr.write("your edit is kept here:%s\n" % tmp.name)
             exit(p.returncode)
         else:
-            tmp.close()
             sys.stderr.write("unexpected error, your edit is kept here:%s\n" % tmp.name)
+            tmp.close()
             raise
 
 
