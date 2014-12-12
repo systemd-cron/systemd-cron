@@ -17,7 +17,8 @@ CRONTAB_DIR = '@statedir@'
 
 SETUID_HELPER = '@libdir@/@package@/crontab_setuid'
 
-HAS_SETUID =     os.path.isfile(SETUID_HELPER) \
+HAS_SETUID =     os.geteuid() != 0 \
+             and os.path.isfile(SETUID_HELPER) \
              and os.stat(SETUID_HELPER).st_uid == 0 \
              and os.stat(SETUID_HELPER).st_mode & stat.S_ISUID \
              and os.stat(SETUID_HELPER).st_mode & stat.S_IXUSR
@@ -183,6 +184,7 @@ def edit(cron_file, args):
             if HAS_SETUID:
                 p = Popen([SETUID_HELPER,'w'], stdin=PIPE)
                 p.communicate(bytes(tmp.file.read(), 'UTF-8'))
+                exit(p.returncode)
             else:
                 raise
 
@@ -236,6 +238,7 @@ def replace(cron_file, args):
         elif HAS_SETUID:
             p = Popen([SETUID_HELPER,'w'], stdin=PIPE)
             p.communicate(bytes(crontab, 'UTF-8'))
+            exit(p.returncode)
         else:
             raise
 
