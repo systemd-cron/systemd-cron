@@ -15,6 +15,12 @@ void end(char * msg){
 	exit(1);
 }
 
+void rtrim(char *str){
+	int n=strlen(str);
+	while((--n>0)&&(str[n]==' ' || str[n]=='\n'));
+	str[n+1]='\0';
+}
+
 int main(int argc, char *argv[]) {
 	if (!getuid()) end("root doesn't need this helper");
 
@@ -51,7 +57,7 @@ int main(int argc, char *argv[]) {
 			if (file != NULL) {
 				int allowed=0;
 				while(fgets(users, sizeof(users), file)) {
-					strtok(users, "\n");
+					rtrim(users);
 					if (!strcmp(pw->pw_name, users)) {
 						allowed=1;
 						break;
@@ -63,7 +69,7 @@ int main(int argc, char *argv[]) {
 				file = fopen("/etc/cron.deny", "r");
 				if (file != NULL) {
 					while(fgets(users, sizeof(users), file)) {
-						strtok(users, "\n");
+						rtrim(users);
 						if (!strcmp(pw->pw_name, users)) {
 							fclose(file);
 							end("you are in /etc/cron.deny");
