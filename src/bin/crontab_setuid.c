@@ -67,8 +67,8 @@ int main(int argc, char *argv[]) {
 			}
 			fchown(fd,getuid(),0);
 			fchmod(fd,0600);
-			fclose(file);
-			rename(temp,crontab);
+			if (fclose(file)) {perror("fclose"); return 1;}
+			if (rename(temp,crontab)) {perror("rename"); return 1;}
 			break;
 		case 'd':
 			if (unlink(crontab) == -1) {

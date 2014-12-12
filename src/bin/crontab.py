@@ -74,7 +74,7 @@ def check(cron_file):
             good = False
             sys.stderr.write('%s: truncated line in %s: %s\n' % (SELF, job['f'], job['l']))
         elif 'p' in job:
-            if job['p'] not in ['reboot', 'minutely', 'hourly', 'midnight', 'weekly',
+            if job['p'] not in ['reboot', 'minutely', 'hourly', 'daily', 'midnight', 'weekly',
                                 'monthly', 'quarterly',
                                 'semi-annually', 'semiannually', 'bi-annually', 'biannually',
                                 'annually', 'yearly']:
@@ -215,16 +215,23 @@ def replace(cron_file, args):
         exit(1)
 
     try:
-        with open(cron_file, 'w') as out:
-            out.write(crontab)
+        new = tempfile.NamedTemporaryFile(mode='w+', encoding='UTF-8', dir=CRONTAB_DIR,
+                                          prefix=args.user + '.', delete=False)
+        new.write(crontab)
+        new.close()
+        os.rename(new.name, cron_file)
         try:
             os.chown(cron_file, pwd.getpwnam(args.user).pw_uid, 0)
             os.chmod(cron_file, stat.S_IRUSR | stat.S_IWUSR)
         except PermissionError:
             pass
-    except IOError as e:
+    except (IOError, PermissionError) as e:
         if args.user != getpass.getuser():
             sys.stderr.write("you can not replace %s's crontab\n" % args.user)
+            exit(1)
+        elif e.errno == os.errno.ENOSPC:
+            sys.stderr.write("no space left on %s\n" % CRONTAB_DIR)
+            os.unlink(new.name)
             exit(1)
         elif HAS_SETUID:
             p = Popen([SETUID_HELPER,'w'], stdin=PIPE)
