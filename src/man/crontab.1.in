@@ -41,11 +41,17 @@ by systemd-crontab-generator.
 .TP
 .I @statedir@
 Directory for users crontabs.
+.TP
+.I /etc/cron.allow
+list of users that can use crontab
+.TP
+.I /etc/cron.deny
+list of users that aren't allowed to use crontab
+.br
+(by default, only root can use crontab)
 
 .SH LIMITATIONS
 The \-s flag (SELinux) is not supported.
-.br
-/etc/cron.allow & /etc/cron.deny are not supported.
 
 .SH AUTHOR
 Konstantin Stepanov <me@kstep.me>

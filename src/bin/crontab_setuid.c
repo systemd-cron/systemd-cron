@@ -5,22 +5,26 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <limits.h>
+#include <string.h>
 #include <sys/stat.h>
 #define	MAX_COMMAND	1000
 #define	MAX_LINES	1000
 
 void end(char * msg){
-	fprintf(stderr,"ERROR: %s,aborting\n", msg);
+	fprintf(stderr,"crontab_setuid: %s\n", msg);
 	exit(1);
 }
 
 int main(int argc, char *argv[]) {
+	if (!getuid()) end("root doesn't need this helper");
+
 	if (argc != 2) end("bad argument");
 
 	struct passwd *pw;
 	pw = getpwuid(getuid());
 	if (!pw) end("user doesn't exist");
 
+	char users[LOGIN_NAME_MAX];
 	char crontab[sizeof CRONTAB_DIR + 1 + LOGIN_NAME_MAX];
 	char temp[sizeof crontab + 7];
 
@@ -43,6 +47,32 @@ int main(int argc, char *argv[]) {
 			fclose(file);
 			break;
 		case 'w':
+			file = fopen("/etc/cron.allow", "r");
+			if (file != NULL) {
+				int allowed=0;
+				while(fgets(users, sizeof(users), file)) {
+					strtok(users, "\n");
+					if (!strcmp(pw->pw_name, users)) {
+						allowed=1;
+						break;
+					}
+				}
+				fclose(file);
+				if (!allowed) end("you're not in /etc/cron.allow");
+			} else  {
+				file = fopen("/etc/cron.deny", "r");
+				if (file != NULL) {
+					while(fgets(users, sizeof(users), file)) {
+						strtok(users, "\n");
+						if (!strcmp(pw->pw_name, users)) {
+							fclose(file);
+							end("you are in /etc/cron.deny");
+						}
+					}
+					fclose(file);
+				} else end("without /etc/cron.allow or /etc/cron.deny; only root can install crontabs");
+			}
+
 			snprintf(temp, sizeof temp, "%s.XXXXXX", crontab);
 			int fd = mkstemp(temp);
 			file = fdopen(fd, "w");
