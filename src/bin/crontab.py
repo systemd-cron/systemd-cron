@@ -137,56 +137,79 @@ def remove(cron_file, args):
                 raise
 
 def edit(cron_file, args):
-    with tempfile.NamedTemporaryFile(mode='w+', encoding='UTF-8') as tmp:
-        try:
-            with open(cron_file, 'r') as inp:
-                tmp.file.write(inp.read())
-        except IOError as e:
-            if e.errno == os.errno.ENOENT:
-                 tmp.file.write('# min hour dom month dow command')
-                 pass
-            elif args.user != getpass.getuser():
-                sys.stderr.write("you can not edit %s's crontab\n" % args.user)
-                exit(1)
-            elif HAS_SETUID:
-                try:
-                    tmp.file.write(subprocess.check_output([SETUID_HELPER,'r'], universal_newlines=True))
-                except subprocess.CalledProcessError as f:
-                    if f.returncode == os.errno.ENOENT:
-                        tmp.file.write('# min hour dom month dow command')
-                        pass
-                    else:
-                        raise
-                pass
-            else:
-                 raise
+    tmp = tempfile.NamedTemporaryFile(mode='w+', encoding='UTF-8', delete=False, prefix='crontab_')
 
-        tmp.file.flush()
-
-        if os.system("'%s' '%s'" % (EDITOR, tmp.name)) != 0:
-            sys.stderr.write('edit aborted\n')
+    try:
+        with open(cron_file, 'r') as inp:
+            tmp.file.write(inp.read())
+    except IOError as e:
+        if e.errno == os.errno.ENOENT:
+            tmp.file.write('# min hour dom month dow command')
+            pass
+        elif args.user != getpass.getuser():
+            sys.stderr.write("you can not edit %s's crontab\n" % args.user)
+            tmp.close()
+            os.unlink(tmp.name)
             exit(1)
-
-        if not check(tmp.name):
-            sys.stderr.write("not replacing crontab\n")
-            exit(1)
-
-        tmp.file.seek(0)
-        try:
-            with open(cron_file, 'w') as out:
-                out.write(tmp.file.read())
+        elif HAS_SETUID:
             try:
-                os.chown(cron_file, pwd.getpwnam(args.user).pw_uid, 0)
-                os.chmod(cron_file, stat.S_IRUSR | stat.S_IWUSR)
-            except PermissionError:
-                pass
-        except IOError as e:
-            if HAS_SETUID:
-                p = Popen([SETUID_HELPER,'w'], stdin=PIPE)
-                p.communicate(bytes(tmp.file.read(), 'UTF-8'))
-                exit(p.returncode)
-            else:
-                raise
+                tmp.file.write(subprocess.check_output([SETUID_HELPER,'r'], universal_newlines=True))
+            except subprocess.CalledProcessError as f:
+                if f.returncode == os.errno.ENOENT:
+                    tmp.file.write('# min hour dom month dow command')
+                    pass
+                else:
+                    tmp.close()
+                    os.unlink(tmp.name)
+                    raise
+            pass
+        else:
+            tmp.close()
+            os.unlink(tmp.name)
+            raise
+
+    tmp.file.flush()
+
+    if os.system("'%s' '%s'" % (EDITOR, tmp.name)) != 0:
+        tmp.close()
+        sys.stderr.write('edit aborted, your edit is kept here:%s\n' % tmp.name)
+        exit(1)
+
+    if not check(tmp.name):
+        tmp.close()
+        sys.stderr.write("not replacing crontab, your edit is kept here:%s\n" % tmp.name)
+        exit(1)
+
+    tmp.file.seek(0)
+
+    try:
+        new = tempfile.NamedTemporaryFile(mode='w+', encoding='UTF-8', dir=CRONTAB_DIR,
+                                          prefix=args.user + '.', delete=False)
+        new.write(tmp.file.read())
+        new.close()
+        os.rename(new.name, cron_file)
+        tmp.close()
+        os.unlink(tmp.name)
+        try:
+            os.chown(cron_file, pwd.getpwnam(args.user).pw_uid, 0)
+            os.chmod(cron_file, stat.S_IRUSR | stat.S_IWUSR)
+        except PermissionError:
+            pass
+    except (IOError, PermissionError) as e:
+        if e.errno == os.errno.ENOSPC:
+            sys.stderr.write("no space left on %s, your edit is kept here:%s\n" % (CRONTAB_DIR, tmp.name))
+            os.unlink(new.name)
+            tmp.close()
+            exit(1)
+        elif HAS_SETUID:
+            p = Popen([SETUID_HELPER,'w'], stdin=PIPE)
+            p.communicate(bytes(tmp.file.read(), 'UTF-8'))
+            if p.returncode: sys.stderr.write("your edit is kept here:%s\n" % tmp.name)
+            exit(p.returncode)
+        else:
+            tmp.close()
+            sys.stderr.write("unexpected error, your edit is kept here:%s\n" % tmp.name)
+            raise
 
 
 def replace(cron_file, args):
