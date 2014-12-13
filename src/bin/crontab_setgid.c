@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <pwd.h>
-#include <grp.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <limits.h>
@@ -81,6 +80,7 @@ int main(int argc, char *argv[]) {
 			}
 
 			snprintf(temp, sizeof temp, "%s.XXXXXX", crontab);
+			// this file is created $user:crontab / 0600
 			int fd = mkstemp(temp);
 			file = fdopen(fd, "w");
 			if (file == NULL) {
@@ -103,10 +103,6 @@ int main(int argc, char *argv[]) {
 				}
 			}
 			if (fclose(file)) {perror("fclose"); return 1;}
-			struct group *grp;
-			grp = getgrnam("crontab");
-			fchown(fd,getuid(),grp->gr_gid);
-			fchmod(fd,0600);
 			if (rename(temp,crontab)) {perror("rename"); return 1;}
 			break;
 		case 'd':
