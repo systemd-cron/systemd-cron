@@ -140,8 +140,7 @@ def remove(cron_file, args):
                 subprocess.check_output([SETGID_HELPER,'d'], universal_newlines=True)
                 pass
             elif e.errno == os.errno.EACCES:
-                with open(cron_file, 'w') as out:
-                    out.write('')
+                open(cron_file, 'w').close()
                 sys.stderr.write("couldn't remove %s , wiped it instead\n" % cron_file)
                 pass
             else:
