@@ -275,12 +275,20 @@ def replace(cron_file, args):
 
 if __name__ == '__main__':
     SELF = os.path.basename(sys.argv[0])
+
+    # try to fixup CRONTAB_DIR if it has not been handled in package script
     try:
         if not os.path.exists(CRONTAB_DIR):
             os.makedirs(CRONTAB_DIR)
     except:
         sys.stderr.write("%s doesn't exists!\n" % CRONTAB_DIR)
         exit(1)
+
+    try:
+        os.chown(CRONTAB_DIR, 0, grp.getgrnam("crontab").gr_gid)
+        os.chmod(CRONTAB_DIR, stat.S_ISVTX | stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IWGRP | stat.S_IXGRP)
+    except:
+        pass
 
     args = args_parser.parse_args()
 
