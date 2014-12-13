@@ -56,4 +56,4 @@ The \-s flag (SELinux) is not supported.
 .SH AUTHOR
 Konstantin Stepanov <me@kstep.me>
 .br
-Alexandre Detiste <alexandre@detiste.be> for this manpage & setuid helper
+Alexandre Detiste <alexandre@detiste.be> for this manpage & setgid helper

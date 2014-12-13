@@ -28,7 +28,7 @@ Dependencies
 * [run-parts][3]
 * python 3
 * /usr/sbin/sendmail (optional, evaluated at runtime)
-* gcc or clang (needed to build `crontab_setuid.c`; this helper is optional and evaluated at runtime)
+* gcc or clang (needed to build `crontab_setgid.c`; this helper is optional and evaluated at runtime)
 
 Installation
 ----------------
@@ -93,7 +93,7 @@ Other options include:
   Default: `no`.
 * `--enable-persistent[=yes|no]` Make timers [persistent][5]. Requires systemd ≥ 212.
   Default: `no`.
-* `--enable-setuid[=yes|no]` Compile setuid C helper for crontab. Needs GCC or Clang.
+* `--enable-setgid[=yes|no]` Compile setgid C helper for crontab. Needs GCC or Clang.
   Default: `no`.
 
 A typical configuration for the latest systemd would be:

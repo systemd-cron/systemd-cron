@@ -7,6 +7,7 @@ import stat
 import argparse
 import getpass
 import pwd
+import grp
 import subprocess
 from subprocess import Popen, PIPE
 import importlib.machinery
@@ -15,13 +16,13 @@ EDITOR = (os.environ.get('EDITOR') or
           os.environ.get('VISUAL','/usr/bin/vim'))
 CRONTAB_DIR = '@statedir@'
 
-SETUID_HELPER = '@libdir@/@package@/crontab_setuid'
+SETGID_HELPER = '@libdir@/@package@/crontab_setgid'
 
-HAS_SETUID =     os.geteuid() != 0 \
-             and os.path.isfile(SETUID_HELPER) \
-             and os.stat(SETUID_HELPER).st_uid == 0 \
-             and os.stat(SETUID_HELPER).st_mode & stat.S_ISUID \
-             and os.stat(SETUID_HELPER).st_mode & stat.S_IXUSR
+HAS_SETGID =     os.geteuid() != 0 \
+             and os.path.isfile(SETGID_HELPER) \
+             and os.stat(SETGID_HELPER).st_uid == 0 \
+             and os.stat(SETGID_HELPER).st_mode & stat.S_ISGID \
+             and os.stat(SETGID_HELPER).st_mode & stat.S_IXGRP
 
 REBOOT_FILE = '/run/crond.reboot'
 
@@ -94,21 +95,22 @@ def list(cron_file, args):
         with open(cron_file, 'r') as f:
             sys.stdout.write(f.read())
         check(cron_file)
-    except IOError as e:
+    except (IOError, PermissionError) as e:
         if e.errno == os.errno.ENOENT:
             sys.stderr.write('no crontab for %s\n' % args.user)
             exit(1)
         elif args.user != getpass.getuser():
             sys.stderr.write("you can not display %s's crontab\n" % args.user)
             exit(1)
-        elif HAS_SETUID:
+        elif HAS_SETGID:
             try:
-                sys.stdout.write(subprocess.check_output([SETUID_HELPER,'r'], universal_newlines=True))
+                sys.stdout.write(subprocess.check_output([SETGID_HELPER,'r'], universal_newlines=True))
             except subprocess.CalledProcessError as f:
                 if f.returncode == os.errno.ENOENT:
                     sys.stderr.write('no crontab for %s\n' % args.user)
                     exit(1)
                 else:
+                    sys.stderr.write('%s\n' % f.output)
                     raise
             pass
         else:
@@ -125,8 +127,8 @@ def remove(cron_file, args):
             elif args.user != getpass.getuser():
                 sys.stderr.write("you can not delete %s's crontab\n" % args.user)
                 exit(1)
-            elif HAS_SETUID:
-                subprocess.check_output([SETUID_HELPER,'d'], universal_newlines=True)
+            elif HAS_SETGID:
+                subprocess.check_output([SETGID_HELPER,'d'], universal_newlines=True)
                 pass
             elif e.errno == os.errno.EACCES:
                 with open(cron_file, 'w') as out:
@@ -151,14 +153,15 @@ def edit(cron_file, args):
             tmp.close()
             os.unlink(tmp.name)
             exit(1)
-        elif HAS_SETUID:
+        elif HAS_SETGID:
             try:
-                tmp.file.write(subprocess.check_output([SETUID_HELPER,'r'], universal_newlines=True))
+                tmp.file.write(subprocess.check_output([SETGID_HELPER,'r'], universal_newlines=True))
             except subprocess.CalledProcessError as f:
                 if f.returncode == os.errno.ENOENT:
                     tmp.file.write('# min hour dom month dow command')
                     pass
                 else:
+                    sys.stderr.write('%s\n' % f.output)
                     tmp.close()
                     os.unlink(tmp.name)
                     raise
@@ -191,9 +194,9 @@ def edit(cron_file, args):
         tmp.close()
         os.unlink(tmp.name)
         try:
-            os.chown(cron_file, pwd.getpwnam(args.user).pw_uid, 0)
+            os.chown(cron_file, pwd.getpwnam(args.user).pw_uid, grp.getgrnam("crontab").gr_gid)
             os.chmod(cron_file, stat.S_IRUSR | stat.S_IWUSR)
-        except PermissionError:
+        except (PermissionError, KeyError):
             pass
     except (IOError, PermissionError) as e:
         if e.errno == os.errno.ENOSPC:
@@ -205,8 +208,8 @@ def edit(cron_file, args):
             sys.stderr.write("you can not edit %s's crontab, your edit is kept here:%s\n" % (args.user, tmp.name))
             tmp.close()
             exit(1)
-        elif HAS_SETUID:
-            p = Popen([SETUID_HELPER,'w'], stdin=PIPE)
+        elif HAS_SETGID:
+            p = Popen([SETGID_HELPER,'w'], stdin=PIPE)
             p.communicate(bytes(tmp.file.read(), 'UTF-8'))
             if p.returncode: sys.stderr.write("your edit is kept here:%s\n" % tmp.name)
             exit(p.returncode)
@@ -250,9 +253,9 @@ def replace(cron_file, args):
         new.close()
         os.rename(new.name, cron_file)
         try:
-            os.chown(cron_file, pwd.getpwnam(args.user).pw_uid, 0)
+            os.chown(cron_file, pwd.getpwnam(args.user).pw_uid, grp.getgrnam("crontab").gr_gid)
             os.chmod(cron_file, stat.S_IRUSR | stat.S_IWUSR)
-        except PermissionError:
+        except (PermissionError, KeyError):
             pass
     except (IOError, PermissionError) as e:
         if args.user != getpass.getuser():
@@ -262,8 +265,8 @@ def replace(cron_file, args):
             sys.stderr.write("no space left on %s\n" % CRONTAB_DIR)
             os.unlink(new.name)
             exit(1)
-        elif HAS_SETUID:
-            p = Popen([SETUID_HELPER,'w'], stdin=PIPE)
+        elif HAS_SETGID:
+            p = Popen([SETGID_HELPER,'w'], stdin=PIPE)
             p.communicate(bytes(crontab, 'UTF-8'))
             exit(p.returncode)
         else:

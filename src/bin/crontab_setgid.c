@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <pwd.h>
+#include <grp.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <limits.h>
@@ -11,7 +12,7 @@
 #define	MAX_LINES	1000
 
 void end(char * msg){
-	fprintf(stderr,"crontab_setuid: %s\n", msg);
+	fprintf(stderr,"crontab_setgid: %s\n", msg);
 	exit(1);
 }
 
@@ -101,9 +102,11 @@ int main(int argc, char *argv[]) {
 					end("maximum lines reached");
 				}
 			}
-			fchown(fd,getuid(),0);
-			fchmod(fd,0600);
 			if (fclose(file)) {perror("fclose"); return 1;}
+			struct group *grp;
+			grp = getgrnam("crontab");
+			fchown(fd,getuid(),grp->gr_gid);
+			fchmod(fd,0600);
 			if (rename(temp,crontab)) {perror("rename"); return 1;}
 			break;
 		case 'd':
