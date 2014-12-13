@@ -90,11 +90,19 @@ def check(cron_file):
                 good = False
     return good
 
+def try_chmod(cron_file, user):
+    try:
+        os.chown(cron_file, pwd.getpwnam(user).pw_uid, grp.getgrnam("crontab").gr_gid)
+        os.chmod(cron_file, stat.S_IRUSR | stat.S_IWUSR)
+    except (PermissionError, KeyError):
+        pass
+
 def list(cron_file, args):
     try:
         with open(cron_file, 'r') as f:
             sys.stdout.write(f.read())
         check(cron_file)
+        try_chmod(cron_file, args.user)
     except (IOError, PermissionError) as e:
         if e.errno == os.errno.ENOENT:
             sys.stderr.write('no crontab for %s\n' % args.user)
@@ -110,8 +118,9 @@ def list(cron_file, args):
                     sys.stderr.write('no crontab for %s\n' % args.user)
                     exit(1)
                 else:
-                    sys.stderr.write('%s\n' % f.output)
-                    raise
+                    # helper will send error to stderr
+                    sys.stderr.write('failed to read %s\n' % cron_file)
+                    exit(f.returncode)
             pass
         else:
             raise
@@ -161,10 +170,11 @@ def edit(cron_file, args):
                     tmp.file.write('# min hour dom month dow command')
                     pass
                 else:
-                    sys.stderr.write('%s\n' % f.output)
+                    # helper will send error to stderr
+                    sys.stderr.write('failed to read %s\n' % cron_file)
                     tmp.close()
                     os.unlink(tmp.name)
-                    raise
+                    exit(f.returncode)
             pass
         else:
             tmp.close()
@@ -193,11 +203,7 @@ def edit(cron_file, args):
         os.rename(new.name, cron_file)
         tmp.close()
         os.unlink(tmp.name)
-        try:
-            os.chown(cron_file, pwd.getpwnam(args.user).pw_uid, grp.getgrnam("crontab").gr_gid)
-            os.chmod(cron_file, stat.S_IRUSR | stat.S_IWUSR)
-        except (PermissionError, KeyError):
-            pass
+        try_chmod(cron_file, args.user)
     except (IOError, PermissionError) as e:
         if e.errno == os.errno.ENOSPC:
             sys.stderr.write("no space left on %s, your edit is kept here:%s\n" % (CRONTAB_DIR, tmp.name))
@@ -252,11 +258,7 @@ def replace(cron_file, args):
         new.write(crontab)
         new.close()
         os.rename(new.name, cron_file)
-        try:
-            os.chown(cron_file, pwd.getpwnam(args.user).pw_uid, grp.getgrnam("crontab").gr_gid)
-            os.chmod(cron_file, stat.S_IRUSR | stat.S_IWUSR)
-        except (PermissionError, KeyError):
-            pass
+        try_chmod(cron_file, args.user)
     except (IOError, PermissionError) as e:
         if args.user != getpass.getuser():
             sys.stderr.write("you can not replace %s's crontab\n" % args.user)
