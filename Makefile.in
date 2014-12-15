@@ -192,6 +192,13 @@ $(builddir)/man/systemd.cron.7: $(srcdir)/man/systemd.cron.7.in
 	               -e '/cron\.$(schedule_not)/,+3d' \
 		       -e '/journalctl -u cron-$(schedule_not)/,+1d' ${\n})
 
+$(builddir)/bin/systemd-crontab-generator: $(srcdir)/bin/systemd-crontab-generator.py
+	$(call in2out,$<,$@)
+	# BUG: this should only run if schedule_not in hourly/daily/weekly/monthly
+	$(foreach schedule_not,$(schedules_not),\
+		sed -i $@ -e '/\/etc\/cron.$(schedule_not)/d' ${\n})
+	chmod +x $@
+
 $(builddir)/bin/%: $(srcdir)/bin/%.py
 	$(call in2out,$<,$@)
 	chmod +x $@

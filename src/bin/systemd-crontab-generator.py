@@ -462,6 +462,10 @@ if __name__ == '__main__':
 
     if os.path.isfile('/etc/crontab'):
         for job in parse_crontab('/etc/crontab', withuser=True):
+            if '/etc/cron.hourly'  in job['c']: continue
+            if '/etc/cron.daily'   in job['c']: continue
+            if '/etc/cron.weekly'  in job['c']: continue
+            if '/etc/cron.monthly' in job['c']: continue
             generate_timer_unit(job, seqs.setdefault(job['j']+job['u'], count()))
 
     CRONTAB_FILES = files('/etc/cron.d')
