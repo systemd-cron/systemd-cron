@@ -10,6 +10,10 @@
 #define	MAX_COMMAND	1000
 #define	MAX_LINES	1000
 
+#ifndef DEFAULT_NOACCESS
+#define DEFAULT_NOACCESS	0
+#endif
+
 void end(char * msg){
 	fprintf(stderr,"crontab_setgid: %s\n", msg);
 	exit(1);
@@ -76,7 +80,8 @@ int main(int argc, char *argv[]) {
 						}
 					}
 					fclose(file);
-				} else end("without /etc/cron.allow or /etc/cron.deny; only root can install crontabs");
+				} else if (DEFAULT_NOACCESS)
+                               end("without /etc/cron.allow or /etc/cron.deny; only root can install crontabs");
 			}
 
 			snprintf(temp, sizeof temp, "%s.XXXXXX", crontab);
