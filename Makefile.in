@@ -106,16 +106,16 @@ ifneq ($(enable_setgid),no)
 	chmod 2755 $(DESTDIR)$(libdir)/$(package)/crontab_setgid || true
 endif
 
-	install -m644 -D $(builddir)/man/systemd.cron.7 $(DESTDIR)$(mandir)/man7
-	install -m644 -D $(builddir)/man/crontab.1 $(DESTDIR)$(mandir)/man1
-	install -m644 -D $(builddir)/man/crontab.5 $(DESTDIR)$(mandir)/man5
-	install -m644 -D $(builddir)/man/anacrontab.5 $(DESTDIR)$(mandir)/man5
-	install -m644 -D $(builddir)/man/systemd-crontab-generator.8 $(DESTDIR)$(mandir)/man8
+	install -m644 -D $(builddir)/man/systemd.cron.7 $(DESTDIR)$(mandir)/man7/systemd.cron.7
+	install -m644 -D $(builddir)/man/crontab.1 $(DESTDIR)$(mandir)/man1/crontab.1
+	install -m644 -D $(builddir)/man/crontab.5 $(DESTDIR)$(mandir)/man5/crontab.5
+	install -m644 -D $(builddir)/man/anacrontab.5 $(DESTDIR)$(mandir)/man5/anacrontab.5
+	install -m644 -D $(builddir)/man/systemd-crontab-generator.8 $(DESTDIR)$(mandir)/man8/systemd-crontab-generator.8
 
-	install -m644 -D $(builddir)/units/cron.target $(DESTDIR)$(unitdir)
-	install -m644 -D $(builddir)/units/cron-update.path $(DESTDIR)$(unitdir)
-	install -m644 -D $(builddir)/units/cron-update.service $(DESTDIR)$(unitdir)
-	install -m644 -D $(builddir)/units/cron-failure@.service $(DESTDIR)$(unitdir)
+	install -m644 -D $(builddir)/units/cron.target $(DESTDIR)$(unitdir)/cron.target
+	install -m644 $(builddir)/units/cron-update.path $(DESTDIR)$(unitdir)
+	install -m644 $(builddir)/units/cron-update.service $(DESTDIR)$(unitdir)
+	install -m644 $(builddir)/units/cron-failure@.service $(DESTDIR)$(unitdir)
 
 	$(foreach schedule,$(schedules),\
 		install -m644 $(builddir)/units/cron-$(schedule).timer $(DESTDIR)$(unitdir)${\n})
