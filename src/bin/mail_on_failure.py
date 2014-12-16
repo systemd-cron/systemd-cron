@@ -7,8 +7,7 @@ from subprocess import Popen, PIPE
 try:
     job = sys.argv[1]
 except IndexError:
-    print("Usage: %s <unit>" % sys.argv[0])
-    exit(1)
+    sys.exit("Usage: %s <unit>" % sys.argv[0])
 
 user = subprocess.check_output(['systemctl','show',job,'--property=User'], universal_newlines=True)
 user = user.rstrip('\n').split('=')[1]

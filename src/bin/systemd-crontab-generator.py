@@ -461,15 +461,10 @@ def count():
         n += 1
 
 if __name__ == '__main__':
-    try:
-        TARGET_DIR = sys.argv[1]
-    except IndexError:
-        TARGET_DIR = None
-        pass
-    if not TARGET_DIR or not os.path.isdir(TARGET_DIR):
-        print("Usage: %s <destination_folder>" % sys.argv[0])
-        exit(1)
+    if len(sys.argv) == 1 or not os.path.isdir(sys.argv[1]):
+        sys.exit("Usage: %s <destination_folder>" % sys.argv[0])
 
+    TARGET_DIR = sys.argv[1]
     TIMERS_DIR = os.path.join(TARGET_DIR, 'cron.target.wants')
 
     try:

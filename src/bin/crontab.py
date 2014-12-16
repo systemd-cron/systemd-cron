@@ -105,22 +105,18 @@ def list(cron_file, args):
         try_chmod(cron_file, args.user)
     except (IOError, PermissionError) as e:
         if e.errno == os.errno.ENOENT:
-            sys.stderr.write('no crontab for %s\n' % args.user)
-            exit(1)
+            sys.exit('no crontab for %s' % args.user)
         elif args.user != getpass.getuser():
-            sys.stderr.write("you can not display %s's crontab\n" % args.user)
-            exit(1)
+            sys.exit("you can not display %s's crontab" % args.user)
         elif HAS_SETGID:
             try:
                 sys.stdout.write(subprocess.check_output([SETGID_HELPER,'r'], universal_newlines=True))
             except subprocess.CalledProcessError as f:
                 if f.returncode == os.errno.ENOENT:
-                    sys.stderr.write('no crontab for %s\n' % args.user)
-                    exit(1)
+                    sys.exit('no crontab for %s' % args.user)
                 else:
                     # helper will send error to stderr
-                    sys.stderr.write('failed to read %s\n' % cron_file)
-                    exit(f.returncode)
+                    sys.exit('failed to read %s' % cron_file)
             pass
         else:
             raise
@@ -134,8 +130,7 @@ def remove(cron_file, args):
                 sys.stderr.write("no crontab for %s\n" % args.user)
                 pass
             elif args.user != getpass.getuser():
-                sys.stderr.write("you can not delete %s's crontab\n" % args.user)
-                exit(1)
+                sys.exit("you can not delete %s's crontab" % args.user)
             elif HAS_SETGID:
                 subprocess.check_output([SETGID_HELPER,'d'], universal_newlines=True)
                 pass
@@ -184,13 +179,11 @@ def edit(cron_file, args):
 
     if os.system("'%s' '%s'" % (EDITOR, tmp.name)) != 0:
         tmp.close()
-        sys.stderr.write('edit aborted, your edit is kept here:%s\n' % tmp.name)
-        exit(1)
+        sys.exit('edit aborted, your edit is kept here:%s' % tmp.name)
 
     if not check(tmp.name):
         tmp.close()
-        sys.stderr.write("not replacing crontab, your edit is kept here:%s\n" % tmp.name)
-        exit(1)
+        sys.exit("not replacing crontab, your edit is kept here:%s" % tmp.name)
 
     tmp.file.seek(0)
 
@@ -205,14 +198,12 @@ def edit(cron_file, args):
         try_chmod(cron_file, args.user)
     except (IOError, PermissionError) as e:
         if e.errno == os.errno.ENOSPC:
-            sys.stderr.write("no space left on %s, your edit is kept here:%s\n" % (CRONTAB_DIR, tmp.name))
             os.unlink(new.name)
             tmp.close()
-            exit(1)
+            sys.exit("no space left on %s, your edit is kept here:%s" % (CRONTAB_DIR, tmp.name))
         elif args.user != getpass.getuser():
-            sys.stderr.write("you can not edit %s's crontab, your edit is kept here:%s\n" % (args.user, tmp.name))
             tmp.close()
-            exit(1)
+            sys.exit("you can not edit %s's crontab, your edit is kept here:%s" % (args.user, tmp.name))
         elif HAS_SETGID:
             p = Popen([SETGID_HELPER,'w'], stdin=PIPE)
             p.communicate(bytes(tmp.file.read(), 'UTF-8'))
@@ -239,17 +230,14 @@ def replace(cron_file, args):
                 crontab = inp.read()
         except IOError as e:
             if e.errno == os.errno.ENOENT:
-                sys.stderr.write("file %s doesn't exists\n" % infile)
-                exit(1)
+                sys.exit("file %s doesn't exists" % infile)
             elif e.errno == os.errno.EACCES:
-                sys.stderr.write("you can't read file %s\n" % infile)
-                exit(1)
+                sys.exit("you can't read file %s" % infile)
             else:
                 raise
 
     if not check(infile):
-        sys.stderr.write("not replacing crontab\n")
-        exit(1)
+        sys.exit("not replacing crontab\n")
 
     try:
         new = tempfile.NamedTemporaryFile(mode='w+', encoding='UTF-8', dir=CRONTAB_DIR,
@@ -260,8 +248,7 @@ def replace(cron_file, args):
         try_chmod(cron_file, args.user)
     except (IOError, PermissionError) as e:
         if args.user != getpass.getuser():
-            sys.stderr.write("you can not replace %s's crontab\n" % args.user)
-            exit(1)
+            sys.exit("you can not replace %s's crontab" % args.user)
         elif e.errno == os.errno.ENOSPC:
             sys.stderr.write("no space left on %s\n" % CRONTAB_DIR)
             os.unlink(new.name)
@@ -282,8 +269,7 @@ if __name__ == '__main__':
         if not os.path.exists(CRONTAB_DIR):
             os.makedirs(CRONTAB_DIR)
     except:
-        sys.stderr.write("%s doesn't exists!\n" % CRONTAB_DIR)
-        exit(1)
+        sys.exit("%s doesn't exists!" % CRONTAB_DIR)
 
     try:
         os.chown(CRONTAB_DIR, 0, grp.getgrnam("crontab").gr_gid)
@@ -302,8 +288,7 @@ if __name__ == '__main__':
     try:
         pwd.getpwnam(args.user)
     except KeyError:
-        sys.stderr.write("user '%s' unknown\n" % args.user)
-        exit(1)
+        sys.exit("user '%s' unknown" % args.user)
 
     try:
         open(REBOOT_FILE,'a').close()

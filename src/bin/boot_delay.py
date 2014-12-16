@@ -6,11 +6,13 @@ import time
 try:
     delay = int(sys.argv[1]) * 60
 except:
-    print("Usage: %s <minutes>" % sys.argv[0])
-    exit(1)
+    sys.exit("Usage: %s <minutes>" % sys.argv[0])
 
 f = open('/proc/uptime', 'r')
 uptime = int(float(f.readline().split()[0]))
 
 if delay > uptime:
-    time.sleep(delay - uptime)
+    try:
+        time.sleep(delay - uptime)
+    except KeyboardInterrupt:
+        pass
