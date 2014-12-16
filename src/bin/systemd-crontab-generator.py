@@ -460,13 +460,7 @@ def count():
         yield n
         n += 1
 
-if __name__ == '__main__':
-    if len(sys.argv) == 1 or not os.path.isdir(sys.argv[1]):
-        sys.exit("Usage: %s <destination_folder>" % sys.argv[0])
-
-    TARGET_DIR = sys.argv[1]
-    TIMERS_DIR = os.path.join(TARGET_DIR, 'cron.target.wants')
-
+def main():
     try:
         os.makedirs(TIMERS_DIR)
     except OSError as e:
@@ -542,3 +536,20 @@ if __name__ == '__main__':
         except OSError as e:
             if e.errno != os.errno.EEXIST:
                 raise
+
+
+if __name__ == '__main__':
+    if len(sys.argv) == 1 or not os.path.isdir(sys.argv[1]):
+        sys.exit("Usage: %s <destination_folder>" % sys.argv[0])
+
+    TARGET_DIR = sys.argv[1]
+    TIMERS_DIR = os.path.join(TARGET_DIR, 'cron.target.wants')
+
+    try:
+        main()
+    except Exception as e:
+        if len(sys.argv) == 4:
+            open('/dev/kmsg', 'w').write('<2> %s[%s]: global exception: %s\n' % (SELF, os.getpid(), e))
+            exit(1)
+        else:
+            raise
