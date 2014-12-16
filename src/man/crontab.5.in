@@ -140,6 +140,14 @@ only recognize @ keywords to be persistent
 .B 'no':
 force all further jobs not to be persistent
 
+.TP
+.B BATCH
+This boolean flag is translated to options
+.B CPUSchedulingPolicy=idle
+and
+.B IOSchedulingClass=idle
+when set.
+
 .PP
 The format of a
 .B cron command
