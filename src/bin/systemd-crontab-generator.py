@@ -249,17 +249,17 @@ def generate_timer_unit(job, seq):
         return
 
     persistent = job['P']
-
-    command=job['c']
+    command = job['c']
     parts = command.split()
     testremoved = None
-
-    standardoutput = ''
+    standardoutput = None
+    delay = job['b']
+    daemon_reload = os.path.isfile(REBOOT_FILE)
 
     try:
         home = pwd.getpwnam(job['u']).pw_dir
     except KeyError:
-        home = ''
+        home = None
         pass
 
     # perform smart substitutions for known shells
@@ -305,17 +305,13 @@ def generate_timer_unit(job, seq):
         # in '/bin/echo -e line1\\nline2\\nline3 | command'
         # to be POSIX compliant
 
-    delay = job['b']
-
-    daemon_reload = os.path.isfile(REBOOT_FILE)
-
     if 'p' in job:
         hour = job['h']
 
         if job['p'] == 'reboot':
             if daemon_reload: return
             if delay == 0: delay = 1
-            schedule = ''
+            schedule = None
             persistent = False
         elif job['p'] == 'minutely':
             schedule = job['p']
