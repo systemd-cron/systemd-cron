@@ -60,6 +60,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
     start_hours_range = 0
     boot_delay = 0
     persistent = Persistent.yes if monotonic else Persistent.auto
+    batch = False
     with open(filename, 'r') as f:
         for line in f.readlines():
             line = line.strip()
@@ -92,6 +93,8 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                      persistent = Persistent.parse(value)
                 elif not withuser and envvar.group(1) == 'PATH':
                      environment['PATH'] = expand_home_path(value, basename)
+                elif envvar.group(1) == 'BATCH':
+                     batch = (value.strip().lower() in ['yes','true','1'])
                 else:
                      environment[envvar.group(1)] = value
                 continue
@@ -139,7 +142,8 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                         'P': False if persistent == Persistent.no else True,
                         'j': jobid,
                         'u': 'root',
-                        'c': command
+                        'c': command,
+                        'Z': batch,
                         }
 
             else:
@@ -171,7 +175,8 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                             'P': False if persistent == Persistent.no else True,
                             'j': basename,
                             'u': user,
-                            'c': command
+                            'c': command,
+                            'Z': batch,
                             }
                 else:
                     if len(parts) < 6 + int(withuser):
@@ -197,7 +202,8 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                             'P': True if persistent == Persistent.yes else False,
                             'j': basename,
                             'u': user,
-                            'c': command
+                            'c': command,
+                            'Z': batch,
                             }
 
 def parse_time_unit(filename, line, value, values, mapping=int):
@@ -434,6 +440,9 @@ def generate_timer_unit(job, seq):
         if job['e']: f.write('Environment=%s\n' % job['e'])
         if job['u'] != 'root': f.write('User=%s\n' % job['u'])
         if standardoutput: f.write('StandardOutput=%s\n' % standardoutput)
+        if job['Z']:
+             f.write('CPUSchedulingPolicy=idle\n')
+             f.write('IOSchedulingClass=idle\n')
 
     return '%s.timer' % unit_name
 
