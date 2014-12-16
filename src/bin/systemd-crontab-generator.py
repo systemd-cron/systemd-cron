@@ -301,6 +301,19 @@ def generate_timer_unit(job, seq):
 
         if testremoved and not os.path.isfile(testremoved): return
 
+        if (len(parts) == 6 and
+            parts[0] == '[' and
+            parts[1] in ['-d','-e'] and
+            parst[2] == '/run/systemd/system' and
+            parts[3] == ']' and
+            parts[4] == '||'): return
+
+        if (len(parts) == 5 and
+            parts[0] == 'test' and
+            parts[1] in ['-d','-e'] and
+            parst[2] == '/run/systemd/system' and
+            parts[3] == '||'): return
+
         # TODO: translate  'command%line1%line2%line3
         # in '/bin/echo -e line1\\nline2\\nline3 | command'
         # to be POSIX compliant
