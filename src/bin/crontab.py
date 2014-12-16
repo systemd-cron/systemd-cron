@@ -131,6 +131,12 @@ def remove(cron_file, args):
                 pass
             elif args.user != getpass.getuser():
                 sys.exit("you can not delete %s's crontab" % args.user)
+            elif e.errno == os.errno.EROFS:
+                if os.path.isfile(cron_file):
+                    sys.exit("%s is on a read-only filesystem" % cron_file)
+                else:
+                    sys.stderr.write("no crontab for %s\n" % args.user)
+                    pass
             elif HAS_SETGID:
                 subprocess.check_output([SETGID_HELPER,'d'], universal_newlines=True)
                 pass
@@ -204,6 +210,9 @@ def edit(cron_file, args):
         elif args.user != getpass.getuser():
             tmp.close()
             sys.exit("you can not edit %s's crontab, your edit is kept here:%s" % (args.user, tmp.name))
+        elif e.errno == os.errno.EROFS:
+            tmp.close()
+            sys.exit("%s is on a read-only filesystem, your edit is kept here:%s" % (CRONTAB_DIR, tmp.name))
         elif HAS_SETGID:
             p = Popen([SETGID_HELPER,'w'], stdin=PIPE)
             p.communicate(bytes(tmp.file.read(), 'UTF-8'))
@@ -253,6 +262,8 @@ def replace(cron_file, args):
             sys.stderr.write("no space left on %s\n" % CRONTAB_DIR)
             os.unlink(new.name)
             exit(1)
+        elif e.errno == os.errno.EROFS:
+            sys.exit("%s is on a read-only filesystem" % CRONTAB_DIR)
         elif HAS_SETGID:
             p = Popen([SETGID_HELPER,'w'], stdin=PIPE)
             p.communicate(bytes(crontab, 'UTF-8'))
