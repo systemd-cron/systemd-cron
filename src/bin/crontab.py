@@ -91,11 +91,12 @@ def check(cron_file):
     return good
 
 def try_chmod(cron_file, user):
-    try:
-        os.chown(cron_file, pwd.getpwnam(user).pw_uid, grp.getgrnam("crontab").gr_gid)
-        os.chmod(cron_file, stat.S_IRUSR | stat.S_IWUSR)
-    except (PermissionError, KeyError):
-        pass
+    if CRON_GROUP:
+        try:
+            os.chown(cron_file, pwd.getpwnam(user).pw_uid, CRON_GROUP)
+            os.chmod(cron_file, stat.S_IRUSR | stat.S_IWUSR)
+        except (PermissionError, KeyError):
+            pass
 
 def list(cron_file, args):
     try:
@@ -283,10 +284,16 @@ if __name__ == '__main__':
         sys.exit("%s doesn't exists!" % CRONTAB_DIR)
 
     try:
-        os.chown(CRONTAB_DIR, 0, grp.getgrnam("crontab").gr_gid)
-        os.chmod(CRONTAB_DIR, stat.S_ISVTX | stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IWGRP | stat.S_IXGRP)
+        CRON_GROUP = os.stat(SETGID_HELPER).st_gid
     except:
-        pass
+        CRON_GROUP = None
+
+    if CRON_GROUP:
+        try:
+            os.chown(CRONTAB_DIR, 0, CRON_GROUP)
+            os.chmod(CRONTAB_DIR, stat.S_ISVTX | stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IWGRP | stat.S_IXGRP)
+        except:
+            pass
 
     args = args_parser.parse_args()
 

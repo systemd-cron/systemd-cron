@@ -86,14 +86,6 @@ test: all
 	$(foreach manpage,$(out_manuals),\
 		man --warnings --encoding=utf8 --local-file $(manpage) 2>&1 > /dev/null${\n})
 
-setgid: $(builddir)/bin/crontab_setgid
-	getent group crontab > /dev/null 2>&1 || addgroup --system crontab
-	chown root:crontab out/build/bin/crontab_setgid
-	chmod 2755 out/build/bin/crontab_setgid
-	mkdir -p $(statedir)
-	chown root:crontab $(statedir)
-	chmod 0770 $(statedir)
-
 install: all
 	install -m755 -D $(builddir)/bin/crontab $(DESTDIR)$(bindir)/crontab
 	install -m755 -D $(builddir)/bin/systemd-crontab-generator $(DESTDIR)$(libdir)/systemd/system-generators/systemd-crontab-generator
@@ -102,8 +94,10 @@ install: all
 	install -m755 -D $(builddir)/bin/boot_delay $(DESTDIR)$(libdir)/$(package)/boot_delay
 ifneq ($(enable_setgid),no)
 	install -m755 -D $(builddir)/bin/crontab_setgid $(DESTDIR)$(libdir)/$(package)/crontab_setgid
-	chgrp crontab $(DESTDIR)$(libdir)/$(package)/crontab_setgid || true
-	chmod 2755 $(DESTDIR)$(libdir)/$(package)/crontab_setgid || true
+	if getent group cron > /dev/null 2>&1; then \
+	    chgrp cron $(DESTDIR)$(libdir)/$(package)/crontab_setgid ; \
+	    chmod 2755 $(DESTDIR)$(libdir)/$(package)/crontab_setgid ; \
+	fi
 endif
 
 	install -m644 -D $(builddir)/man/systemd.cron.7 $(DESTDIR)$(mandir)/man7/systemd.cron.7
