@@ -21,6 +21,7 @@ SETGID_HELPER = '@libdir@/@package@/crontab_setgid'
 HAS_SETGID =     os.geteuid() != 0 \
              and os.path.isfile(SETGID_HELPER) \
              and os.stat(SETGID_HELPER).st_uid == 0 \
+             and os.stat(SETGID_HELPER).st_gid != 0 \
              and os.stat(SETGID_HELPER).st_mode & stat.S_ISGID \
              and os.stat(SETGID_HELPER).st_mode & stat.S_IXGRP
 
