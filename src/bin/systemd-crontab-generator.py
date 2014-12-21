@@ -61,7 +61,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
     boot_delay = 0
     persistent = Persistent.yes if monotonic else Persistent.auto
     batch = False
-    with open(filename, 'r') as f:
+    with open(filename, 'r', encoding='utf8') as f:
         for line in f.readlines():
             line = line.strip()
             if not line or line.startswith('#'):
@@ -104,7 +104,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
 
             if monotonic:
                 if len(parts) < 4:
-                    yield { 'f': filename, 'l': line, 'j': '-', 'u': '-' }
+                    yield { 'l': line }
                     continue
 
                 period, delay, jobid = parts[0:3]
@@ -149,7 +149,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
             else:
                 if line.startswith('@'):
                     if len(parts) < 2 + int(withuser):
-                        yield { 'f': filename, 'l': line, 'j': '-', 'u': '-' }
+                        yield { 'l': line }
                         continue
 
                     period = parts[0]
@@ -180,7 +180,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                             }
                 else:
                     if len(parts) < 6 + int(withuser):
-                        yield { 'f': filename, 'l': line, 'j': '-', 'u': '-' }
+                        yield { 'l': line }
                         continue
 
                     minutes, hours, days = parts[0:3]
@@ -250,10 +250,6 @@ def parse_period(mapping=int):
     return parser
 
 def generate_timer_unit(job, seq):
-    if 'c' not in job:
-        log(3, 'truncated line in %s: %s' % (job['f'], job['l']))
-        return
-
     persistent = job['P']
     command = job['c']
     parts = command.split()
@@ -393,11 +389,11 @@ def generate_timer_unit(job, seq):
         elif '"' not in command:
             command=job['s'] + ' -c "' + command + '"'
         else:
-            with open('%s/%s.sh' % (TARGET_DIR, unit_name), 'w') as f:
+            with open('%s/%s.sh' % (TARGET_DIR, unit_name), 'w', encoding='utf8') as f:
                 f.write(command)
             command=job['s'] + ' ' + TARGET_DIR + '/' + unit_name + '.sh'
 
-    with open('%s/%s.timer' % (TARGET_DIR, unit_name), 'w') as f:
+    with open('%s/%s.timer' % (TARGET_DIR, unit_name), 'w' , encoding='utf8') as f:
         f.write('[Unit]\n')
         f.write('Description=[Timer] "%s"\n' % job['l'])
         f.write('Documentation=man:systemd-crontab-generator(8)\n')
@@ -420,7 +416,7 @@ def generate_timer_unit(job, seq):
         if e.errno != os.errno.EEXIST:
             raise
 
-    with open('%s/%s.service' % (TARGET_DIR, unit_name), 'w') as f:
+    with open('%s/%s.service' % (TARGET_DIR, unit_name), 'w', encoding='utf8') as f:
         f.write('[Unit]\n')
         f.write('Description=[Cron] "%s"\n' % job['l'])
         f.write('Documentation=man:systemd-crontab-generator(8)\n')
@@ -448,7 +444,7 @@ def generate_timer_unit(job, seq):
 
 def log(level, message):
     if len(sys.argv) == 4:
-        with open('/dev/kmsg', 'w') as kmsg:
+        with open('/dev/kmsg', 'w', encoding='utf8') as kmsg:
             kmsg.write('<%s> %s[%s]: %s\n' % (level, SELF, os.getpid(), message))
     else:
         sys.stderr.write('%s: %s\n' % (SELF, message))
@@ -469,6 +465,9 @@ def main():
 
     if os.path.isfile('/etc/crontab'):
         for job in parse_crontab('/etc/crontab', withuser=True):
+            if 'c' not in job:
+                 log(3, 'truncated line in /etc/crontab: %s' % job['l'])
+                 continue
             if '/etc/cron.hourly'  in job['c']: continue
             if '/etc/cron.daily'   in job['c']: continue
             if '/etc/cron.weekly'  in job['c']: continue
@@ -489,10 +488,16 @@ def main():
             continue
         else:
             for job in parse_crontab(filename, withuser=True):
+                if 'c' not in job:
+                    log(3, 'truncated line in %s: %s' % (filename, job['l']))
+                    continue
                 generate_timer_unit(job, seqs.setdefault(job['j']+job['u'], count()))
 
     if os.path.isfile('/etc/anacrontab'):
         for job in parse_crontab('/etc/anacrontab', monotonic=True):
+            if 'c' not in job:
+                 log(3, 'truncated line in /etc/anacrontab: %s' % job['l'])
+                 continue
             generate_timer_unit(job, seqs.setdefault(job['j']+job['u'], count()))
 
 

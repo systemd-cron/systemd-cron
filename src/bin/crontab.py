@@ -75,17 +75,17 @@ def check(cron_file):
     for job in parser.parse_crontab(cron_file, withuser=False):
         if 'c' not in job:
             good = False
-            sys.stderr.write('%s: truncated line in %s: %s\n' % (SELF, job['f'], job['l']))
+            sys.stderr.write('%s: truncated line in %s: %s\n' % (SELF, cron_file, job['l']))
         elif 'p' in job:
             if job['p'] not in ['reboot', 'minutely', 'hourly', 'daily', 'midnight', 'weekly',
                                 'monthly', 'quarterly',
                                 'semi-annually', 'semiannually', 'bi-annually', 'biannually',
                                 'annually', 'yearly']:
                 good = False
-                sys.stderr.write("%s: unknown schedule in %s: %s\n" % (SELF, job['f'], job['l']))
+                sys.stderr.write("%s: unknown schedule in %s: %s\n" % (SELF, cron_file, job['l']))
         elif 0 in job['M'] or 0 in job['d']:
                 good = False
-                sys.stderr.write("%s: month and day can't be 0 in %s: %s\n" % (SELF, job['f'], job['l']))
+                sys.stderr.write("%s: month and day can't be 0 in %s: %s\n" % (SELF, cron_file, job['l']))
         else:
             if not len(job['M']) or not len(job['d']) or not len(job['h']) or not len(job['m']):
                 good = False
