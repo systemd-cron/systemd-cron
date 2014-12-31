@@ -7,7 +7,6 @@ import stat
 import argparse
 import getpass
 import pwd
-import grp
 import subprocess
 from subprocess import Popen, PIPE
 import importlib.machinery

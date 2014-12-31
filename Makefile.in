@@ -36,9 +36,8 @@ out_units		:= $(out_services) $(out_timers) $(out_targets) $(builddir)/units/cro
                            $(builddir)/units/cron-update.path $(builddir)/units/cron-update.service \
                            $(builddir)/units/cron-failure@.service
 out_manuals		:= $(patsubst $(srcdir)/man/%.in,$(builddir)/man/%,$(wildcard $(srcdir)/man/*))
-out_programs		:= $(patsubst $(srcdir)/bin/%.py,$(builddir)/bin/%,$(wildcard $(srcdir)/bin/*.py)) \
-                           $(builddir)/bin/crontab_setgid
-outputs			:= $(out_units) $(out_manuals) $(out_programs)
+out_programs		:= $(patsubst $(srcdir)/bin/%.py,$(builddir)/bin/%,$(wildcard $(srcdir)/bin/*.py))
+outputs			:= $(out_units) $(out_manuals) $(out_programs) $(builddir)/bin/crontab_setgid
 
 define \n
 
@@ -85,6 +84,8 @@ dist: $(tarball)
 test: all
 	$(foreach manpage,$(out_manuals),\
 		man --warnings --encoding=utf8 --local-file $(manpage) 2>&1 > /dev/null${\n})
+	$(foreach program,$(out_programs),\
+		pyflakes3 $(program) ${\n})
 
 install: all
 	install -m755 -D $(builddir)/bin/crontab $(DESTDIR)$(bindir)/crontab
