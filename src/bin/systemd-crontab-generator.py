@@ -76,19 +76,16 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                          random_delay = int(value)
                      except ValueError:
                          log(4, 'invalid RANDOM_DELAY in %s: %s' % (filename, line))
-                         pass
                 elif envvar.group(1) == 'START_HOURS_RANGE':
                      try:
                          start_hours_range = int(value.split('-')[0])
                      except ValueError:
                          log(4, 'invalid START_HOURS_RANGE in %s: %s' % (filename, line))
-                         pass
                 elif envvar.group(1) == 'DELAY':
                      try:
                          boot_delay = int(value)
                      except ValueError:
                          log(4, 'invalid DELAY in %s: %s' % (filename, line))
-                         pass
                 elif envvar.group(1) == 'PERSISTENT':
                      persistent = Persistent.parse(value)
                 elif not withuser and envvar.group(1) == 'PATH':
@@ -262,7 +259,6 @@ def generate_timer_unit(job, seq):
         home = pwd.getpwnam(job['u']).pw_dir
     except KeyError:
         home = None
-        pass
 
     # perform smart substitutions for known shells
     if job['s'] in KSH_SHELLS:
@@ -358,7 +354,7 @@ def generate_timer_unit(job, seq):
             try:
                if int(job['p']) > 31:
                     # workaround for anacrontab
-                    schedule = '*-1/%s-1 %s:%s:0' % (int(round(int(job['p']))/30), hour, delay)
+                    schedule = '*-1/%s-1 %s:%s:0' % (int(round(job['p']/30)), hour, delay)
                else:
                     schedule = '*-*-1/%s %s:%s:0' % (int(job['p']), hour, delay)
             except ValueError:

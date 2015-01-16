@@ -118,7 +118,6 @@ def list(cron_file, args):
                 else:
                     # helper will send error to stderr
                     sys.exit('failed to read %s' % cron_file)
-            pass
         else:
             raise
 
@@ -129,7 +128,6 @@ def remove(cron_file, args):
         except OSError as e:
             if e.errno == os.errno.ENOENT:
                 sys.stderr.write("no crontab for %s\n" % args.user)
-                pass
             elif args.user != getpass.getuser():
                 sys.exit("you can not delete %s's crontab" % args.user)
             elif e.errno == os.errno.EROFS:
@@ -137,14 +135,11 @@ def remove(cron_file, args):
                     sys.exit("%s is on a read-only filesystem" % cron_file)
                 else:
                     sys.stderr.write("no crontab for %s\n" % args.user)
-                    pass
             elif HAS_SETGID:
                 subprocess.check_output([SETGID_HELPER,'d'], universal_newlines=True)
-                pass
             elif e.errno == os.errno.EACCES:
                 open(cron_file, 'w').close()
                 sys.stderr.write("couldn't remove %s , wiped it instead\n" % cron_file)
-                pass
             else:
                 raise
 
@@ -157,7 +152,6 @@ def edit(cron_file, args):
     except IOError as e:
         if e.errno == os.errno.ENOENT:
             tmp.file.write('# min hour dom month dow command')
-            pass
         elif args.user != getpass.getuser():
             sys.stderr.write("you can not edit %s's crontab\n" % args.user)
             tmp.close()
@@ -176,7 +170,6 @@ def edit(cron_file, args):
                     tmp.close()
                     os.unlink(tmp.name)
                     exit(f.returncode)
-            pass
         else:
             tmp.close()
             os.unlink(tmp.name)
