@@ -6,7 +6,7 @@ crontab - maintain crontab files for individual users
 .SH SYNOPSIS
 crontab [\-u user] file
 .br
-crontab [\-u user] [\-l | \-r | \-e] [\-i]
+crontab [\-u user] [\-l | \-r | \-e | \-s] [\-i]
 
 .TP
 .B (blank)
@@ -23,6 +23,9 @@ delete user's crontab
 .TP
 .B -e, --edit
 edit user's crontab
+.TP
+.B -s, --show
+show all user who have a crontab
 .TP
 .B -i, --ask
 prompt before deleting user's crontab
@@ -51,7 +54,7 @@ list of users that aren't allowed to use crontab
 (by default, only root can use crontab)
 
 .SH LIMITATIONS
-The \-s flag (SELinux) is not supported.
+SELinux is not supported.
 
 .SH AUTHOR
 Konstantin Stepanov <me@kstep.me>

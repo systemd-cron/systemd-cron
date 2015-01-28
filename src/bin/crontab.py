@@ -8,6 +8,7 @@ import argparse
 import getpass
 import pwd
 import subprocess
+import glob
 from subprocess import Popen, PIPE
 import importlib.machinery
 
@@ -50,6 +51,9 @@ group.add_argument('-e', '--edit', dest='action', action='store_const', const='e
  specified by the VISUAL or EDITOR environment variables. After
  you exit from the editor, the modified crontab will be installed
  automatically.''')
+
+group.add_argument('-s', '--show', dest='action', action='store_const', const='show',
+        help='''Show all user who have a crontab.''')
 
 args_parser.add_argument('-i', '--ask', dest='ask', action='store_true', default=False,
         help='''This option modifies the -r option to prompt the user for a
@@ -217,6 +221,17 @@ def edit(cron_file, args):
             tmp.close()
             raise
 
+def show(cron_file, args):
+    if os.geteuid() != 0:
+        sys.exit("must be privileged to use -s")
+
+    for cron_file in glob.glob(os.path.join(CRONTAB_DIR, '*')):
+        user = os.path.basename(cron_file)
+        try:
+            pwd.getpwnam(user)
+            print(user)
+        except KeyError:
+            sys.stderr.write("WARNING: crontab found with no matching user: %s\n" % user)
 
 def replace(cron_file, args):
     if args.file == '-':
@@ -310,6 +325,7 @@ if __name__ == '__main__':
             'list': list,
             'edit': edit,
             'remove': remove,
+            'show': show,
             }.get(args.action, replace)
 
     loader = importlib.machinery.SourceFileLoader('name', '@libdir@/systemd/system-generators/systemd-crontab-generator')
