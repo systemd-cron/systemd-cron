@@ -123,14 +123,12 @@ def list(cron_file, args):
         elif args.user != getpass.getuser():
             sys.exit("you can not display %s's crontab" % args.user)
         elif HAS_SETGID:
-            try:
-                sys.stdout.write(subprocess.check_output([SETGID_HELPER,'r'], universal_newlines=True))
-            except subprocess.CalledProcessError as f:
-                if f.returncode == os.errno.ENOENT:
-                    sys.exit('no crontab for %s' % args.user)
-                else:
-                    # helper will send error to stderr
-                    sys.exit('failed to read %s' % cron_file)
+            returncode = subprocess.call([SETGID_HELPER,'r'])
+            if returncode == os.errno.ENOENT:
+                sys.exit('no crontab for %s' % args.user)
+            elif returncode:
+                # helper will send error to stderr
+                sys.exit('failed to read %s' % cron_file)
         else:
             raise
 
@@ -176,7 +174,6 @@ def edit(cron_file, args):
             except subprocess.CalledProcessError as f:
                 if f.returncode == os.errno.ENOENT:
                     tmp.file.write('# min hour dom month dow command')
-                    pass
                 else:
                     # helper will send error to stderr
                     sys.stderr.write('failed to read %s\n' % cron_file)
@@ -223,8 +220,10 @@ def edit(cron_file, args):
         elif HAS_SETGID:
             p = Popen([SETGID_HELPER,'w'], stdin=PIPE)
             p.communicate(bytes(tmp.file.read(), 'UTF-8'))
-            if p.returncode: sys.stderr.write("your edit is kept here:%s\n" % tmp.name)
-            exit(p.returncode)
+            if p.returncode:
+                sys.exit("your edit is kept here:%s" % tmp.name)
+            else:
+                os.unlink(tmp.name)
         else:
             sys.stderr.write("unexpected error, your edit is kept here:%s\n" % tmp.name)
             tmp.close()
