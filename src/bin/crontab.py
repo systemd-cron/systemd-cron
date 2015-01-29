@@ -12,8 +12,17 @@ import glob
 from subprocess import Popen, PIPE
 import importlib.machinery
 
+for pgm in ('/usr/bin/editor', '/usr/bin/vim', '/usr/bin/nano', '/usr/bin/mcedit'):
+    if os.path.isfile(pgm) and os.access(pgm, os.X_OK):
+        editor = pgm
+        break
+else:
+    editor = 'false'
+
 EDITOR = (os.environ.get('EDITOR') or
-          os.environ.get('VISUAL','/usr/bin/vim'))
+          os.environ.get('VISUAL') or
+          editor)
+
 CRONTAB_DIR = '@statedir@'
 
 SETGID_HELPER = '@libdir@/@package@/crontab_setgid'
