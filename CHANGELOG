@@ -1,0 +1,151 @@
+v1.5.2 : 2014-12-21
+
+   Bug-fix release:
+     * generator now process UTF-8 files correctly (generators are run
+       with LANG=C)
+     * global exception handler added to generator; now prints error in
+       journal
+     * make install : setgid helper will be chgrp cron / chmod 2755 if
+       group cron exists ; but won't create this group by itself
+     * now support BATCH=yes|no into crontabs; this is translasted into
+       CPUSchedulingPolicy=idle & IOSchedulingClass=idle
+     * the generator can now co-exist with a boilerplate /etc/crontab that
+       does includes include definitions for /etc/cron.daily etc... these
+       will only be processed if the matching native unit is not actived
+       during configure step
+
+v1.5.1 : 2014-12-13
+
+     * make all writes in crontab (both Python & C parts) atomic
+     * keep rejected crontabs in /tmp/crontab* for review
+     * added support for /etc.cron.allow and /etc/cron.deny; without any
+       of those, only root can create crontabs
+     * turn the setuid/root helper into a setguid/crontab to let it run
+       with the least privieges
+
+   If you enable this feature in your package, some additional setup is
+   needed after it has been unpacked:
+      getent group crontab > /dev/null 2>&1 || addgroup --system crontab
+      chgrp crontab /lib/systemd-cron/crontab_setgid
+      chmod 2755 /lib/systemd-cron/crontab_setgid
+      mkdir -p /var/spool/cron/crontabs
+      chown root:crontab /var/spool/cron/crontabs
+      chmod 1730 /var/spool/cron/crontabs
+      cd /var/spool/cron/crontabs
+      ls -1 | xargs -r -n 1 --replace=xxx  chown 'xxx:crontab' 'xxx'
+      ls -1 | xargs -r -n 1 chmod 600
+
+   The crontab program, when run as root, will also try to fixup file
+   permissions;
+   but won't create the crontab group.
+
+   You can use sudo crontab -l -u $USER to fix-up your own crontab's
+   permissions.
+
+   THANKS to Lorenzo Beretta for review
+
+v1.5.0 : 2014-12-11
+
+     * added an optional C setuid helper to let non-root users use crontab
+
+v1.4.2 : 2014-11-25
+
+   Bug-Fix release
+     * build now honor bindir for systemctl location
+     * generator: better handling of quoted commands in crontabs
+
+v1.4.1 : 2014-11-11
+
+     * generator: will now log warnings & errors about bad crontabs in the
+       journal
+     * generator: try less aggressively to make jobs persistent: a job
+       like 0 19 * * * root poweroff on a school/office PC would had run
+       the next morning; which is not the expected behaviour; this can now
+       be overiden with the PERSISTENT=yes|auto|no variable
+     * new trivial internal utility boot_delay : this is needed
+       because combining OnCalendar= & OnBootSec= in timer units doesn't
+       have the needed behaviour (OR instead of AND). A boot delay is a
+       standard feature of anacrontab; but can now also be used in crontab
+       by specifying the DELAY= value.
+
+   Thanks to @wavexx for the extensive review.
+
+v1.4.0 : 2014-11-04
+
+     * new utility mail_on_failure that is called by a new OnFailure=
+       hook, both for static & generated units
+     * add support for new time unit introduced in systemd 217: minutely,
+       quarterly, semi-annually
+     * review of man pages
+
+v1.3.3 : 2014-10-21
+
+   This release solves a bug introduced in crontab with the switch to
+   Python3
+
+v1.3.2 : 2014-10-20
+
+     * switch to Python3 for crontab & generator
+     * add a manpage for /etc/anacrontab
+     * add a new utility remove_stale_stamps than removes stales stamps
+       from long deleted crontabs ( It can be called from
+       /etc/cron.weekly/ )
+     * configure: statedir defaults now to '/var/spool/cron'
+     * crontab: improved error handling
+     * generator: add support for RANDOM_DELAY & START_HOURS_RANGE to
+       anacrontab. This works in crontabs too.
+
+v1.3.1 : 2014-09-22
+
+     * turn Path watching unit in static unit
+     * make Persistant=true smarter
+     * make /var/spool configurable
+     * put man page in right section
+
+v1.3.0 : 2014-09-04
+
+   merge in systemd-crontab-generator from @kstep
+   https://github.com/kstep/systemd-crontab-generator
+
+v1.2.1 : 2014-04-01
+
+     * FIX: Build should now be parallelizable with make -j<N>
+
+v1.2.0 : 2014-03-31
+
+     * NEW: Yearly timers with system ≥ 209.
+     * NEW: Persistent timers with systemd ≥ 212.
+
+v1.1.2 : 2013-08-24
+
+     * FIX: Reconfigure units so that service units are automatically
+       started by targets without needing to have them separately enabled.
+
+v1.1.1 : 2013-07-31
+
+     * Only activate service units if corresponding cron directory is
+       non-empty.
+     * Makefile does not automatically install cron directories.
+
+   Thanks @WithHat
+
+v1.1.0 : 2013-07-16
+
+     * Add target units which allow you to write custom cron jobs.
+
+   Thanks @WithHat
+
+v1.0.1 : 2013-05-31
+
+     * Update build mechanism with configure script and templated
+       Makefile.
+
+v1.0.0 : 2013-05-30
+
+     * Support cron.boot for scripts to be executed at boot-up.
+
+v0.1.0 : 2013-05-27
+
+     * Initial release supporting hourly, daily, weekly, and monthly
+       scripts.
+
