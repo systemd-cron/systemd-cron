@@ -1,0 +1,70 @@
+#!/bin/bash
+#
+# this is a sample script that show a desktop notification
+# when your cron.daily job is done
+#
+# a better GUI to systemd timers (like the KDE Weather/Calendar applet)
+# would be better
+#
+# you should put this in /etc/cron.daily/
+
+set -e
+[ -e /var/log/unattended-upgrades/unattended-upgrades.log ] || exit 0
+
+line=$(cat /var/log/unattended-upgrades/unattended-upgrades.log | grep "will be upgraded" | tail -n 1)
+if [ -z "$line" -a -e /var/log/unattended-upgrades/unattended-upgrades.log.1.gz ]
+then
+	line=$(zcat /var/log/unattended-upgrades/unattended-upgrades.log.1.gz | grep "will be upgraded" | tail -n 1)
+fi
+
+updated=$(echo $line | grep ^$(date +%Y-%m-%d) | cut -d: -f4)
+
+# reboot-required isn't broad enough to my taste (mostly only kernel);
+# these are the usual suspects that might make a system
+# unbootable or make X doens't come up
+for a in $updated; do
+	if [[ $a == *grub* ]]; then grub="$grub $a"; fi
+	if [[ $a == *systemd* ]]; then systemd="$systemd $a"; fi
+	if [[ $a == *kdm* ]]; then kdm="$radeon $a"; fi
+	if [[ $a == *radeon* ]]; then radeon="$radeon $a"; fi
+	if [[ $a == *mesa* ]]; then mesa="$mesa $a"; fi
+done;
+
+if [ -e /var/run/reboot-required -o -n "$grub" -o -n "$systemd" -o -n "$kdm" -o -n "$radeon" -o -n "$mesa" ]
+then
+	# check if user is active
+	if [ -n "$(users)" ]
+	then
+		echo grub:$grub
+		echo systemd:$systemd
+		echo kdm:$kdm
+		echo radeon:$radeon
+		echo mesa:$mesa
+		echo "user(s) active:"
+		who
+		user=$(loginctl list-sessions | grep seat0 | awk '{print $3}')
+		if [ -n "$user" ]
+		then
+			export DISPLAY=:0
+			su $user -c "notify-send 'REBOOT NEEDED' -i /usr/share/icons/oxygen/48x48/status/dialog-warning.png \"$updated\" "
+		else
+			echo "REBOOT NEEDED: $updated" | wall
+		fi
+	else
+                # reboot after 1 minute
+                shutdown --reboot
+	fi
+else
+	# check if a graphical session exists
+	user=$(loginctl list-sessions | grep seat0 | awk '{print $3}')
+	if [ -n "$user" ]
+	then
+	    export DISPLAY=:0
+            if [ -n "$updated" ]
+            then
+		su $user -c "notify-send 'daily upgrade completed' -i /usr/share/icons/oxygen/48x48/status/dialog-information.png \"$updated\" "
+	    else
+		su $user -c "notify-send 'cron-daily finished' -i /usr/share/icons/oxygen/48x48/status/dialog-information.png 'nothing to update today'"
+	    fi
+	fi
+fi
