@@ -42,11 +42,14 @@ then
 		echo mesa:$mesa
 		echo "user(s) active:"
 		who
-		user=$(loginctl list-sessions | grep seat0 | awk '{print $3}')
-		if [ -n "$user" ]
+		users=$(loginctl list-sessions | grep seat0 | awk '{print $3}')
+		if [ -n "$users" ]
 		then
-			export DISPLAY=:0
-			su $user -c "notify-send 'REBOOT NEEDED' -i /usr/share/icons/oxygen/48x48/status/dialog-warning.png \"$updated\" "
+			for user in $users
+			do
+				export DISPLAY=:0
+				su $user -c "notify-send 'REBOOT NEEDED' -i dialog-warning \"$updated\" "
+			done
 		else
 			echo "REBOOT NEEDED: $updated" | wall
 		fi
@@ -56,15 +59,22 @@ then
 	fi
 else
 	# check if a graphical session exists
-	user=$(loginctl list-sessions | grep seat0 | awk '{print $3}')
-	if [ -n "$user" ]
+	users=$(loginctl list-sessions | grep seat0 | awk '{print $3}')
+	if [ -n "$users" ]
 	then
 	    export DISPLAY=:0
             if [ -n "$updated" ]
             then
-		su $user -c "notify-send 'daily upgrade completed' -i /usr/share/icons/oxygen/48x48/status/dialog-information.png \"$updated\" "
+		for user in $users
+		do
+			echo $user
+			su $user -c "notify-send 'daily upgrade completed' -i dialog-information \"$updated\" "
+		done
 	    else
-		su $user -c "notify-send 'cron-daily finished' -i /usr/share/icons/oxygen/48x48/status/dialog-information.png 'nothing to update today'"
+		for user in $users
+		do
+			su $user -c "notify-send 'cron-daily finished' -i dialog-information 'nothing to update today'"
+		done
 	    fi
 	fi
 fi
