@@ -243,7 +243,10 @@ def show(cron_file, args):
 
 def replace(cron_file, args):
     if args.file == '-':
-        crontab = sys.stdin.read()
+        try:
+            crontab = sys.stdin.read()
+        except KeyboardInterrupt:
+            sys.exit()
         tmp = tempfile.NamedTemporaryFile(mode='w+', encoding='UTF-8')
         tmp.write(crontab)
         tmp.file.flush()
