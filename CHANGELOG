@@ -1,3 +1,7 @@
+v1.5.4 : UNRELEASED
+
+     * generator: don't call OnFailure unit without a MTA avalaible.
+
 v1.5.3 : 2015-02-16
 
    Minor bugfixes:
