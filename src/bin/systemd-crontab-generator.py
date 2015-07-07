@@ -21,6 +21,13 @@ REBOOT_FILE = '/run/crond.reboot'
 
 SELF = os.path.basename(sys.argv[0])
 
+for pgm in ('/usr/sbin/sendmail', '/usr/lib/sendmail'):
+    if os.path.exists(pgm):
+        HAS_SENDMAIL = True
+        break
+else:
+    HAS_SENDMAIL = False
+
 class Persistent(object):
     yes, no, auto = range(3)
 
@@ -92,6 +99,10 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                      environment['PATH'] = expand_home_path(value, basename)
                 elif envvar.group(1) == 'BATCH':
                      batch = (value.strip().lower() in ['yes','true','1'])
+                elif envvar.group(1) == 'MAILTO':
+                     environment[envvar.group(1)] = value
+                     if value and not HAS_SENDMAIL:
+                         log(4, 'a MTA is not installed, but MAILTO is set in %s' % filename)
                 else:
                      environment[envvar.group(1)] = value
                 continue
@@ -419,7 +430,12 @@ def generate_timer_unit(job, seq):
         f.write('RefuseManualStart=true\n')
         f.write('RefuseManualStop=true\n')
         f.write('SourcePath=%s\n' % job['f'])
-        if '"MAILTO="' not in job['e']: f.write('OnFailure=cron-failure@%i.service\n')
+        if '"MAILTO="' in job['e']:
+            pass # mails explicitely disabled
+        elif not HAS_SENDMAIL and '"MAILTO=' not in job['e']:
+            pass # mails automaticaly disabled
+        else:
+            f.write('OnFailure=cron-failure@%i.service\n')
         if job['u'] != 'root' or job['f'] == '@statedir@/root':
             f.write('Requires=systemd-user-sessions.service\n')
             if home: f.write('RequiresMountsFor=%s\n' % home)
