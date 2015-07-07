@@ -9,6 +9,14 @@ try:
 except IndexError:
     sys.exit("Usage: %s <unit>" % sys.argv[0])
 
+for pgm in ('/usr/sbin/sendmail', '/usr/lib/sendmail'):
+    if os.path.exists(pgm):
+        break
+else:
+    cat = Popen(['systemd-cat', '-t', 'systemd-cron', '-p', 'err'], stdin=PIPE)
+    cat.communicate(bytes("can't send error mail for %s without a MTA" % job, 'UTF-8'))
+    exit(0)
+
 user = subprocess.check_output(['systemctl','show',job,'--property=User'], universal_newlines=True)
 user = user.rstrip('\n').split('=')[1]
 if not user: user = 'root'
