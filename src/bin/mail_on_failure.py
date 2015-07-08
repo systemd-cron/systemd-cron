@@ -13,8 +13,7 @@ for pgm in ('/usr/sbin/sendmail', '/usr/lib/sendmail'):
     if os.path.exists(pgm):
         break
 else:
-    cat = Popen(['systemd-cat', '-t', 'systemd-cron', '-p', 'err'], stdin=PIPE)
-    cat.communicate(bytes("can't send error mail for %s without a MTA" % job, 'UTF-8'))
+    print("<3>can't send error mail for %s without a MTA" % job)
     exit(0)
 
 user = subprocess.check_output(['systemctl','show',job,'--property=User'], universal_newlines=True)
