@@ -139,4 +139,4 @@ Copyright
 [7]: http://packages.debian.org/systemd-cron/
 [8]: http://packages.ubuntu.com/search?suite=all&searchon=names&keywords=systemd-cron
 [9]: https://aur.archlinux.org/packages/systemd-cron
-[10]: http://gpo.zugaina.org/sys-process/systemd-cron
+[10]: https://packages.gentoo.org/package/sys-process/systemd-cron
