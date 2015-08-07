@@ -1,6 +1,7 @@
 v1.5.4 : UNRELEASED
 
      * generator: don't call OnFailure unit without a MTA avalaible.
+     * sync with systemd-cron-next: remove --stale-stamps configure option
 
 v1.5.3 : 2015-02-16
 
