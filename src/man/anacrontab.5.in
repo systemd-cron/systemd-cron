@@ -71,7 +71,7 @@ between runs; where systemd will try to run it every monday at 00:00;
 or as soon the system boot. In the most extreme case, if a system was only started on sunday;
 a weekly job will run this day and the again the next (mon)day.
 .br
-With carefull manual settings, it would be possible to run the
+With careful manual settings, it would be possible to run the
 real anacron binary (not your distro's package) with systemd-cron;
 if you need an identical behaviour.
 .br

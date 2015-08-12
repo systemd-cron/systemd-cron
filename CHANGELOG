@@ -9,7 +9,7 @@ v1.5.3 : 2015-02-16
      * add crontab --show option that lists crontabs
      * crontab: try /usr/bin/editor, /usr/bin/vim, /usr/bin/nano,
        /usr/bin/mcedit if VISUAL and EDITOR are not set
-     * avoid forgeting successfull edits in /tmp/
+     * avoid forgeting successful edits in /tmp/
 
 v1.5.2 : 2014-12-21
 
@@ -24,7 +24,7 @@ v1.5.2 : 2014-12-21
        CPUSchedulingPolicy=idle & IOSchedulingClass=idle
      * the generator can now co-exist with a boilerplate /etc/crontab that
        does includes include definitions for /etc/cron.daily etc... these
-       will only be processed if the matching native unit is not actived
+       will only be processed if the matching native unit is not activated
        during configure step
 
 v1.5.1 : 2014-12-13
@@ -111,7 +111,7 @@ v1.3.2 : 2014-10-20
 v1.3.1 : 2014-09-22
 
      * turn Path watching unit in static unit
-     * make Persistant=true smarter
+     * make Persistent=true smarter
      * make /var/spool configurable
      * put man page in right section
 

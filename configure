@@ -65,7 +65,7 @@ set_enable_flag()
     elif [ ${2} = 'yes' ] || [ ${2} = 'no' ]; then
         eval "enable_${1}=${2}"
     else
-        echo "ERROR: Unkown value for enable-${1}: '${2}'. Expected 'yes' or 'no'."
+        echo "ERROR: Unknown value for enable-${1}: '${2}'. Expected 'yes' or 'no'."
     fi
 }
 
