@@ -38,6 +38,8 @@ There exists packages avaible for:
 * [Arch][9]
 * [Gentoo][10]
 
+There is also a .spec file for Fedora in [contrib/][11].
+
 You can also build it manually from source.
 
 
@@ -140,3 +142,4 @@ Copyright
 [8]: http://packages.ubuntu.com/search?suite=all&searchon=names&keywords=systemd-cron
 [9]: https://aur.archlinux.org/packages/systemd-cron
 [10]: https://packages.gentoo.org/package/sys-process/systemd-cron
+[11]: https://github.com/systemd-cron/systemd-cron/blob/master/contrib/systemd-cron.spec
