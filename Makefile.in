@@ -1,7 +1,7 @@
 CFLAGS ?= -O2
 CFLAGS += -Wall
 
-package		:= $(shell cat README.md | head -n1)
+package		:= $(shell head -n1 README.md)
 version		:= $(shell cat VERSION)
 
 schedules			:= @schedules@
