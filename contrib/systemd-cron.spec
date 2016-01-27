@@ -26,7 +26,7 @@ Requires:       systemd
 Provides systemd units to run cron jobs in /etc/cron.hourly cron.daily
 cron.weekly and cron.monthly directories, without having cron
 or anacron installed.
-It also provides a generator that dynamicaly translate /etc/crontab,
+It also provides a generator that dynamically translate /etc/crontab,
 /etc/cron.d/* and user cronjobs in systemd units.
 
 %pre
