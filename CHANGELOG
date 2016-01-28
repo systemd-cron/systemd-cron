@@ -1,5 +1,6 @@
 v1.5.5 : UNRELEASED
 
+     * pass $(CPPFLAGS) to compilator for setgid helper
 
 v1.5.4 : 2016-01-29
 

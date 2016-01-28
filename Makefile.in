@@ -199,7 +199,7 @@ $(builddir)/bin/%: $(srcdir)/bin/%.py
 
 $(builddir)/bin/crontab_setgid: $(srcdir)/bin/crontab_setgid.c
 ifneq ($(enable_setgid),no)
-	$(CC) $(CFLAGS) $(LDFLAGS) $< -DCRONTAB_DIR='"$(statedir)"' -o $@
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) $< -DCRONTAB_DIR='"$(statedir)"' -o $@
 endif
 
 $(outputs): | $(builddir)
