@@ -60,6 +60,15 @@ def expand_home_path(path, user):
             parts[i] = home + part[1:]
     return ':'.join(parts)
 
+def environment_string(env):
+    line = []
+    for k, v in env.items():
+        if ' ' in v:
+            line.append('"%s=%s"' % (k, v))
+        else:
+            line.append('%s=%s' % (k, v))
+    return ' '.join(line)
+
 def parse_crontab(filename, withuser=True, monotonic=False):
     basename = os.path.basename(filename)
     environment = { }
@@ -139,7 +148,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                 jobid = ''.join(c for c in jobid if c in valid_chars)
 
                 yield {
-                        'e': ' '.join('"%s=%s"' % kv for kv in environment.items()),
+                        'e': environment_string(environment),
                         's': environment.get('SHELL','/bin/sh'),
                         'a': random_delay,
                         'l': line,
@@ -172,7 +181,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                     user, command = (parts[1], ' '.join(parts[2:])) if withuser else (basename, ' '.join(parts[1:]))
 
                     yield {
-                            'e': ' '.join('"%s=%s"' % kv for kv in environment.items()),
+                            'e': environment_string(environment),
                             's': environment.get('SHELL','/bin/sh'),
                             'a': random_delay,
                             'l': line,
@@ -196,7 +205,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                     user, command = (parts[5], ' '.join(parts[6:])) if withuser else (basename, ' '.join(parts[5:]))
 
                     yield {
-                            'e': ' '.join('"%s=%s"' % kv for kv in environment.items()),
+                            'e': environment_string(environment),
                             's': environment.get('SHELL','/bin/sh'),
                             'a': random_delay,
                             'l': line,
