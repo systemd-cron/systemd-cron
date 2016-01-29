@@ -400,14 +400,9 @@ def generate_timer_unit(job, seq):
     unit_name = "cron-%s-%s-%s" % (job['j'], job['u'], unit_id)
 
     if not (len(parts) == 1 and os.path.isfile(command)):
-        if "'" not in command:
-            command=job['s'] + " -c '" + command + "'"
-        elif '"' not in command:
-            command=job['s'] + ' -c "' + command + '"'
-        else:
-            with open('%s/%s.sh' % (TARGET_DIR, unit_name), 'w', encoding='utf8') as f:
-                f.write(command)
-            command=job['s'] + ' ' + TARGET_DIR + '/' + unit_name + '.sh'
+        with open('%s/%s.sh' % (TARGET_DIR, unit_name), 'w', encoding='utf8') as f:
+            f.write(command)
+        command=job['s'] + ' ' + TARGET_DIR + '/' + unit_name + '.sh'
 
     with open('%s/%s.timer' % (TARGET_DIR, unit_name), 'w' , encoding='utf8') as f:
         f.write('[Unit]\n')
