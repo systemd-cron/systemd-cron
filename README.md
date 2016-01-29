@@ -138,7 +138,7 @@ Copyright
 [4]: https://www.gnu.org/prep/standards/html_node/Directory-Variables.html "Directory Variables"
 [5]: http://www.freedesktop.org/software/systemd/man/systemd.timer.html#Persistent= "systemd.timer"
 [6]: https://github.com/kstep/systemd-crontab-generator "crontab generator"
-[7]: http://packages.debian.org/systemd-cron/
+[7]: http://packages.debian.org/systemd-cron
 [8]: http://packages.ubuntu.com/search?suite=all&searchon=names&keywords=systemd-cron
 [9]: https://aur.archlinux.org/packages/systemd-cron
 [10]: https://packages.gentoo.org/package/sys-process/systemd-cron
