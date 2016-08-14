@@ -66,7 +66,7 @@ Any
 greater than 30 is rounded to the closest month
 .PP
 There are subtle differences on how anacron & systemd handle persistente timers:
-anacron will run a weekly job at most once a week, with allways a minimum delay of 6 days
+anacron will run a weekly job at most once a week, with always a minimum delay of 6 days
 between runs; where systemd will try to run it every monday at 00:00;
 or as soon the system boot. In the most extreme case, if a system was only started on sunday;
 a weekly job will run this day and the again the next (mon)day.
