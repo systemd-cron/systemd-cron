@@ -73,7 +73,7 @@ Other options include:
 
 * `--unitdir=<path>` Path to systemd unit files.
   Default: `<libdir>/systemd/system`.
-* `--runpaths=<path>` The path installations should use for the `run-parts` executable.
+* `--runparts=<path>` The path installations should use for the `run-parts` executable.
   Default: `<prefix>/bin/run-parts`.
 * `--enable-boot[=yes|no]` Include support for the boot timer.
   Default: `yes`.
