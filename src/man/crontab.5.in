@@ -99,7 +99,7 @@ Otherwise mail is sent to the owner of the crontab.
 .br
 This mail only contains an small excerpt from the log, as seen when using
 .B systemctl status
-The full output remains avaible in the journal.
+The full output remains available in the journal.
 
 .TP
 .B RANDOM_DELAY
