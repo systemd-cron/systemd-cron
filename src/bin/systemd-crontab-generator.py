@@ -11,9 +11,9 @@ envvar_re = re.compile(r'^([A-Za-z_0-9]+)\s*=\s*(.*)$')
 
 MINUTES_SET = list(range(0, 60))
 HOURS_SET = list(range(0, 24))
-DAYS_SET = list(range(0, 32))
+DAYS_SET = list(range(1, 32))
 DOWS_SET = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-MONTHS_SET = list(range(0, 13))
+MONTHS_SET = list(range(1, 13))
 TIME_UNITS_SET = ['daily', 'weekly', 'monthly', 'quarterly', 'semi-annually', 'yearly']
 
 KSH_SHELLS = ['/bin/sh', '/bin/dash', '/bin/ksh', '/bin/bash', '/usr/bin/zsh']

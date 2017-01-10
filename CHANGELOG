@@ -1,10 +1,11 @@
-v1.5.5 : UNRELEASED
+v1.5.5 : 2017-10-01
 
      * pass $(CPPFLAGS) to compilator for setgid helper
      * almost always generate .sh scripts to avoid that systemd
        complains with "Invalid escape sequences in line, correcting:"
        when parsing some complex one-liners
        https://github.com/systemd/systemd/blob/master/src/basic/extract-word.c#L204
+     * fix off-by-one error in processing of '*/<n>' for months & days. Issue #49
 
 v1.5.4 : 2016-01-29
 
