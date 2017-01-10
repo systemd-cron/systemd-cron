@@ -231,7 +231,8 @@ def parse_time_unit(filename, line, value, values, mapping=int):
         list(map(parse_period(mapping), value.split(','))))), set()))
     except ValueError:
         result = []
-    if not len(result): log(3, 'garbled time in %s [%s]: %s' % (filename, line, value))
+    if not len(result):
+        log(3, 'garbled time in %s [%s]: %s' % (filename, line, value))
     return result
 
 def month_map(month):
