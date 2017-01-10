@@ -263,7 +263,7 @@ def parse_period(mapping=int):
         except ValueError:
             start = end = range
 
-        return slice(mapping(start), mapping(end) + 1, int(step))
+        return slice(mapping(start) - 1, mapping(end), int(step))
 
     return parser
 
