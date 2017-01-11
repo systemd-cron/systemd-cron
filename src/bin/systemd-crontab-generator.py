@@ -227,8 +227,12 @@ def parse_time_unit(filename, line, value, values, mapping=int):
     if value == '*':
         return ['*']
     try:
+        base = min(values)
+        # day of weeks
+        if isinstance(base, str):
+            base = 0
         result = sorted(reduce(lambda a, i: a.union(set(i)), list(map(values.__getitem__,
-        list(map(parse_period(mapping, min(values)), value.split(','))))), set()))
+        list(map(parse_period(mapping, base), value.split(','))))), set()))
     except ValueError:
         result = []
     if not len(result):
