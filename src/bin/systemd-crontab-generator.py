@@ -387,8 +387,15 @@ def generate_timer_unit(job, seq):
                     schedule = job['p']
 
     else:
-        dows = ','.join(job['w'])
-        dows = '' if dows == '*' else dows + ' '
+        if job['w'] == ['*']:
+            dows=''
+        else:
+            dows_sorted = []
+            for day in DOWS_SET:
+                if day in job['w']:
+                    dows_sorted.append(day)
+            dows = ','.join(dows_sorted) + ' '
+
         if 0 in job['M']: job['M'].remove(0)
         if 0 in job['d']: job['d'].remove(0)
         if not len(job['M']) or not len(job['d']) or not len(job['h']) or not len(job['m']):
