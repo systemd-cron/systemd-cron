@@ -228,7 +228,7 @@ def parse_time_unit(filename, line, value, values, mapping=int):
         return ['*']
     try:
         result = sorted(reduce(lambda a, i: a.union(set(i)), list(map(values.__getitem__,
-        list(map(parse_period(mapping), value.split(','))))), set()))
+        list(map(parse_period(mapping, min(values)), value.split(','))))), set()))
     except ValueError:
         result = []
     if not len(result):
@@ -247,7 +247,7 @@ def dow_map(dow):
     except ValueError:
         return int(dow) % 7
 
-def parse_period(mapping=int):
+def parse_period(mapping=int, base=0):
     def parser(value):
         try:
             range, step = value.split('/')
@@ -263,7 +263,7 @@ def parse_period(mapping=int):
         except ValueError:
             start = end = range
 
-        return slice(mapping(start) - 1, mapping(end), int(step))
+        return slice(mapping(start) - 1 + int(not(bool(base))), mapping(end) + int(not(bool(base))), int(step))
 
     return parser
 
