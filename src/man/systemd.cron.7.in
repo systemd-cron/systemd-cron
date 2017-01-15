@@ -142,7 +142,7 @@ flag, while a regular cron+anacron setup won't catch-up the missed executions of
 .br
 .SB OnCalendar=*-*-* 18:36:00
 
-.IP "Override cron-daily.service priority, usefull for old computers"
+.IP "Override cron-daily.service priority, useful for old computers"
 .br
 .SB # systemctl edit cron-daily.service
 .br
