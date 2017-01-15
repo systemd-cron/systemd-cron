@@ -317,6 +317,12 @@ If you add those lines, your jobs will run twice.
 .SH SEE ALSO
 systemd.cron(7), systemd-crontab-generator(8), crontab(1)
 
+Some extra settings can only be tweaked with
+.PP
+    systemctl edit cron-<schedule>.[timer|service]
+.TP
+see systemd.cron(7) for more details.
+
 .SH LIMITATIONS
 The
 .I systemd-cron

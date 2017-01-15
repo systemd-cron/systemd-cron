@@ -55,6 +55,12 @@ list of users that aren't allowed to use crontab
 
 .SH LIMITATIONS
 SELinux is not supported.
+.TP
+Some extra settings can only be tweaked with
+.PP
+    systemctl edit cron-<schedule>.[timer|service]
+.TP
+see systemd.cron(7) for more details.
 
 .SH AUTHOR
 Konstantin Stepanov <me@kstep.me>

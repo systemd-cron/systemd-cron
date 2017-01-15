@@ -133,6 +133,29 @@ flag, while a regular cron+anacron setup won't catch-up the missed executions of
 .SB # journalctl -u cron-yearly
 .br
 
+.IP "Override some generated timer start time"
+.SB # systemctl edit cron-geoip-database-contrib-root-<...>.timer --full
+.br
+.I keep existing statements, but change this one:
+.br
+.SB [Timer]
+.br
+.SB OnCalendar=*-*-* 18:36:00
+
+.IP "Override cron-daily.service priority, usefull for old computers"
+.br
+.SB # systemctl edit cron-daily.service
+.br
+.I this will open a blank editor when you can type a drop-in configuration file
+.I that will extend the current .service
+.br
+.SB [Service]
+.br
+.SB CPUSchedulingPolicy=idle
+.br
+.SB IOSchedulingClass=idle
+.br
+
 .IP "Example service file executed every hour"
 .SB [Unit]
 .br

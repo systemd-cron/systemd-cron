@@ -1,3 +1,9 @@
+v1.5.8 : 2017-01-15
+
+     * handle weekly slices as expected
+     * document that someone can use 'systemctl edit' to override
+       (generated) units.
+
 v1.5.7 : 2017-01-11
 
      * try to fix it again, hopefully finally,
