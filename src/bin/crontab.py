@@ -185,17 +185,14 @@ def edit(cron_file, args):
             os.unlink(tmp.name)
             raise
 
-    tmp.file.flush()
+    tmp.close()
 
     if subprocess.call([EDITOR, tmp.name]) != 0:
-        tmp.close()
         sys.exit('edit aborted, your edit is kept here:%s' % tmp.name)
 
     if not check(tmp.name):
-        tmp.close()
         sys.exit("not replacing crontab, your edit is kept here:%s" % tmp.name)
 
-    tmp.file.close()
     tmp.file = open(tmp.name,"r")
 
     try:
