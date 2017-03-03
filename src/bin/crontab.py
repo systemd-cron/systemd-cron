@@ -193,38 +193,34 @@ def edit(cron_file, args):
     if not check(tmp.name):
         sys.exit("not replacing crontab, your edit is kept here:%s" % tmp.name)
 
-    tmp.file = open(tmp.name,"r")
+    with open(tmp.name,"r") as edited:
+        newtab = edited.read()
 
     try:
         new = tempfile.NamedTemporaryFile(mode='w+', encoding='UTF-8', dir=CRONTAB_DIR,
                                           prefix=args.user + '.', delete=False)
-        new.write(tmp.file.read())
+        new.write(newtab)
         new.close()
         os.rename(new.name, cron_file)
-        tmp.close()
         os.unlink(tmp.name)
         try_chmod(cron_file, args.user)
     except (IOError, PermissionError) as e:
         if e.errno == os.errno.ENOSPC:
             os.unlink(new.name)
-            tmp.close()
             sys.exit("no space left on %s, your edit is kept here:%s" % (CRONTAB_DIR, tmp.name))
         elif args.user != getpass.getuser():
-            tmp.close()
             sys.exit("you can not edit %s's crontab, your edit is kept here:%s" % (args.user, tmp.name))
         elif e.errno == os.errno.EROFS:
-            tmp.close()
             sys.exit("%s is on a read-only filesystem, your edit is kept here:%s" % (CRONTAB_DIR, tmp.name))
         elif HAS_SETGID:
             p = Popen([SETGID_HELPER,'w'], stdin=PIPE)
-            p.communicate(bytes(tmp.file.read(), 'UTF-8'))
+            p.communicate(bytes(newtab, 'UTF-8'))
             if p.returncode:
                 sys.exit("your edit is kept here:%s" % tmp.name)
             else:
                 os.unlink(tmp.name)
         else:
             sys.stderr.write("unexpected error, your edit is kept here:%s\n" % tmp.name)
-            tmp.close()
             raise
 
 def show(cron_file, args):
