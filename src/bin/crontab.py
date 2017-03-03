@@ -195,7 +195,8 @@ def edit(cron_file, args):
         tmp.close()
         sys.exit("not replacing crontab, your edit is kept here:%s" % tmp.name)
 
-    tmp.file.seek(0)
+    tmp.file.close()
+    tmp.file = open(tmp.name,"r")
 
     try:
         new = tempfile.NamedTemporaryFile(mode='w+', encoding='UTF-8', dir=CRONTAB_DIR,
