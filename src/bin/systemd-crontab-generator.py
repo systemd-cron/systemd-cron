@@ -473,7 +473,7 @@ def generate_timer_unit(job, seq):
 def log(level, message):
     if len(sys.argv) == 4:
         with open('/dev/kmsg', 'w', encoding='utf8') as kmsg:
-            kmsg.write('<%s> %s[%s]: %s\n' % (level, SELF, os.getpid(), message))
+            kmsg.write('<%s>%s[%s]: %s\n' % (level, SELF, os.getpid(), message))
     else:
         sys.stderr.write('%s: %s\n' % (SELF, message))
 
