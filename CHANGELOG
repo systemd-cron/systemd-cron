@@ -1,6 +1,7 @@
 v1.5.9 : 2017-xx-xx
 
      * allow runtime masking of units
+     * log masked timers in a distinct way
 
 v1.5.8 : 2017-01-15
 

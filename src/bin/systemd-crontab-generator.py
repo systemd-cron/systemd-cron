@@ -509,7 +509,10 @@ def main():
                           '/etc/systemd/system/%s.timer' % basename,
                           '/run/systemd/system/%s.timer' % basename):
             if os.path.exists(unit_file):
-                log(5, 'ignoring %s because native timer is present' % filename)
+                if os.path.realpath(unit_file) == '/dev/null':
+                    log(5, 'ignoring %s because it is masked' % filename)
+                else:
+                    log(5, 'ignoring %s because native timer is present' % filename)
                 continue
         if basename.startswith('.'):
             continue
