@@ -509,17 +509,16 @@ def main():
          or os.path.exists('/etc/systemd/system/%s.timer' % basename)):
             log(5, 'ignoring %s because native timer is present' % filename)
             continue
-        elif basename.startswith('.'):
+        if basename.startswith('.'):
             continue
-        elif '.dpkg-' in basename:
+        if '.dpkg-' in basename:
             log(5, 'ignoring %s' % filename)
             continue
-        else:
-            for job in parse_crontab(filename, withuser=True):
-                if 'c' not in job:
-                    log(3, 'truncated line in %s: %s' % (filename, job['l']))
-                    continue
-                generate_timer_unit(job, seqs.setdefault(job['j']+job['u'], count()))
+        for job in parse_crontab(filename, withuser=True):
+            if 'c' not in job:
+                log(3, 'truncated line in %s: %s' % (filename, job['l']))
+                continue
+            generate_timer_unit(job, seqs.setdefault(job['j']+job['u'], count()))
 
     if os.path.isfile('/etc/anacrontab'):
         for job in parse_crontab('/etc/anacrontab', monotonic=True):
