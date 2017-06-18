@@ -421,8 +421,6 @@ def generate_timer_unit(job, seq):
         f.write('Description=[Timer] "%s"\n' % job['l'])
         f.write('Documentation=man:systemd-crontab-generator(8)\n')
         f.write('PartOf=cron.target\n')
-        f.write('RefuseManualStart=true\n')
-        f.write('RefuseManualStop=true\n')
         f.write('SourcePath=%s\n' % job['f'])
         if testremoved: f.write('ConditionFileIsExecutable=%s\n' % testremoved)
 
@@ -443,8 +441,6 @@ def generate_timer_unit(job, seq):
         f.write('[Unit]\n')
         f.write('Description=[Cron] "%s"\n' % job['l'])
         f.write('Documentation=man:systemd-crontab-generator(8)\n')
-        f.write('RefuseManualStart=true\n')
-        f.write('RefuseManualStop=true\n')
         f.write('SourcePath=%s\n' % job['f'])
         if '"MAILTO="' in job['e']:
             pass # mails explicitely disabled

@@ -1,7 +1,8 @@
-v1.5.9 : 2017-xx-xx
+v1.5.9 : 2017-06-18
 
      * allow runtime masking of units
      * log masked timers in a distinct way
+     * drop cargo-culted RefuseManual[Start|Stop]
 
 v1.5.8 : 2017-01-15
 

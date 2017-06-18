@@ -2,8 +2,6 @@
 Description=@package@ @schedule@ script service
 Documentation=man:systemd.cron(7)
 PartOf=cron-@schedule@.target
-RefuseManualStart=yes
-RefuseManualStop=yes
 ConditionDirectoryNotEmpty=@confdir@/cron.@schedule@
 ConditionPathExists=!/run/crond.bootdir
 OnFailure=cron-failure@%i.service
