@@ -3,6 +3,7 @@ v1.5.9 : 2017-06-18
      * allow runtime masking of units
      * log masked timers in a distinct way
      * drop cargo-culted RefuseManual[Start|Stop]
+     * delay cron-boot.timer of 1 minute
 
 v1.5.8 : 2017-01-15
 

@@ -4,5 +4,5 @@ Documentation=man:systemd.cron(7)
 PartOf=cron.target
 
 [Timer]
-OnBootSec=0
+OnBootSec=60
 Unit=cron-@schedule@.target
