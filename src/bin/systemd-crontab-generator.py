@@ -501,15 +501,19 @@ def main():
     CRONTAB_FILES = files('/etc/cron.d')
     for filename in CRONTAB_FILES:
         basename = os.path.basename(filename)
+        masked = False
         for unit_file in ('@unitdir@/%s.timer' % basename,
                           '/etc/systemd/system/%s.timer' % basename,
                           '/run/systemd/system/%s.timer' % basename):
             if os.path.exists(unit_file):
+                masked = True
                 if os.path.realpath(unit_file) == '/dev/null':
                     log(5, 'ignoring %s because it is masked' % filename)
                 else:
                     log(5, 'ignoring %s because native timer is present' % filename)
-                continue
+                break
+        if masked:
+            continue
         if basename.startswith('.'):
             continue
         if '.dpkg-' in basename:
