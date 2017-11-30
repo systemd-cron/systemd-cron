@@ -558,7 +558,7 @@ def main():
 
             f.write('\n[Service]\n')
             f.write('Type=oneshot\n')
-            f.write('ExecStart=/bin/sh -c "@bindir@/systemctl daemon-reload ; @bindir@/systemctl try-restart cron.target"\n')
+            f.write('ExecStart=/bin/sh -c "systemctl daemon-reload ; systemctl try-restart cron.target"\n')
 
         MULTIUSER_DIR = os.path.join(TARGET_DIR, 'multi-user.target.wants')
 

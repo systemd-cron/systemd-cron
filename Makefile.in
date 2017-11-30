@@ -18,6 +18,7 @@ statedir	:= @statedir@
 mandir		:= @mandir@
 docdir		:= @docdir@
 unitdir		:= @unitdir@
+generatordir	:= @generatordir@
 
 runparts	:= @runparts@
 
@@ -88,7 +89,7 @@ test: all
 
 install: all
 	install -m755 -D $(builddir)/bin/crontab $(DESTDIR)$(bindir)/crontab
-	install -m755 -D $(builddir)/bin/systemd-crontab-generator $(DESTDIR)$(libdir)/systemd/system-generators/systemd-crontab-generator
+	install -m755 -D $(builddir)/bin/systemd-crontab-generator $(DESTDIR)$(generatordir)/systemd-crontab-generator
 	install -m755 -D $(builddir)/bin/remove_stale_stamps $(DESTDIR)$(libdir)/$(package)/remove_stale_stamps
 	install -m755 -D $(builddir)/bin/mail_on_failure $(DESTDIR)$(libdir)/$(package)/mail_on_failure
 	install -m755 -D $(builddir)/bin/boot_delay $(DESTDIR)$(libdir)/$(package)/boot_delay
