@@ -31,6 +31,9 @@ enable_minutely=no
 enable_quarterly=no
 enable_semi_annually=no
 
+# systemd ≥ 229
+enable_randomized_delay=yes
+
 ARGS=$(getopt -n "$(basename "${0}")" -o '' -l '
 prefix:,
 bindir:,
@@ -53,6 +56,7 @@ enable-quarterly::,
 enable-semi_annually::,
 enable-yearly::,
 enable-persistent::,
+enable-randomized-delay::,
 enable-setgid::,
 ' -- "${@}")
 
@@ -159,6 +163,10 @@ do
             set_enable_flag persistent ${2}
             shift 2;;
 
+        '--enable-randomized-delay')
+            set_enable_flag randomized_delay ${2}
+            shift 2;;
+
         '--enable-setgid')
             set_enable_flag setgid ${2}
             shift 2;;
@@ -221,6 +229,7 @@ sed "
 s|@schedules@|${schedules}|g
 s|@schedules_not@|${schedules_not}|g
 s|@enable_persistent@|${enable_persistent}|g
+s|@enable_randomized_delay@|${enable_randomized_delay}|g
 s|@enable_setgid@|${enable_setgid}|g
 s|@prefix@|${prefix}|g
 s|@bindir@|${bindir}|g

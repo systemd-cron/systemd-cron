@@ -18,6 +18,7 @@ TIME_UNITS_SET = ['daily', 'weekly', 'monthly', 'quarterly', 'semi-annually', 'y
 
 KSH_SHELLS = ['/bin/sh', '/bin/dash', '/bin/ksh', '/bin/bash', '/usr/bin/zsh']
 REBOOT_FILE = '/run/crond.reboot'
+RANDOMIZED_DELAY = @randomized_delay@
 
 SELF = os.path.basename(sys.argv[0])
 
@@ -428,7 +429,11 @@ def generate_timer_unit(job, seq):
         f.write('Unit=%s.service\n' % unit_name)
         if schedule: f.write('OnCalendar=%s\n' % schedule)
         else:        f.write('OnBootSec=%sm\n' % delay)
-        if job['a'] != 1: f.write('AccuracySec=%sm\n' % job['a'])
+        if job['a'] != 1:
+            if RANDOMIZED_DELAY:
+                f.write('RandomizedDelaySec=%sm\n' % job['a'])
+            else:
+                f.write('AccuracySec=%sm\n' % job['a'])
         if @persistent@ and persistent: f.write('Persistent=true\n')
 
     try:
