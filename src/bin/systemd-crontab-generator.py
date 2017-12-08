@@ -455,16 +455,21 @@ def generate_timer_unit(job, seq):
             f.write('OnFailure=cron-failure@%i.service\n')
         if job['u'] != 'root' or job['f'] == '@statedir@/root':
             f.write('Requires=systemd-user-sessions.service\n')
-            if home: f.write('RequiresMountsFor=%s\n' % home)
+            if home:
+                f.write('RequiresMountsFor=%s\n' % home)
 
         f.write('\n[Service]\n')
         f.write('Type=oneshot\n')
         f.write('IgnoreSIGPIPE=false\n')
-        if schedule and delay: f.write('ExecStartPre=-@libdir@/@package@/boot_delay %s\n' % delay)
+        if schedule and delay:
+             f.write('ExecStartPre=-@libdir@/@package@/boot_delay %s\n' % delay)
         f.write('ExecStart=%s\n' % command)
-        if job['e']: f.write('Environment=%s\n' % job['e'])
-        if job['u'] != 'root': f.write('User=%s\n' % job['u'])
-        if standardoutput: f.write('StandardOutput=%s\n' % standardoutput)
+        if job['e']:
+             f.write('Environment=%s\n' % job['e'])
+        if job['u'] != 'root':
+             f.write('User=%s\n' % job['u'])
+        if standardoutput:
+             f.write('StandardOutput=%s\n' % standardoutput)
         if job['Z']:
              f.write('CPUSchedulingPolicy=idle\n')
              f.write('IOSchedulingClass=idle\n')
