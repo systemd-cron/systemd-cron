@@ -9,7 +9,7 @@ statedir='/var/spool/cron'
 mandir='$(datadir)/man'
 docdir='$(datadir)/doc/$(package)'
 unitdir='$(libdir)/systemd/system'
-generatordir='%(libdir)/systemd/system-generators'
+generatordir='$(libdir)/systemd/system-generators'
 runparts='/usr/bin/run-parts'
 enable_setgid=no
 
