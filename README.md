@@ -25,6 +25,7 @@ Dependencies
     * systemd ≥ 209, yearly timers
     * systemd ≥ 212, persistent timers
     * systemd ≥ 217, minutely , quarterly & semi-annually timers
+    * systemd ≥ 229, real random delay support with `RandomizedDelaySec` option
 * [run-parts][3]
 * python 3
 * /usr/sbin/sendmail (optional, evaluated at runtime)
@@ -95,6 +96,8 @@ Other options include:
   Default: `no`.
 * `--enable-persistent[=yes|no]` Make timers [persistent][5]. Requires systemd ≥ 212.
   Default: `no`.
+* `--enable-randomized-delay=[yes|no]` Use [`RandomizedDelaySec`] option for `RANDOM_DELAY` support. Requires systemd ≥ 229.
+  Default: `yes`.
 * `--enable-setgid[=yes|no]` Compile setgid C helper for crontab. Needs GCC or Clang.
   Default: `no`.
 
