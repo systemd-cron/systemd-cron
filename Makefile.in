@@ -60,6 +60,7 @@ define in2out
 		-e "s|\@bindir\@|$(bindir)|g" \
 		-e "s|\@libdir\@|$(libdir)|g" \
 		-e "s|\@unitdir\@|$(unitdir)|g" \
+		-e "s|\@generatordir\@|$(generatordir)|g" \
 		-e "s|\@runparts\@|$(runparts)|g" \
 		-e "s|\@version\@|$(version)|g" \
 		-e "s|\@persistent\@|$(persistent)|g" \
