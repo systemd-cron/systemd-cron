@@ -4,7 +4,7 @@
 systemd-crontab-generator - translate cron schedules in systemd Units
 
 .SH SYNOPSIS
-@libdir@/systemd/system-generators/systemd-crontab-generator output_folder
+@generatordir@/systemd-crontab-generator output_folder
 
 .SH DESCRIPTION
 systemd-crontab-generator is a generator that translates the legacy cron files (see FILES)
@@ -77,11 +77,11 @@ to have a overview of timers and know when they will elapse.
 
 If you get errors like
 .br
-.B @libdir@/systemd/system-generators/systemd-crontab-generator failed with error code 1.
+.B @generatordir@/systemd-crontab-generator failed with error code 1.
 .br
 in the journal, you can manually run
 .br
-.B "@libdir@/systemd/system-generators/systemd-crontab-generator /tmp"
+.B "@generatordir@/systemd-crontab-generator /tmp"
 .br
 to get a more verbose error message.
 

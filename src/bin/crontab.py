@@ -333,7 +333,7 @@ if __name__ == '__main__':
             'show': show,
             }.get(args.action, replace)
 
-    loader = importlib.machinery.SourceFileLoader('name', '@libdir@/systemd/system-generators/systemd-crontab-generator')
+    loader = importlib.machinery.SourceFileLoader('name', '@generatordir@/systemd-crontab-generator')
     parser = loader.load_module()
 
     action(cron_file, args)
