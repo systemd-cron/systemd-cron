@@ -1,3 +1,7 @@
+v1.5.13 : 2018-03-28
+
+     * escape '%' in unit description (Thanks Mateusz Kowalewski)
+
 v1.5.12 : 2017-12-08
 
      * fix typo in configure script introduced in 1.5.11
