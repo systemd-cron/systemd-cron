@@ -419,7 +419,7 @@ def generate_timer_unit(job, seq):
 
     with open('%s/%s.timer' % (TARGET_DIR, unit_name), 'w' , encoding='utf8') as f:
         f.write('[Unit]\n')
-        f.write('Description=[Timer] "%s"\n' % job['l'])
+        f.write('Description=[Timer] "%s"\n' % job['l'].replace('%', '%%'))
         f.write('Documentation=man:systemd-crontab-generator(8)\n')
         f.write('PartOf=cron.target\n')
         f.write('SourcePath=%s\n' % job['f'])
@@ -444,7 +444,7 @@ def generate_timer_unit(job, seq):
 
     with open('%s/%s.service' % (TARGET_DIR, unit_name), 'w', encoding='utf8') as f:
         f.write('[Unit]\n')
-        f.write('Description=[Cron] "%s"\n' % job['l'])
+        f.write('Description=[Cron] "%s"\n' % job['l'].replace('%', '%%'))
         f.write('Documentation=man:systemd-crontab-generator(8)\n')
         f.write('SourcePath=%s\n' % job['f'])
         if '"MAILTO="' in job['e']:
