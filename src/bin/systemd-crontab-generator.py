@@ -6,6 +6,7 @@ import re
 import string
 from functools import reduce
 import hashlib
+import errno
 
 envvar_re = re.compile(r'^([A-Za-z_0-9]+)\s*=\s*(.*)$')
 
@@ -439,7 +440,7 @@ def generate_timer_unit(job, seq):
     try:
         os.symlink('%s/%s.timer' % (TARGET_DIR, unit_name), '%s/%s.timer' % (TIMERS_DIR, unit_name))
     except OSError as e:
-        if e.errno != os.errno.EEXIST:
+        if e.errno != errno.EEXIST:
             raise
 
     with open('%s/%s.service' % (TARGET_DIR, unit_name), 'w', encoding='utf8') as f:
@@ -494,7 +495,7 @@ def main():
     try:
         os.makedirs(TIMERS_DIR)
     except OSError as e:
-        if e.errno != os.errno.EEXIST:
+        if e.errno != errno.EEXIST:
             raise
 
     if os.path.isfile('/etc/crontab'):
@@ -575,13 +576,13 @@ def main():
         try:
            os.makedirs(MULTIUSER_DIR)
         except OSError as e:
-           if e.errno != os.errno.EEXIST:
+           if e.errno != errno.EEXIST:
                raise
 
         try:
             os.symlink('%s/cron-after-var.service' % TARGET_DIR, '%s/cron-after-var.service' % MULTIUSER_DIR)
         except OSError as e:
-            if e.errno != os.errno.EEXIST:
+            if e.errno != errno.EEXIST:
                 raise
 
 

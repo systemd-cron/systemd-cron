@@ -11,6 +11,7 @@ import subprocess
 import glob
 from subprocess import Popen, PIPE
 import importlib.machinery
+import errno
 
 for pgm in ('/usr/bin/editor', '/usr/bin/vim', '/usr/bin/nano', '/usr/bin/mcedit'):
     if os.path.isfile(pgm) and os.access(pgm, os.X_OK):
@@ -118,13 +119,13 @@ def list(cron_file, args):
         check(cron_file)
         try_chmod(cron_file, args.user)
     except (IOError, PermissionError) as e:
-        if e.errno == os.errno.ENOENT:
+        if e.errno == errno.ENOENT:
             sys.exit('no crontab for %s' % args.user)
         elif args.user != getpass.getuser():
             sys.exit("you can not display %s's crontab" % args.user)
         elif HAS_SETGID:
             returncode = subprocess.call([SETGID_HELPER,'r'])
-            if returncode == os.errno.ENOENT:
+            if returncode == errno.ENOENT:
                 sys.exit('no crontab for %s' % args.user)
             elif returncode:
                 # helper will send error to stderr
@@ -137,18 +138,18 @@ def remove(cron_file, args):
         try:
             os.unlink(cron_file)
         except OSError as e:
-            if e.errno == os.errno.ENOENT:
+            if e.errno == errno.ENOENT:
                 sys.stderr.write("no crontab for %s\n" % args.user)
             elif args.user != getpass.getuser():
                 sys.exit("you can not delete %s's crontab" % args.user)
-            elif e.errno == os.errno.EROFS:
+            elif e.errno == errno.EROFS:
                 if os.path.isfile(cron_file):
                     sys.exit("%s is on a read-only filesystem" % cron_file)
                 else:
                     sys.stderr.write("no crontab for %s\n" % args.user)
             elif HAS_SETGID:
                 subprocess.check_output([SETGID_HELPER,'d'], universal_newlines=True)
-            elif e.errno == os.errno.EACCES:
+            elif e.errno == errno.EACCES:
                 open(cron_file, 'w').close()
                 sys.stderr.write("couldn't remove %s , wiped it instead\n" % cron_file)
             else:
@@ -161,7 +162,7 @@ def edit(cron_file, args):
         with open(cron_file, 'r') as inp:
             tmp.file.write(inp.read())
     except IOError as e:
-        if e.errno == os.errno.ENOENT:
+        if e.errno == errno.ENOENT:
             tmp.file.write('# min hour dom month dow command')
         elif args.user != getpass.getuser():
             sys.stderr.write("you can not edit %s's crontab\n" % args.user)
@@ -172,7 +173,7 @@ def edit(cron_file, args):
             try:
                 tmp.file.write(subprocess.check_output([SETGID_HELPER,'r'], universal_newlines=True))
             except subprocess.CalledProcessError as f:
-                if f.returncode == os.errno.ENOENT:
+                if f.returncode == errno.ENOENT:
                     tmp.file.write('# min hour dom month dow command')
                 else:
                     # helper will send error to stderr
@@ -205,12 +206,12 @@ def edit(cron_file, args):
         os.unlink(tmp.name)
         try_chmod(cron_file, args.user)
     except (IOError, PermissionError) as e:
-        if e.errno == os.errno.ENOSPC:
+        if e.errno == errno.ENOSPC:
             os.unlink(new.name)
             sys.exit("no space left on %s, your edit is kept here:%s" % (CRONTAB_DIR, tmp.name))
         elif args.user != getpass.getuser():
             sys.exit("you can not edit %s's crontab, your edit is kept here:%s" % (args.user, tmp.name))
-        elif e.errno == os.errno.EROFS:
+        elif e.errno == errno.EROFS:
             sys.exit("%s is on a read-only filesystem, your edit is kept here:%s" % (CRONTAB_DIR, tmp.name))
         elif HAS_SETGID:
             p = Popen([SETGID_HELPER,'w'], stdin=PIPE)
@@ -252,9 +253,9 @@ def replace(cron_file, args):
             with open(infile, 'r') as inp:
                 crontab = inp.read()
         except IOError as e:
-            if e.errno == os.errno.ENOENT:
+            if e.errno == errno.ENOENT:
                 sys.exit("file %s doesn't exists" % infile)
-            elif e.errno == os.errno.EACCES:
+            elif e.errno == errno.EACCES:
                 sys.exit("you can't read file %s" % infile)
             else:
                 raise
@@ -272,11 +273,11 @@ def replace(cron_file, args):
     except (IOError, PermissionError) as e:
         if args.user != getpass.getuser():
             sys.exit("you can not replace %s's crontab" % args.user)
-        elif e.errno == os.errno.ENOSPC:
+        elif e.errno == errno.ENOSPC:
             sys.stderr.write("no space left on %s\n" % CRONTAB_DIR)
             os.unlink(new.name)
             exit(1)
-        elif e.errno == os.errno.EROFS:
+        elif e.errno == errno.EROFS:
             sys.exit("%s is on a read-only filesystem" % CRONTAB_DIR)
         elif HAS_SETGID:
             p = Popen([SETGID_HELPER,'w'], stdin=PIPE)
