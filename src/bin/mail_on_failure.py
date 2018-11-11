@@ -46,13 +46,20 @@ body += "Content-Transfer-Encoding: 8bit\n"
 body += "Auto-Submitted: auto-generated\n"
 body += "\n"
 
-try:
-    systemctl = subprocess.check_output(['systemctl','status',job], universal_newlines=True)
-except subprocess.CalledProcessError as e:
-    if e.returncode != 3:
-        raise
-    else:
-        body += e.output
+for locale in (None, 'C.UTF-8', 'C'):
+    if locale:
+        os.environ['LC_ALL'] = locale
+    try:
+        systemctl = subprocess.check_output(['systemctl', 'status', job], universal_newlines=True)
+    except UnicodeDecodeError:
+        # current locale is broken, try again
+        pass
+    except subprocess.CalledProcessError as e:
+        if e.returncode != 3:
+            raise
+        else:
+            body += e.output
+            break
 
 p = Popen(['sendmail','-i','-B8BITMIME',mailto], stdin=PIPE)
 p.communicate(bytes(body, 'UTF-8'))
