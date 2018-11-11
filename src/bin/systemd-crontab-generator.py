@@ -462,6 +462,7 @@ def generate_timer_unit(job, seq):
         f.write('\n[Service]\n')
         f.write('Type=oneshot\n')
         f.write('IgnoreSIGPIPE=false\n')
+        f.write('KillMode=process\n')
         if schedule and delay:
              f.write('ExecStartPre=-@libdir@/@package@/boot_delay %s\n' % delay)
         f.write('ExecStart=%s\n' % command)
