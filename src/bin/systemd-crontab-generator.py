@@ -20,6 +20,7 @@ TIME_UNITS_SET = ['daily', 'weekly', 'monthly', 'quarterly', 'semi-annually', 'y
 KSH_SHELLS = ['/bin/sh', '/bin/dash', '/bin/ksh', '/bin/bash', '/usr/bin/zsh']
 REBOOT_FILE = '/run/crond.reboot'
 RANDOMIZED_DELAY = @randomized_delay@
+RUN_PARTS_FLAG = '/run/systemd/use_run_parts'
 
 SELF = os.path.basename(sys.argv[0])
 
@@ -547,8 +548,10 @@ def main():
             generate_timer_unit(job, seq=seqs.setdefault(job['j']+job['u'], count()))
 
     if run_parts:
-        open('/run/systemd/use_run_parts', 'a').close()
+        open(RUN_PARTS_FLAG, 'a').close()
     else:
+        if os.path.exists(RUN_PARTS_FLAG):
+            os.unlink(RUN_PARTS_FLAG)
         # https://github.com/systemd-cron/systemd-cron/issues/47
         job_template = dict()
         job_template['P'] = @persistent@
