@@ -7,3 +7,4 @@ PartOf=cron.target
 Persistent=true
 OnCalendar=@schedule@
 Unit=cron-@schedule@.target
+ConditionPathExists=/run/systemd/use_run_parts

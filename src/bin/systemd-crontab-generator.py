@@ -79,6 +79,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
     boot_delay = 0
     persistent = Persistent.yes if monotonic else Persistent.auto
     batch = False
+    run_parts = @use_runparts@
     with open(filename, 'r', encoding='utf8') as f:
         for line in f.readlines():
             line = line.strip()
@@ -110,6 +111,8 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                      environment['PATH'] = expand_home_path(value, basename)
                 elif envvar.group(1) == 'BATCH':
                      batch = (value.strip().lower() in ['yes','true','1'])
+                elif envvar.group(1) == 'RUN_PARTS':
+                     run_parts = (value.strip().lower() in ['yes','true','1'])
                 elif envvar.group(1) == 'MAILTO':
                      environment[envvar.group(1)] = value
                      if value and not HAS_SENDMAIL:
@@ -196,6 +199,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                             'u': user,
                             'c': command,
                             'Z': batch,
+                            'J': run_parts,
                             }
                 else:
                     if len(parts) < 6 + int(withuser):
@@ -223,6 +227,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                             'u': user,
                             'c': command,
                             'Z': batch,
+                            'J': run_parts,
                             }
 
 def parse_time_unit(filename, line, value, values, mapping=int):
@@ -288,7 +293,7 @@ def generate_timer_unit(job, seq):
         home = None
 
     # perform smart substitutions for known shells
-    if job['s'] in KSH_SHELLS:
+    if 's' not in job or job['s'] in KSH_SHELLS:
         if home and command.startswith('~/'):
             command = home + command[1:]
 
@@ -344,7 +349,7 @@ def generate_timer_unit(job, seq):
         # to be POSIX compliant
 
     if 'p' in job:
-        hour = job['h']
+        hour = job['h'] if 'h' in job else 0
 
         if job['p'] == 'reboot':
             if daemon_reload: return
@@ -430,7 +435,7 @@ def generate_timer_unit(job, seq):
         f.write('Unit=%s.service\n' % unit_name)
         if schedule: f.write('OnCalendar=%s\n' % schedule)
         else:        f.write('OnBootSec=%sm\n' % delay)
-        if job['a'] != 1:
+        if 'a' in job and job['a'] != 1:
             if RANDOMIZED_DELAY:
                 f.write('RandomizedDelaySec=%sm\n' % job['a'])
             else:
@@ -472,7 +477,7 @@ def generate_timer_unit(job, seq):
              f.write('User=%s\n' % job['u'])
         if standardoutput:
              f.write('StandardOutput=%s\n' % standardoutput)
-        if job['Z']:
+        if 'Z' in job and job['Z']:
              f.write('CPUSchedulingPolicy=idle\n')
              f.write('IOSchedulingClass=idle\n')
 
@@ -499,8 +504,11 @@ def main():
         if e.errno != errno.EEXIST:
             raise
 
+    run_parts = @use_runparts@
     if os.path.isfile('/etc/crontab'):
         for job in parse_crontab('/etc/crontab', withuser=True):
+            if 'J' in job:
+                 run_parts = job['J']
             if 'c' not in job:
                  log(3, 'truncated line in /etc/crontab: %s' % job['l'])
                  continue
@@ -536,6 +544,42 @@ def main():
                 log(3, 'truncated line in %s: %s' % (filename, job['l']))
                 continue
             generate_timer_unit(job, seqs.setdefault(job['j']+job['u'], count()))
+
+    if run_parts:
+        open('/run/systemd/use_run_parts', 'a').close()
+    else:
+        # https://github.com/systemd-cron/systemd-cron/issues/47
+        job_template = dict()
+        job_template['P'] = @persistent@
+        job_template['u'] = 'root'
+        job_template['e'] = ''
+        i = 0
+        for period in ['hourly', 'daily', 'weekly', 'monthly']:
+            i = i + 1
+            job_template['b'] = i * 5
+            directory = '/etc/cron.' + period
+            if not os.path.isdir(directory):
+                continue
+            CRONTAB_FILES = files('/etc/cron.' + period)
+            for filename in CRONTAB_FILES:
+                job_template['p'] = period
+                basename = os.path.basename(filename)
+                if (os.path.exists('/lib/systemd/system/%s.timer' % basename)
+                 or os.path.exists('/etc/systemd/system/%s.timer' % basename)):
+                    log(5, 'ignoring %s because native timer is present' % filename)
+                    continue
+                elif basename.startswith('.'):
+                    continue
+                elif '.dpkg-' in basename:
+                    log(5, 'ignoring %s' % filename)
+                    continue
+                else:
+                    job = job_template
+                    job['l'] = filename
+                    job['f'] = filename
+                    job['j'] = period + '-' + basename
+                    job['c'] = filename
+                    generate_timer_unit(job, seqs.setdefault(job['j']+job['u'], count()))
 
     if os.path.isfile('/etc/anacrontab'):
         for job in parse_crontab('/etc/anacrontab', monotonic=True):

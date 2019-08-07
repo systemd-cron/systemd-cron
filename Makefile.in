@@ -6,6 +6,7 @@ version		:= $(shell cat VERSION)
 
 schedules			:= @schedules@
 schedules_not			:= @schedules_not@
+enable_runparts		:= @enable_runparts@
 enable_persistent	:= @enable_persistent@
 enable_randomized_delay	:= @enable_randomized_delay@
 enable_setgid		:= @enable_setgid@
@@ -47,6 +48,7 @@ endef
 
 null :=
 requires = $(subst ${null} ${null},\n,$(foreach schedule,$(schedules),Requires=cron-$(schedule).timer))
+use_runparts = $(if $(filter $(enable_runparts),yes),True,False)
 persistent = $(if $(filter $(enable_persistent),yes),True,False)
 randomized_delay = $(if $(filter $(enable_randomized_delay),yes),True,False)
 
@@ -62,6 +64,7 @@ define in2out
 		-e "s|\@unitdir\@|$(unitdir)|g" \
 		-e "s|\@generatordir\@|$(generatordir)|g" \
 		-e "s|\@runparts\@|$(runparts)|g" \
+		-e "s|\@use_runparts\@|$(use_runparts)|g" \
 		-e "s|\@version\@|$(version)|g" \
 		-e "s|\@persistent\@|$(persistent)|g" \
 		-e "s|\@randomized_delay\@|$(randomized_delay)|g" \
