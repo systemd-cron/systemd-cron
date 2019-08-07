@@ -278,7 +278,7 @@ def parse_period(mapping=int, base=0):
 
     return parser
 
-def generate_timer_unit(job, seq):
+def generate_timer_unit(job, seq=None, unit_name=None):
     persistent = job['P']
     command = job['c']
     parts = command.split()
@@ -410,13 +410,14 @@ def generate_timer_unit(job, seq):
         schedule = '%s*-%s-%s %s:%s:00' % (dows, ','.join(map(str, job['M'])),
                 ','.join(map(str, job['d'])), ','.join(map(str, job['h'])), ','.join(map(str, job['m'])))
 
-    if not persistent:
-        unit_id = next(seq)
-    else:
-        unit_id = hashlib.md5()
-        unit_id.update(bytes('\0'.join([schedule, command]), 'utf-8'))
-        unit_id = unit_id.hexdigest()
-    unit_name = "cron-%s-%s-%s" % (job['j'], job['u'], unit_id)
+    if not unit_name:
+        if not persistent:
+            unit_id = next(seq)
+        else:
+            unit_id = hashlib.md5()
+            unit_id.update(bytes('\0'.join([schedule, command]), 'utf-8'))
+            unit_id = unit_id.hexdigest()
+        unit_name = "cron-%s-%s-%s" % (job['j'], job['u'], unit_id)
 
     if not (len(parts) == 1 and os.path.isfile(command)):
         with open('%s/%s.sh' % (TARGET_DIR, unit_name), 'w', encoding='utf8') as f:
@@ -516,7 +517,7 @@ def main():
             if '/etc/cron.daily'   in job['c']: continue
             if '/etc/cron.weekly'  in job['c']: continue
             if '/etc/cron.monthly' in job['c']: continue
-            generate_timer_unit(job, seqs.setdefault(job['j']+job['u'], count()))
+            generate_timer_unit(job, seq=seqs.setdefault(job['j']+job['u'], count()))
 
     CRONTAB_FILES = files('/etc/cron.d')
     for filename in CRONTAB_FILES:
@@ -543,7 +544,7 @@ def main():
             if 'c' not in job:
                 log(3, 'truncated line in %s: %s' % (filename, job['l']))
                 continue
-            generate_timer_unit(job, seqs.setdefault(job['j']+job['u'], count()))
+            generate_timer_unit(job, seq=seqs.setdefault(job['j']+job['u'], count()))
 
     if run_parts:
         open('/run/systemd/use_run_parts', 'a').close()
@@ -579,14 +580,14 @@ def main():
                     job['f'] = filename
                     job['j'] = period + '-' + basename
                     job['c'] = filename
-                    generate_timer_unit(job, seqs.setdefault(job['j']+job['u'], count()))
+                    generate_timer_unit(job, unit_name='cron-' + job['j'])
 
     if os.path.isfile('/etc/anacrontab'):
         for job in parse_crontab('/etc/anacrontab', monotonic=True):
             if 'c' not in job:
                  log(3, 'truncated line in /etc/anacrontab: %s' % job['l'])
                  continue
-            generate_timer_unit(job, seqs.setdefault(job['j']+job['u'], count()))
+            generate_timer_unit(job, seq=seqs.setdefault(job['j']+job['u'], count()))
 
 
     if os.path.isdir('@statedir@'):
@@ -598,7 +599,7 @@ def main():
                 continue
             else:
                 for job in parse_crontab(filename, withuser=False):
-                    generate_timer_unit(job, seqs.setdefault(job['j']+job['u'], count()))
+                    generate_timer_unit(job, seq=seqs.setdefault(job['j']+job['u'], count()))
         try:
             open(REBOOT_FILE,'a').close()
         except:
