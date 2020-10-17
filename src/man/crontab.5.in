@@ -352,7 +352,7 @@ doesn't support these
 features:
 .TP
 *
-spawning forking deamons, the 'Service' units are all set with 'Type=oneshot'
+spawning forking daemons, the 'Service' units are all set with 'Type=oneshot'
 .TP
 *
 multi-line jobs separated by the '%' character
