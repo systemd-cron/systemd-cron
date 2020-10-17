@@ -1,3 +1,14 @@
+v1.5.15 : 2020-10-17
+
+     * fix skipping OnFailure for empty MAILTO=, thanks to Richard Laager
+     * make run-parts uses optional
+
+v1.5.14 : 2018-11-11
+
+     * Python 3.7 comptability, thanks to enrico.detoma
+     * Handle sending mail_on_error when the locale is not correctly set
+     * Use KillMode=process for generated units
+
 v1.5.13 : 2018-03-28
 
      * escape '%' in unit description (Thanks Mateusz Kowalewski)
