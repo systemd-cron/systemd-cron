@@ -541,6 +541,9 @@ def main():
         if '.dpkg-' in basename:
             log(5, 'ignoring %s' % filename)
             continue
+        if '~' in basename:
+            log(5, 'ignoring %s' % filename)
+            continue
         for job in parse_crontab(filename, withuser=True):
             if 'c' not in job:
                 log(3, 'truncated line in %s: %s' % (filename, job['l']))
