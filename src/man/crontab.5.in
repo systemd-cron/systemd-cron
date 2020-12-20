@@ -66,7 +66,7 @@ will not work as you might expect. And neither will this work
     B=2
     C=$A $B
 .PP
-There will not be any subsitution for the defined variables in the
+There will not be any substitution for the defined variables in the
 last value.
 .PP
 An alternative for setting up the commands path is using the fact that
