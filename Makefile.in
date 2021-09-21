@@ -10,6 +10,7 @@ enable_runparts		:= @enable_runparts@
 enable_persistent	:= @enable_persistent@
 enable_randomized_delay	:= @enable_randomized_delay@
 enable_setgid		:= @enable_setgid@
+use_loglevelmax		:= @use_loglevelmax@
 
 prefix		:= @prefix@
 bindir		:= @bindir@
@@ -68,6 +69,7 @@ define in2out
 		-e "s|\@version\@|$(version)|g" \
 		-e "s|\@persistent\@|$(persistent)|g" \
 		-e "s|\@randomized_delay\@|$(randomized_delay)|g" \
+		-e "s|\@use_loglevelmax\@|$(use_loglevelmax)|g" \
 		-e "s|\@schedule\@|$3|g" \
 		-e "s|\@requires\@|$4|g" \
 		$1 > $2
@@ -165,6 +167,9 @@ $(builddir)/units/cron-failure@.service: $(srcdir)/units/cron-failure@.service.i
 
 $(builddir)/units/cron-%.service: $(srcdir)/units/cron-schedule.service.in
 	$(call in2out,$<,$@,$*)
+ifeq ($(use_loglevelmax),no)
+	sed -i -e '/^LogLevelMax=/d' $@
+endif
 
 $(builddir)/units/cron-boot.service: $(srcdir)/units/cron-boot.service.in
 	$(call in2out,$<,$@,boot)
