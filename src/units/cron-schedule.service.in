@@ -8,4 +8,5 @@ OnFailure=cron-failure@%i.service
 [Service]
 Type=oneshot
 IgnoreSIGPIPE=false
+LogLevelMax=@use_loglevelmax@
 ExecStart=@runparts@ @confdir@/cron.@schedule@

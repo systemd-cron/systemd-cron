@@ -35,6 +35,9 @@ enable_semi_annually=no
 # systemd ≥ 229
 enable_randomized_delay=yes
 
+# systemd ≥ 236
+use_loglevelmax=no
+
 ARGS=$(getopt -n "$(basename "${0}")" -o '' -l '
 prefix:,
 bindir:,
@@ -60,6 +63,7 @@ enable-persistent::,
 enable-randomized-delay::,
 enable-setgid::,
 enable-runparts::,
+use-loglevelmax::,
 ' -- "${@}")
 
 if [ $? -ne 0 ]; then
@@ -177,6 +181,15 @@ do
             set_enable_flag runparts ${2}
             shift 2;;
 
+        '--use-loglevelmax')
+            case "${2}" in
+                'alert'|'crit'|'err'|'warning'|'notice'|'info'|'debug')
+                    use_loglevelmax="${2}";;
+                *)
+                    echo "ERROR: Unknown value for use-loglevelmax: '${2}'. Expected 'alert', 'crit', 'err', 'warning', 'notice', 'info', or 'debug'.";;
+            esac
+            shift 2;;
+
         '--')
             shift
             break;;
@@ -249,5 +262,6 @@ s|@docdir@|${docdir}|g
 s|@unitdir@|${unitdir}|g
 s|@generatordir@|${generatordir}|g
 s|@runparts@|${runparts}|g
+s|@use_loglevelmax@|${use_loglevelmax}|g
 " Makefile.in >> Makefile
 

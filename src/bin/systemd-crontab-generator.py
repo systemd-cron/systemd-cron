@@ -21,6 +21,7 @@ KSH_SHELLS = ['/bin/sh', '/bin/dash', '/bin/ksh', '/bin/bash', '/usr/bin/zsh']
 REBOOT_FILE = '/run/crond.reboot'
 RANDOMIZED_DELAY = @randomized_delay@
 RUN_PARTS_FLAG = '/run/systemd/use_run_parts'
+USE_LOGLEVELMAX = '@use_loglevelmax@'
 
 SELF = os.path.basename(sys.argv[0])
 
@@ -470,6 +471,8 @@ def generate_timer_unit(job, seq=None, unit_name=None):
         f.write('Type=oneshot\n')
         f.write('IgnoreSIGPIPE=false\n')
         f.write('KillMode=process\n')
+        if USE_LOGLEVELMAX != 'no':
+            f.write('LogLevelMax=%s\n' % USE_LOGLEVELMAX)
         if schedule and delay:
              f.write('ExecStartPre=-@libdir@/@package@/boot_delay %s\n' % delay)
         f.write('ExecStart=%s\n' % command)
