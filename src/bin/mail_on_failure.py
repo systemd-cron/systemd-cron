@@ -25,7 +25,8 @@ else:
 user = subprocess.check_output(
                      ['systemctl', 'show', args.unit, '--property=User'],
                      universal_newlines=True)
-user = user.rstrip('\n').split('=')[1] or 'root'
+user = user.rstrip('\n')
+user = user.split('=')[1] if user else 'root'
 
 mailto = user
 mailfrom = 'root'
@@ -33,10 +34,10 @@ mailfrom = 'root'
 job_env = subprocess.check_output(
                         ['systemctl', 'show', args.unit, '--property=Environment'],
                         universal_newlines=True)
-job_env = job_env.rstrip('\n').split('=', 1)[1]
+job_env = job_env.rstrip('\n')
 
 if job_env:
-    for var in job_env.split(' '):
+    for var in job_env.split('=', 1)[1].split(' '):
         try:
             key , value = var.split('=', 1)
             if key == 'MAILTO':
@@ -57,7 +58,7 @@ for locale in (None, 'C.UTF-8', 'C'):
         os.environ['LC_ALL'] = locale
     try:
         output = subprocess.check_output(['systemctl', 'status', args.unit], universal_newlines=True)
-        logging.waring('systemctl status should have failed')
+        logging.warning('systemctl status should have failed')
         break
     except UnicodeDecodeError:
         logging.info('current locale (%s) is broken, try again', locale)
