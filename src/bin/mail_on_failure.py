@@ -27,6 +27,7 @@ user = subprocess.check_output(
 user = user.rstrip('\n').split('=')[1] or 'root'
 
 mailto = user
+mailfrom = 'root'
 
 job_env = subprocess.check_output(
                         ['systemctl', 'show', args.unit, '--property=Environment'],
@@ -39,6 +40,8 @@ if job_env:
             key , value = var.split('=', 1)
             if key == 'MAILTO':
                 mailto = value
+            if key == 'MAILFROM':
+                mailfrom = value
         except ValueError:
             pass
 
@@ -48,7 +51,7 @@ if not mailto:
 
 hostname = os.uname()[1]
 
-body = "From: root (systemd-cron)\n"
+body = "From: " + mailfrom + " (systemd-cron)\n"
 body += "To: " + mailto + "\n"
 body += "Subject: [" + hostname + "] job " + args.unit  + " failed\n"
 body += "MIME-Version: 1.0\n"
