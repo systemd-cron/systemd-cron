@@ -24,12 +24,13 @@ Dependencies
 * systemd ≥ 197
     * systemd ≥ 209, yearly timers
     * systemd ≥ 212, persistent timers
-    * systemd ≥ 217, minutely , quarterly & semi-annually timers
+    * systemd ≥ 217, minutely, quarterly & semi-annually timers
     * systemd ≥ 229, real random delay support with `RandomizedDelaySec` option
 * [run-parts][3]
 * python 3
 * /usr/sbin/sendmail (optional, evaluated at runtime)
 * gcc or clang (needed to build `crontab_setgid.c`; this helper is optional and evaluated at runtime)
+* support for /usr/lib/sysusers.d/*.conf (optional)
 
 Installation
 ----------------

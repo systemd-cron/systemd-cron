@@ -102,6 +102,7 @@ install: all
 	install -m755 -D $(builddir)/bin/remove_stale_stamps $(DESTDIR)$(libdir)/$(package)/remove_stale_stamps
 	install -m755 -D $(builddir)/bin/mail_on_failure $(DESTDIR)$(libdir)/$(package)/mail_on_failure
 	install -m755 -D $(builddir)/bin/boot_delay $(DESTDIR)$(libdir)/$(package)/boot_delay
+	install -m644 -D $(srcdir)/lib/sysusers.d/systemd-cron.conf $(DESTDIR)$(libdir)/sysusers.d/systemd-cron.conf
 ifneq ($(enable_setgid),no)
 	install -m755 -D $(builddir)/bin/crontab_setgid $(DESTDIR)$(libdir)/$(package)/crontab_setgid
 	if getent group cron > /dev/null 2>&1; then \
