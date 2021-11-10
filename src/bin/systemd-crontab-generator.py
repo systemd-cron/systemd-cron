@@ -456,7 +456,7 @@ def generate_timer_unit(job, seq=None, unit_name=None):
         f.write('Description=[Cron] "%s"\n' % job['l'].replace('%', '%%'))
         f.write('Documentation=man:systemd-crontab-generator(8)\n')
         f.write('SourcePath=%s\n' % job['f'])
-        if 'MAILTO= ' in job['e']:
+        if re.search('MAILTO=(\s+|$)', job['e']):
             pass # mails explicitely disabled
         elif not HAS_SENDMAIL:
             pass # mails automaticaly disabled
