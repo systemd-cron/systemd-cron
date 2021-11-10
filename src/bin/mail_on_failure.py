@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 import argparse
+import email.mime.text
+import email.utils
 import logging
 import os
 import subprocess
-from subprocess import Popen, PIPE
 
 __DOC__ = """ send a panic email about a failed cron job """
 
@@ -51,28 +52,34 @@ if not mailto:
 
 hostname = os.uname()[1]
 
-body = "From: " + mailfrom + " (systemd-cron)\n"
-body += "To: " + mailto + "\n"
-body += "Subject: [" + hostname + "] job " + args.unit  + " failed\n"
-body += "MIME-Version: 1.0\n"
-body += "Content-Type: text/plain; charset=UTF-8\n"
-body += "Content-Transfer-Encoding: 8bit\n"
-body += "Auto-Submitted: auto-generated\n"
-body += "\n"
-
 for locale in (None, 'C.UTF-8', 'C'):
     if locale:
         os.environ['LC_ALL'] = locale
     try:
-        subprocess.check_output(['systemctl', 'status', args.unit], universal_newlines=True)
+        output = subprocess.check_output(['systemctl', 'status', args.unit], universal_newlines=True)
+        logging.waring('systemctl status should have failed')
+        break
     except UnicodeDecodeError:
         logging.info('current locale (%s) is broken, try again', locale)
     except subprocess.CalledProcessError as e:
         if e.returncode != 3:
             raise
         else:
-            body += e.output
+            output = e.output
             break
 
-p = Popen(['sendmail','-i','-B8BITMIME',mailto], stdin=PIPE)
-p.communicate(bytes(body, 'UTF-8'))
+message_object = email.mime.text.MIMEText(_text=output)
+message_object['Date'] = email.utils.formatdate()
+message_object['From'] = mailfrom + ' (systemd-cron)'
+message_object['To'] = mailto
+message_object['Subject'] = "[" + hostname + "] job " + args.unit + " failed"
+# https://datatracker.ietf.org/doc/html/rfc3834#section-5
+message_object['Auto-Submitted'] = 'auto-generated'
+
+subprocess.run(
+        ['sendmail',
+         '-i',
+         '-B8BITMIME',
+         mailto],
+        universal_newlines=False,
+        input=message_object.as_bytes())
