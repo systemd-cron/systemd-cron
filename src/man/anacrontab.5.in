@@ -23,7 +23,7 @@ The special
 The special
 .B START_HOURS_RANGE
 (in hours) environment variable is translated to the
-.I \'hour\'
+.I 'hour'
 component of
 .B OnCalendar=.
 anacron expect a range in the format ##-##, systemd-crontab-generator

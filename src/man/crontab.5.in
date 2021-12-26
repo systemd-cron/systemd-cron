@@ -117,7 +117,7 @@ the start times of @daily/@weekly/@monthly... jobs on a 24/24 system.
 .TP
 .B START_HOURS_RANGE
 (in hours) environment variable is translated to the
-.I \'hour\'
+.I 'hour'
 component of
 .B OnCalendar=.
 This variable is inheritted from anacrontab(5), but also supported in crontab(5)
