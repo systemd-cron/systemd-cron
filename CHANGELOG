@@ -1,3 +1,8 @@
+v1.15.19 : 2022-07-16
+
+     * Allign with previous botched version jump (#82)
+     * crontab accepts $EDITOR with spaces (#83)
+
 v1.5.18 : 2020-12-26
 
      Various improvements to email on error:

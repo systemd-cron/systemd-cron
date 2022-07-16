@@ -188,7 +188,7 @@ def edit(cron_file, args):
 
     tmp.close()
 
-    if subprocess.call([EDITOR, tmp.name]) != 0:
+    if subprocess.call(EDITOR.split(" ") + [tmp.name]) != 0:
         sys.exit('edit aborted, your edit is kept here:%s' % tmp.name)
 
     if not check(tmp.name):
