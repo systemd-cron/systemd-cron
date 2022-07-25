@@ -26,7 +26,9 @@ user = subprocess.check_output(
                      ['systemctl', 'show', args.unit, '--property=User'],
                      universal_newlines=True)
 user = user.rstrip('\n')
-user = user.split('=')[1] if user else 'root'
+user = user.split('=')[1]
+if not user:
+    user = 'root'
 
 mailto = user
 mailfrom = 'root'
