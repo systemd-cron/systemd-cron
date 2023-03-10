@@ -71,7 +71,13 @@ for locale in (None, 'C.UTF-8', 'C'):
             output = e.output
             break
 
-message_object = email.mime.text.MIMEText(_text=output)
+# Encode the message in 8-bit UTF-8
+# Virtually all modern MTAs are 8-bit clean and send each other 8-bit data
+# without checking each other's 8BITMIME flag.
+utf8_8bit = email.charset.Charset('utf-8')
+utf8_8bit.body_encoding = None
+
+message_object = email.mime.text.MIMEText(_text=output, _charset=utf8_8bit)
 message_object['Date'] = email.utils.formatdate()
 message_object['From'] = mailfrom + ' (systemd-cron)'
 message_object['To'] = mailto
