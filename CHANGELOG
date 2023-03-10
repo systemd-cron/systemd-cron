@@ -1,3 +1,7 @@
+v1.15.20 : 2023-03-10
+
+     * fix sending of unicode emails, thanks to 0xE1E10
+
 v1.15.19 : 2022-07-16
 
      * Allign with previous botched version jump (#82)
