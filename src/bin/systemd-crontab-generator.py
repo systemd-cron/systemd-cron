@@ -24,6 +24,10 @@ RUN_PARTS_FLAG = '/run/systemd/use_run_parts'
 USE_LOGLEVELMAX = '@use_loglevelmax@'
 
 SELF = os.path.basename(sys.argv[0])
+PART2TIMER = {
+    'apt-compat': 'apt-daily',
+}
+
 
 for pgm in ('/usr/sbin/sendmail', '/usr/lib/sendmail'):
     if os.path.exists(pgm):
@@ -574,6 +578,7 @@ def main():
             for filename in CRONTAB_FILES:
                 job_template['p'] = period
                 basename = os.path.basename(filename)
+                basename = PART2TIMER.get(basename, basename)
                 if (os.path.exists('/lib/systemd/system/%s.timer' % basename)
                  or os.path.exists('/etc/systemd/system/%s.timer' % basename)):
                     log(5, 'ignoring %s because native timer is present' % filename)
