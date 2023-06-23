@@ -24,8 +24,12 @@ RUN_PARTS_FLAG = '/run/systemd/use_run_parts'
 USE_LOGLEVELMAX = '@use_loglevelmax@'
 
 SELF = os.path.basename(sys.argv[0])
+
+# this is dumb, but gets the job done
 PART2TIMER = {
     'apt-compat': 'apt-daily',
+    'dpkg': 'dpkg-db-backup',
+    'plocate': 'plocate-updatedb',
 }
 
 
@@ -578,8 +582,9 @@ def main():
             for filename in CRONTAB_FILES:
                 job_template['p'] = period
                 basename = os.path.basename(filename)
-                basename = PART2TIMER.get(basename, basename)
+                basename_distro = PART2TIMER.get(basename, basename)
                 if (os.path.exists('/lib/systemd/system/%s.timer' % basename)
+                 or os.path.exists('/lib/systemd/system/%s.timer' % basename_distro)
                  or os.path.exists('/etc/systemd/system/%s.timer' % basename)):
                     log(5, 'ignoring %s because native timer is present' % filename)
                     continue
