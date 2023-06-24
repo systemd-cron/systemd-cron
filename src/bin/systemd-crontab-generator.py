@@ -572,7 +572,7 @@ def main():
         job_template['u'] = 'root'
         job_template['e'] = ''
         i = 0
-        for period in ['hourly', 'daily', 'weekly', 'monthly']:
+        for period in ['hourly', 'daily', 'weekly', 'monthly', 'yearly']:
             i = i + 1
             job_template['b'] = i * 5
             directory = '/etc/cron.' + period
