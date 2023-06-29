@@ -30,6 +30,9 @@ PART2TIMER = {
     'apt-compat': 'apt-daily',
     'dpkg': 'dpkg-db-backup',
     'plocate': 'plocate-updatedb',
+    'sysstat': 'sysstat-summary',
+    'cron-sysstat-root-0': 'sysstat-collect',
+    # cron-sysstat-root-1 ?
 }
 
 
