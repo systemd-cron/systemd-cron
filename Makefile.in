@@ -122,12 +122,14 @@ endif
 	install -m644 $(builddir)/units/cron-update.service $(DESTDIR)$(unitdir)
 	install -m644 $(builddir)/units/cron-failure@.service $(DESTDIR)$(unitdir)
 
+ifneq ($(enable_runparts),no)
 	$(foreach schedule,$(schedules),\
 		install -m644 $(builddir)/units/cron-$(schedule).timer $(DESTDIR)$(unitdir)${\n})
 	$(foreach schedule,$(schedules),\
 		install -m644 $(builddir)/units/cron-$(schedule).target $(DESTDIR)$(unitdir)${\n})
 	$(foreach schedule,$(schedules),\
 		install -m644 $(builddir)/units/cron-$(schedule).service $(DESTDIR)$(unitdir)${\n})
+endif
 
 uninstall:
 	rm -f $(DESTDIR)$(bindir)/crontab
