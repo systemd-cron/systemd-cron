@@ -50,6 +50,8 @@ endef
 null :=
 ifneq ($(enable_runparts),no)
 requires = $(subst ${null} ${null},\n,$(foreach schedule,$(schedules),Requires=cron-$(schedule).timer))
+else
+requires = Requires=systemd-cron-cleaner.timer
 endif
 use_runparts = $(if $(filter $(enable_runparts),yes),True,False)
 persistent = $(if $(filter $(enable_persistent),yes),True,False)
