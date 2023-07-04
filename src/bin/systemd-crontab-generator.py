@@ -31,10 +31,11 @@ PART2TIMER = {
     'dpkg': 'dpkg-db-backup',
     'plocate': 'plocate-updatedb',
     'sysstat': 'sysstat-summary',
-    'cron-sysstat-root-0': 'sysstat-collect',
-    # cron-sysstat-root-1 ?
 }
 
+CROND2TIMER = {
+    'sysstat': 'sysstat-collect',
+}
 
 for pgm in ('/usr/sbin/sendmail', '/usr/lib/sendmail'):
     if os.path.exists(pgm):
@@ -537,8 +538,10 @@ def main():
     CRONTAB_FILES = files('/etc/cron.d')
     for filename in CRONTAB_FILES:
         basename = os.path.basename(filename)
+        basename_distro = CROND2TIMER.get(basename, basename)
         masked = False
         for unit_file in ('@unitdir@/%s.timer' % basename,
+                          '@unitdir@/%s.timer' % basename_distro,
                           '/etc/systemd/system/%s.timer' % basename,
                           '/run/systemd/system/%s.timer' % basename):
             if os.path.exists(unit_file):
