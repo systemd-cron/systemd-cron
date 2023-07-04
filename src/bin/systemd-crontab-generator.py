@@ -44,7 +44,7 @@ for pgm in ('/usr/sbin/sendmail', '/usr/lib/sendmail'):
 else:
     HAS_SENDMAIL = False
 
-class Persistent(object):
+class Persistent:
     yes, no, auto = range(3)
 
     @classmethod
