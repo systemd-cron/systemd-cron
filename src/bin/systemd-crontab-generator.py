@@ -589,8 +589,8 @@ def main():
                 job_template['p'] = period
                 basename = os.path.basename(filename)
                 basename_distro = PART2TIMER.get(basename, basename)
-                if (os.path.exists('@unitdir@/system/%s.timer' % basename)
-                 or os.path.exists('@unitdir@/system/%s.timer' % basename_distro)
+                if (os.path.exists('@unitdir@/%s.timer' % basename)
+                 or os.path.exists('@unitdir@/%s.timer' % basename_distro)
                  or os.path.exists('/etc/systemd/system/%s.timer' % basename)):
                     log(5, 'ignoring %s because native timer is present' % filename)
                     continue
