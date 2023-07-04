@@ -1,12 +1,12 @@
 #!/usr/bin/python3
-import sys
+import errno
+import hashlib
 import os
 import pwd
 import re
 import string
+import sys
 from functools import reduce
-import hashlib
-import errno
 
 envvar_re = re.compile(r'^([A-Za-z_0-9]+)\s*=\s*(.*)$')
 
