@@ -7,6 +7,7 @@ import re
 import string
 import sys
 from functools import reduce
+from typing import Dict, List, Optional
 
 envvar_re = re.compile(r'^([A-Za-z_0-9]+)\s*=\s*(.*)$')
 
@@ -58,13 +59,13 @@ class Persistent:
             return cls.no
 
 
-def files(dirname):
+def files(dirname:str) -> List[str]:
     try:
         return list(filter(os.path.isfile, [os.path.join(dirname, f) for f in os.listdir(dirname)]))
     except OSError:
         return []
 
-def expand_home_path(path, user):
+def expand_home_path(path:str, user:str) -> str:
     try:
         home = pwd.getpwnam(user).pw_dir
     except KeyError:
@@ -76,7 +77,7 @@ def expand_home_path(path, user):
             parts[i] = home + part[1:]
     return ':'.join(parts)
 
-def environment_string(env):
+def environment_string(env:Dict[str, str]) -> str:
     line = []
     for k, v in env.items():
         if ' ' in v:
@@ -85,7 +86,7 @@ def environment_string(env):
             line.append('%s=%s' % (k, v))
     return ' '.join(line)
 
-def parse_crontab(filename, withuser=True, monotonic=False):
+def parse_crontab(filename:str, withuser:bool=True, monotonic:bool=False):
     basename = os.path.basename(filename)
     environment = { }
     random_delay = 1
@@ -155,7 +156,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                         '@semiannually': 'semi-annually',
                         '@anually': 'yearly',
                         '@annually': 'yearly',
-                        }.get(period, None) or period.lstrip('@')
+                        }.get(period, '') or period.lstrip('@')
                 try:
                     boot_delay = int(delay)
                 except ValueError:
@@ -195,7 +196,7 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                             '@semiannually': 'semi-annually',
                             '@anually': 'yearly',
                             '@annually': 'yearly',
-                            }.get(period, None) or period.lstrip('@')
+                            }.get(period, '') or period.lstrip('@')
 
                     user, command = (parts[1], ' '.join(parts[2:])) if withuser else (basename, ' '.join(parts[1:]))
 
@@ -244,7 +245,8 @@ def parse_crontab(filename, withuser=True, monotonic=False):
                             'J': run_parts,
                             }
 
-def parse_time_unit(filename, line, value, values, mapping=int):
+def parse_time_unit(filename:str, line:str, value:str, values, mapping=int) -> List[str]:
+    result:List[str]
     if value == '*':
         return ['*']
     try:
@@ -260,13 +262,13 @@ def parse_time_unit(filename, line, value, values, mapping=int):
         log(3, 'garbled time in %s [%s]: %s' % (filename, line, value))
     return result
 
-def month_map(month):
+def month_map(month:str) -> int:
     try:
         return int(month)
     except ValueError:
         return ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'nov', 'dec'].index(month.lower()[0:3]) + 1
 
-def dow_map(dow):
+def dow_map(dow:str) -> int:
     try:
         return ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'].index(dow[0:3].lower())
     except ValueError:
@@ -292,7 +294,7 @@ def parse_period(mapping=int, base=0):
 
     return parser
 
-def generate_timer_unit(job, seq=None, unit_name=None):
+def generate_timer_unit(job, seq=None, unit_name=None) -> Optional[str]:
     persistent = job['P']
     command = job['c']
     parts = command.split()
@@ -343,20 +345,20 @@ def generate_timer_unit(job, seq=None, unit_name=None):
                 command = ' '.join(parts[4:])
                 parts = command.split()
 
-        if testremoved and not os.path.isfile(testremoved): return
+        if testremoved and not os.path.isfile(testremoved): return None
 
         if (len(parts) == 6 and
             parts[0] == '[' and
             parts[1] in ['-d','-e'] and
             parts[2] == '/run/systemd/system' and
             parts[3] == ']' and
-            parts[4] == '||'): return
+            parts[4] == '||'): return None
 
         if (len(parts) == 5 and
             parts[0] == 'test' and
             parts[1] in ['-d','-e'] and
             parts[2] == '/run/systemd/system' and
-            parts[3] == '||'): return
+            parts[3] == '||'): return None
 
         # TODO: translate  'command%line1%line2%line3
         # in '/bin/echo -e line1\\nline2\\nline3 | command'
@@ -366,7 +368,8 @@ def generate_timer_unit(job, seq=None, unit_name=None):
         hour = job['h'] if 'h' in job else 0
 
         if job['p'] == 'reboot':
-            if daemon_reload: return
+            if daemon_reload:
+                return None
             if delay == 0: delay = 1
             schedule = None
             persistent = False
@@ -420,7 +423,7 @@ def generate_timer_unit(job, seq=None, unit_name=None):
         if 0 in job['M']: job['M'].remove(0)
         if 0 in job['d']: job['d'].remove(0)
         if not len(job['M']) or not len(job['d']) or not len(job['h']) or not len(job['m']):
-            return
+            return None
         schedule = '%s*-%s-%s %s:%s:00' % (dows, ','.join(map(str, job['M'])),
                 ','.join(map(str, job['d'])), ','.join(map(str, job['h'])), ','.join(map(str, job['m'])))
 
@@ -500,7 +503,7 @@ def generate_timer_unit(job, seq=None, unit_name=None):
 
     return '%s.timer' % unit_name
 
-def log(level, message):
+def log(level:int, message:str) -> None:
     if len(sys.argv) == 4:
         with open('/dev/kmsg', 'w', encoding='utf8') as kmsg:
             kmsg.write('<%s>%s[%s]: %s\n' % (level, SELF, os.getpid(), message))
@@ -514,7 +517,7 @@ def count():
         yield n
         n += 1
 
-def main():
+def main() -> None:
     try:
         os.makedirs(TIMERS_DIR)
     except OSError as e:
