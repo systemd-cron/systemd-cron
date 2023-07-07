@@ -16,7 +16,7 @@ Add executable scripts to the appropriate cron directory (e.g. `/etc/cron.daily`
     # systemctl start cron.target
 
 The project also includes simple crontab command equivalent, which behaves like standard crontab command (and accepts the same main options).
-   
+
 The scripts should now be automatically run by systemd. See man:systemd.cron(7) for more information.
 
 Dependencies
@@ -26,8 +26,8 @@ Dependencies
     * systemd ≥ 212, persistent timers
     * systemd ≥ 217, minutely, quarterly & semi-annually timers
     * systemd ≥ 229, real random delay support with `RandomizedDelaySec` option
-* [run-parts][3]
 * python 3
+* [run-parts][3] (optional)
 * /usr/sbin/sendmail (optional, evaluated at runtime)
 * gcc or clang (needed to build `crontab_setgid.c`; this helper is optional and evaluated at runtime)
 * support for /usr/lib/sysusers.d/*.conf (optional)
@@ -130,10 +130,10 @@ The project is licensed under MIT.
 
 Copyright
 -------------
-© 2014, Dwayne Bent : original package with static units  
-© 2014, Konstantin Stepanov (me@kstep.me) : author of crontab generator  
-© 2014, Daniel Schaal : review of crontab generator  
-© 2014, Alexandre Detiste (alexandre@detiste.be) : manpage for crontab generator  
+© 2014, Dwayne Bent : original package with static units
+© 2014, Konstantin Stepanov (me@kstep.me) : author of crontab generator
+© 2014, Daniel Schaal : review of crontab generator
+© 2014, Alexandre Detiste (alexandre@detiste.be) : manpage for crontab generator
 
 
 [1]: http://www.freedesktop.org/wiki/Software/systemd/ "systemd"
