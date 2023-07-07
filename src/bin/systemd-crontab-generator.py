@@ -87,6 +87,8 @@ def environment_string(env:Dict[str, str]) -> str:
     return ' '.join(line)
 
 def parse_crontab(filename:str, withuser:bool=True, monotonic:bool=False):
+    '''parser shared with /usr/bin/crontab'''
+
     basename = os.path.basename(filename)
     environment = { }
     random_delay = 1
