@@ -1,17 +1,18 @@
 #!/usr/bin/python3
 
-import tempfile
-import sys
-import os
-import stat
 import argparse
-import getpass
-import pwd
-import subprocess
-import glob
-from subprocess import Popen, PIPE
-import importlib.machinery
 import errno
+import getpass
+import glob
+import importlib.machinery
+import os
+import pwd
+import stat
+import sys
+import subprocess
+import tempfile
+from subprocess import Popen, PIPE
+from typing import Optional
 
 for pgm in ('/usr/bin/editor', '/usr/bin/vim', '/usr/bin/nano', '/usr/bin/mcedit'):
     if os.path.isfile(pgm) and os.access(pgm, os.X_OK):
@@ -74,7 +75,7 @@ args_parser.add_argument('-i', '--ask', dest='ask', action='store_true', default
  #MLS_LEVEL setting to the crontab file before editing / replacement occurs
  #- see the documentation of MLS_LEVEL in crontab(5).''')
 
-def confirm(message):
+def confirm(message:str) -> bool:
     while True:
         answer = input(message).lower()
         if answer not in 'yn':
@@ -83,7 +84,7 @@ def confirm(message):
 
         return answer == 'y'
 
-def check(cron_file):
+def check(cron_file:str) -> bool:
     good = True
     for job in parser.parse_crontab(cron_file, withuser=False):
         if 'c' not in job:
@@ -104,7 +105,7 @@ def check(cron_file):
                 good = False
     return good
 
-def try_chmod(cron_file, user):
+def try_chmod(cron_file:str, user:str):
     if CRON_GROUP:
         try:
             os.chown(cron_file, pwd.getpwnam(user).pw_uid, CRON_GROUP)
@@ -112,7 +113,7 @@ def try_chmod(cron_file, user):
         except (PermissionError, KeyError):
             pass
 
-def list(cron_file, args):
+def list(cron_file:str, args) -> None:
     try:
         with open(cron_file, 'r') as f:
             sys.stdout.write(f.read())
@@ -133,7 +134,7 @@ def list(cron_file, args):
         else:
             raise
 
-def remove(cron_file, args):
+def remove(cron_file:str, args):
     if not args.ask or confirm('Are you sure you want to delete %s (y/n)? ' % cron_file):
         try:
             os.unlink(cron_file)
@@ -155,7 +156,7 @@ def remove(cron_file, args):
             else:
                 raise
 
-def edit(cron_file, args):
+def edit(cron_file:str, args):
     tmp = tempfile.NamedTemporaryFile(mode='w+', encoding='UTF-8', delete=False, prefix='crontab_')
 
     try:
@@ -224,7 +225,7 @@ def edit(cron_file, args):
             sys.stderr.write("unexpected error, your edit is kept here:%s\n" % tmp.name)
             raise
 
-def show(cron_file, args):
+def show(cron_file:str, args):
     if os.geteuid() != 0:
         sys.exit("must be privileged to use -s")
 
@@ -236,7 +237,7 @@ def show(cron_file, args):
         except KeyError:
             sys.stderr.write("WARNING: crontab found with no matching user: %s\n" % user)
 
-def replace(cron_file, args):
+def replace(cron_file:str, args):
     if args.file == '-':
         try:
             crontab = sys.stdin.read()
@@ -297,6 +298,7 @@ if __name__ == '__main__':
     except:
         sys.exit("%s doesn't exists!" % CRONTAB_DIR)
 
+    CRON_GROUP:Optional[int]
     try:
         CRON_GROUP = os.stat(SETGID_HELPER).st_gid
     except:
