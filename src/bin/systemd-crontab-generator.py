@@ -35,6 +35,7 @@ PART2TIMER = {
 }
 
 CROND2TIMER = {
+    'ntpsec': 'ntpsec-rotate-stats',
     'sysstat': 'sysstat-collect',
 }
 
