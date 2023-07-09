@@ -7,7 +7,7 @@ import re
 import string
 import sys
 from functools import reduce
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 from typing import Any #XXX
 
 envvar_re = re.compile(r'^([A-Za-z_0-9]+)\s*=\s*(.*)$')
@@ -29,6 +29,7 @@ USE_RUNPARTS = "@use_runparts@" == "True"
 PERSISTENT = "@persistent@" == "True"
 
 SELF = os.path.basename(sys.argv[0])
+VALID_CHARS = "-_" + string.ascii_letters + string.digits
 
 # this is dumb, but gets the job done
 PART2TIMER = {
@@ -79,7 +80,7 @@ class Job:
     batch:bool
     jobid:str
     user:str
-    command:str
+    command:Union[str, List[str]]
     valid:bool
     run_parts:bool
 
@@ -96,6 +97,35 @@ class Job:
         self.valid = False
         self.run_parts = False
         self.batch = False
+
+    def decode(self) -> bool:
+        '''decode & validate'''
+        self.jobid = ''.join(c for c in self.jobid if c in VALID_CHARS)
+
+        if not self.command:
+            return False
+        elif type(self.command) is list:
+            self.command = ' '.join(self.command)
+
+        if 'SHELL' in self.environment:
+            self.shell = self.environment['SHELL']
+
+        if type(self.period) is str:
+            self.period = {
+                '1': 'daily',
+                '7': 'weekly',
+                '30': 'monthly',
+                '31': 'monthly',
+                'biannually': 'semi-annually',
+                'bi-annually': 'semi-annually',
+                'semiannually': 'semi-annually',
+                'anually': 'yearly',
+                'annually': 'yearly',
+                '365': 'yearly',
+            }.get(self.period, self.period)
+
+        self.valid = True
+        return True
 
 def files(dirname:str) -> List[str]:
     try:
@@ -181,14 +211,22 @@ def parse_crontab(filename:str,
             parts = line.split()
             line = ' '.join(parts)
 
+            j = Job(filename, line)
+            j.boot_delay = boot_delay
+            j.batch = batch
+            j.run_parts = run_parts
+            j.random_delay = random_delay
+            j.environment = environment
+            j.start_hour = start_hour
+
             if monotonic:
                 if len(parts) < 4:
-                    yield Job(filename, line)
+                    yield j
                     continue
 
-                period, delay, jobid = parts[0:3]
-                command = ' '.join(parts[3:])
-                period = {
+                period, delay, j.jobid = parts[0:3]
+                period = period.lower()
+                j.period = {
                         '1': 'daily',
                         '7': 'weekly',
                         '30': 'monthly',
@@ -201,84 +239,46 @@ def parse_crontab(filename:str,
                         }.get(period, '') or period.lstrip('@')
                 try:
                     boot_delay = int(delay)
+                    if boot_delay > 0:
+                        j.boot_delay = boot_delay
                 except ValueError:
                     log(4, 'invalid DELAY in %s: %s' % (filename, line))
-                    boot_delay = 0
-                if boot_delay < 0: boot_delay = 0
-
-                valid_chars = "-_%s%s" % (string.ascii_letters, string.digits)
-                jobid = ''.join(c for c in jobid if c in valid_chars)
-
-                j = Job(filename, line)
-                j.environment = environment
-                j.shell = environment.get('SHELL','/bin/sh')
-                j.random_delay = random_delay
-                j.period = period.lower()
-                j.boot_delay = boot_delay
-                j.start_hour = start_hour
                 j.persistent = False if persistent == Persistent.no else True
-                j.jobid = jobid
-                j.command = command
-                j.batch = batch
-                j.valid = True
-                yield j
-
+                j.command = parts[3:]
             else:
                 if line.startswith('@'):
                     if len(parts) < 2 + int(withuser):
-                        yield Job(filename, line)
+                        yield j
                         continue
-
-                    period = parts[0]
-                    period = {
+                    period = parts[0].lower()
+                    j.period = {
                             '@biannually': 'semi-annually',
                             '@bi-annually': 'semi-annually',
                             '@semiannually': 'semi-annually',
                             '@anually': 'yearly',
                             '@annually': 'yearly',
                             }.get(period, '') or period.lstrip('@')
-
-                    user, command = (parts[1], ' '.join(parts[2:])) if withuser else (basename, ' '.join(parts[1:]))
-
-                    j = Job(filename, line)
-                    j.environment = environment
-                    j.shell = environment.get('SHELL','/bin/sh')
-                    j.random_delay = random_delay
-                    j.period = period.lower()
-                    j.boot_delay = boot_delay
-                    j.start_hour = start_hour
-                    j.jobid = jobid
-                    j.command = command
-                    j.batch = batch
+                    if withuser:
+                        j.user = parts[1]
+                        j.command = parts[2:]
+                    else:
+                        j.user = basename
+                        j.command = parts[1:]
+                    j.jobid = basename
                     j.persistent = False if persistent == Persistent.no else True
-                    j.user = user
-                    j.command = command
-                    j.batch = batch
-                    j.run_parts = run_parts
-                    j.valid = True
-                    yield j
-
                 else:
                     if len(parts) < 6 + int(withuser):
-                        yield Job(filename, line)
+                        yield j
                         continue
-
-                    minutes, hours, days = parts[0:3]
-                    months, dows = parts[3:5]
-                    user, command = (parts[5], ' '.join(parts[6:])) if withuser else (basename, ' '.join(parts[5:]))
-
-                    j = Job(filename, line)
+                    minutes, hours, days, months, dows = parts[0:5]
+                    if withuser:
+                        j.user = parts[5]
+                        j.command = parts[6:]
+                    else:
+                        j.user = basename
+                        j.command = parts[5:]
                     j.jobid = basename
-                    j.environment = environment
-                    j.shell = environment.get('SHELL','/bin/sh')
-                    j.random_delay = random_delay
-                    j.boot_delay = boot_delay
                     j.persistent = Persistent.yes or False
-                    j.user = user
-                    j.command = command
-                    j.batch = batch
-                    j.run_parts = run_parts
-                    j.valid = True
                     j.period = {
                             'm': parse_time_unit(filename, line, minutes, MINUTES_SET),
                             'h': parse_time_unit(filename, line, hours, HOURS_SET),
@@ -286,7 +286,9 @@ def parse_crontab(filename:str,
                             'w': parse_time_unit(filename, line, dows, DOWS_SET, dow_map),
                             'M': parse_time_unit(filename, line, months, MONTHS_SET, month_map),
                     }
-                    yield j
+
+            j.decode()
+            yield j
 
 def parse_time_unit(filename:str, line:str, value:str, values, mapping=int) -> List[str]:
     result:List[str]
@@ -645,6 +647,7 @@ def main() -> None:
                 job.command = filename
                 basename = os.path.basename(filename)
                 job.jobid = period + '-' + basename
+                job.decode() # ensure clean jobid
                 basename_distro = PART2TIMER.get(basename, basename)
                 if (os.path.exists('@unitdir@/%s.timer' % basename)
                  or os.path.exists('@unitdir@/%s.timer' % basename_distro)
