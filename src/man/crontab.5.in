@@ -338,7 +338,7 @@ of the crontab tasks themselves.
 The
 .I crontab
 syntax does not make it possible to define all possible periods one could
-image off. For example, it is not straightforward to define the last
+imagine off. For example, it is not straightforward to define the last
 weekday of a month. If a task needs to be run in a specific period of time
 that cannot be defined in the
 .I crontab
