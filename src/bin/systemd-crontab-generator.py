@@ -80,7 +80,7 @@ class Job:
     batch:bool
     jobid:str
     user:str
-    command:Union[str, List[str]]
+    command:List[str]
     valid:bool
     run_parts:bool
 
@@ -90,7 +90,7 @@ class Job:
         self.environment = dict()
         self.shell = '/bin/sh'
         self.boot_delay = 0
-        self.start_hour = 6
+        self.start_hour = 0
         self.random_delay = 0
         self.persistent = Persistent.auto
         self.user = 'root'
@@ -104,8 +104,6 @@ class Job:
 
         if not self.command:
             return False
-        elif type(self.command) is list:
-            self.command = ' '.join(self.command)
 
         if 'SHELL' in self.environment:
             self.shell = self.environment['SHELL']
@@ -346,8 +344,6 @@ def parse_period(mapping=int, base=0):
 
 def generate_timer_unit(job:Job, seq=None, unit_name=None) -> Optional[str]:
     persistent = job.persistent
-    command = job.command
-    parts = command.split()
     testremoved = None
     standardoutput = None
     delay = job.boot_delay
@@ -360,56 +356,55 @@ def generate_timer_unit(job:Job, seq=None, unit_name=None) -> Optional[str]:
 
     # perform smart substitutions for known shells
     if job.shell in KSH_SHELLS:
-        if home and command.startswith('~/'):
-            command = home + command[1:]
+        if home and job.command[0].startswith('~/'):
+            job.command[0] = home + job.command[0][2:]
 
-        if (len(parts) >= 3 and
-            parts[-2] == '>' and
-            parts[-1] == '/dev/null'):
-            command = ' '.join(parts[0:-2])
-            parts = command.split()
-            standardoutput='/dev/null';
+        if (len(job.command) >= 3 and
+            job.command[-2] == '>' and
+            job.command[-1] == '/dev/null'):
+            job.command = job.command[0:-2]
+            standardoutput='/dev/null'
 
-        if (len(parts) >= 2 and
-            parts[-1] == '>/dev/null'):
-            command = ' '.join(parts[0:-1])
-            parts = command.split()
-            standardoutput='/dev/null';
+        if (len(job.command) >= 2 and
+            job.command[-1] == '>/dev/null'):
+            job.command = job.command[0:-1]
+            standardoutput = '/dev/null'
 
-        if (len(parts) == 6 and
-            parts[0] == '[' and
-            parts[1] in ['-x','-f','-e'] and
-            parts[2] == parts[5] and
-            parts[3] == ']' and
-            parts[4] == '&&' ):
-                testremoved = parts[2]
-                command = ' '.join(parts[5:])
-                parts = command.split()
+        if (len(job.command) == 6 and
+            job.command[0] == '[' and
+            job.command[1] in ['-x','-f','-e'] and
+            job.command[2] == job.command[5] and
+            job.command[3] == ']' and
+            job.command[4] == '&&' ):
+                testremoved = job.command[2]
+                job.command = job.command[5:]
 
-        if (len(parts) == 5 and
-            parts[0] == 'test' and
-            parts[1] in ['-x','-f','-e'] and
-            parts[2] == parts[4] and
-            parts[3] == '&&' ):
-                testremoved = parts[2]
-                command = ' '.join(parts[4:])
-                parts = command.split()
+        if (len(job.command) == 5 and
+            job.command[0] == 'test' and
+            job.command[1] in ['-x','-f','-e'] and
+            job.command[2] == job.command[4] and
+            job.command[3] == '&&' ):
+                testremoved = job.command[2]
+                job.command = job.command[4:]
 
         if testremoved and not os.path.isfile(testremoved):
+            log(3, '%s is removed, skipping job' % testremoved)
             return None
 
-        if (len(parts) == 6 and
-            parts[0] == '[' and
-            parts[1] in ['-d','-e'] and
-            parts[2] == '/run/systemd/system' and
-            parts[3] == ']' and
-            parts[4] == '||'): return None
+        if (len(job.command) == 6 and
+            job.command[0] == '[' and
+            job.command[1] in ['-d','-e'] and
+            job.command[2] == '/run/systemd/system' and
+            job.command[3] == ']' and
+            job.command[4] == '||'):
+             return None
 
-        if (len(parts) == 5 and
-            parts[0] == 'test' and
-            parts[1] in ['-d','-e'] and
-            parts[2] == '/run/systemd/system' and
-            parts[3] == '||'): return None
+        if (len(job.command) == 5 and
+            job.command[0] == 'test' and
+            job.command[1] in ['-d','-e'] and
+            job.command[2] == '/run/systemd/system' and
+            job.command[3] == '||'):
+             return None
 
     if type(job.period) is str:
         hour = job.start_hour
@@ -494,10 +489,13 @@ def generate_timer_unit(job:Job, seq=None, unit_name=None) -> Optional[str]:
             unit_id = unit_id.hexdigest()
         unit_name = "cron-%s-%s-%s" % (job.jobid, job.user, unit_id)
 
-    if not (len(parts) == 1 and os.path.isfile(command)):
-        with open('%s/%s.sh' % (TARGET_DIR, unit_name), 'w', encoding='utf8') as f:
-            f.write(command)
-        command=job.shell + ' ' + TARGET_DIR + '/' + unit_name + '.sh'
+    if len(job.command) == 1 and os.path.isfile(job.command[0]):
+        command = job.command[0]
+    else:
+        scriptlet = os.path.join(TARGET_DIR, '%s.sh' % unit_name)
+        with open(scriptlet, 'w', encoding='utf8') as f:
+            f.write(' '.join(job.command))
+        command = job.shell + ' ' + scriptlet
 
     with open('%s/%s.timer' % (TARGET_DIR, unit_name), 'w' , encoding='utf8') as f:
         f.write('[Unit]\n')
