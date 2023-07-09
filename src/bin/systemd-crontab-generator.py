@@ -80,6 +80,7 @@ class Job:
     batch:bool
     jobid:str
     user:str
+    home:Optional[str]
     command:List[str]
     valid:bool
     run_parts:bool
@@ -139,11 +140,11 @@ class Job:
             return
 
         try:
-            home = pwd.getpwnam(self.user).pw_dir
+            self.home = pwd.getpwnam(self.user).pw_dir
         except KeyError:
-            home = None
-        if home and self.command[0].startswith('~/'):
-            self.command[0] = home + self.command[0][2:]
+            pass
+        if self.home and self.command[0].startswith('~/'):
+            self.command[0] = self.home + self.command[0][2:]
 
         if (len(self.command) >= 3 and
             self.command[-2] == '>' and
@@ -494,7 +495,7 @@ def generate_timer_unit(job:Job, seq=None, unit_name=None) -> Optional[str]:
             unit_id = next(seq)
         else:
             unit_id = hashlib.md5()
-            unit_id.update(bytes('\0'.join([schedule] + command), 'utf-8'))
+            unit_id.update(bytes('\0'.join([schedule] + job.command), 'utf-8'))
             unit_id = unit_id.hexdigest()
         unit_name = "cron-%s-%s-%s" % (job.jobid, job.user, unit_id)
 
@@ -545,8 +546,8 @@ def generate_timer_unit(job:Job, seq=None, unit_name=None) -> Optional[str]:
             f.write('OnFailure=cron-failure@%i.service\n')
         if job.user != 'root' or job.filename == '@statedir@/root':
             f.write('Requires=systemd-user-sessions.service\n')
-            if home:
-                f.write('RequiresMountsFor=%s\n' % home)
+            if job.home:
+                f.write('RequiresMountsFor=%s\n' % job.home)
 
         f.write('\n[Service]\n')
         f.write('Type=oneshot\n')
