@@ -599,8 +599,8 @@ def main() -> None:
         basename = os.path.basename(filename)
         basename_distro = CROND2TIMER.get(basename, basename)
         masked = False
-        for unit_file in ('@unitdir@/%s.timer' % basename,
-                          '@unitdir@/%s.timer' % basename_distro,
+        for unit_file in ('/lib/systemd/system/%s.timer' % basename,
+                          '/lib/systemd/system/%s.timer' % basename_distro,
                           '/etc/systemd/system/%s.timer' % basename,
                           '/run/systemd/system/%s.timer' % basename):
             if os.path.exists(unit_file):
@@ -649,8 +649,8 @@ def main() -> None:
                 job.jobid = period + '-' + basename
                 job.decode() # ensure clean jobid
                 basename_distro = PART2TIMER.get(basename, basename)
-                if (os.path.exists('@unitdir@/%s.timer' % basename)
-                 or os.path.exists('@unitdir@/%s.timer' % basename_distro)
+                if (os.path.exists('/lib/systemd/system/%s.timer' % basename)
+                 or os.path.exists('/lib/systemd/system/%s.timer' % basename_distro)
                  or os.path.exists('/etc/systemd/system/%s.timer' % basename)):
                     log(5, 'ignoring %s because native timer is present' % filename)
                     continue
