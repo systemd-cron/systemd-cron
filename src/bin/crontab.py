@@ -87,21 +87,24 @@ def confirm(message:str) -> bool:
 def check(cron_file:str) -> bool:
     good = True
     for job in parser.parse_crontab(cron_file, withuser=False):
-        if 'c' not in job:
+        if not job.valid:
             good = False
-            sys.stderr.write('%s: truncated line in %s: %s\n' % (SELF, cron_file, job['l']))
-        elif 'p' in job:
-            if job['p'] not in ['reboot', 'minutely', 'hourly', 'daily', 'midnight', 'weekly',
+            sys.stderr.write('%s: truncated line in %s: %s\n' % (SELF, cron_file, job.line))
+        elif type(job.period) is str:
+            if job.period not in ['reboot', 'minutely', 'hourly', 'daily', 'midnight', 'weekly',
                                 'monthly', 'quarterly',
                                 'semi-annually', 'semiannually', 'bi-annually', 'biannually',
                                 'annually', 'yearly']:
                 good = False
-                sys.stderr.write("%s: unknown schedule in %s: %s\n" % (SELF, cron_file, job['l']))
-        elif 0 in job['M'] or 0 in job['d']:
+                sys.stderr.write("%s: unknown schedule in %s: %s\n" % (SELF, cron_file, job.line))
+        elif 0 in job.period['M'] or 0 in job.period['d']:
                 good = False
-                sys.stderr.write("%s: month and day can't be 0 in %s: %s\n" % (SELF, cron_file, job['l']))
+                sys.stderr.write("%s: month and day can't be 0 in %s: %s\n" % (SELF, cron_file, job.line))
         else:
-            if not len(job['M']) or not len(job['d']) or not len(job['h']) or not len(job['m']):
+            if (not len(job.period['M'])
+                or not len(job.period['d'])
+                or not len(job.period['h'])
+                or not len(job.period['m'])):
                 good = False
     return good
 

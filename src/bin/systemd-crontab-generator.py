@@ -8,6 +8,7 @@ import string
 import sys
 from functools import reduce
 from typing import Dict, List, Optional
+from typing import Any #XXX
 
 envvar_re = re.compile(r'^([A-Za-z_0-9]+)\s*=\s*(.*)$')
 
@@ -63,6 +64,39 @@ class Persistent:
             return cls.no
 
 
+class Job:
+    '''Job definition'''
+    filename:str
+    line:str
+    environment:Dict[str, str]
+    shell:str
+    random_delay:int
+    #period:Union[str:Dict[str, int]]
+    period:Any #XXX
+    boot_delay:int
+    start_hour:int
+    persistent:int # tristate
+    batch:bool
+    jobid:str
+    user:str
+    command:str
+    valid:bool
+    run_parts:bool
+
+    def __init__(self, filename:str, line:str) -> None:
+        self.filename = filename
+        self.line = line
+        self.environment = dict()
+        self.shell = '/bin/sh'
+        self.boot_delay = 0
+        self.start_hour = 6
+        self.random_delay = 0
+        self.persistent = Persistent.auto
+        self.user = 'root'
+        self.valid = False
+        self.run_parts = False
+        self.batch = False
+
 def files(dirname:str) -> List[str]:
     try:
         return list(filter(os.path.isfile, [os.path.join(dirname, f) for f in os.listdir(dirname)]))
@@ -90,17 +124,19 @@ def environment_string(env:Dict[str, str]) -> str:
             line.append('%s=%s' % (k, v))
     return ' '.join(line)
 
-def parse_crontab(filename:str, withuser:bool=True, monotonic:bool=False):
+def parse_crontab(filename:str,
+                  withuser:bool=True,
+                  monotonic:bool=False):
     '''parser shared with /usr/bin/crontab'''
 
-    basename = os.path.basename(filename)
-    environment = { }
-    random_delay = 1
-    start_hours_range = 0
-    boot_delay = 0
-    persistent = Persistent.yes if monotonic else Persistent.auto
-    batch = False
-    run_parts = USE_RUNPARTS
+    basename:str = os.path.basename(filename)
+    environment:Dict[str,str] = dict()
+    random_delay:int = 1
+    start_hour:int = 6
+    boot_delay:int = 0
+    persistent:int = Persistent.yes if monotonic else Persistent.auto
+    batch:bool = False
+    run_parts:bool = USE_RUNPARTS
     with open(filename, 'r', encoding='utf8') as f:
         for line in f.readlines():
             line = line.strip()
@@ -118,7 +154,7 @@ def parse_crontab(filename:str, withuser:bool=True, monotonic:bool=False):
                          log(4, 'invalid RANDOM_DELAY in %s: %s' % (filename, line))
                 elif envvar.group(1) == 'START_HOURS_RANGE':
                      try:
-                         start_hours_range = int(value.split('-')[0])
+                         start_hour = int(value.split('-')[0])
                      except ValueError:
                          log(4, 'invalid START_HOURS_RANGE in %s: %s' % (filename, line))
                 elif envvar.group(1) == 'DELAY':
@@ -147,7 +183,7 @@ def parse_crontab(filename:str, withuser:bool=True, monotonic:bool=False):
 
             if monotonic:
                 if len(parts) < 4:
-                    yield { 'l': line }
+                    yield Job(filename, line)
                     continue
 
                 period, delay, jobid = parts[0:3]
@@ -173,26 +209,24 @@ def parse_crontab(filename:str, withuser:bool=True, monotonic:bool=False):
                 valid_chars = "-_%s%s" % (string.ascii_letters, string.digits)
                 jobid = ''.join(c for c in jobid if c in valid_chars)
 
-                yield {
-                        'e': environment_string(environment),
-                        's': environment.get('SHELL','/bin/sh'),
-                        'a': random_delay,
-                        'l': line,
-                        'f': filename,
-                        'p': period.lower(),
-                        'b': boot_delay,
-                        'h': start_hours_range,
-                        'P': False if persistent == Persistent.no else True,
-                        'j': jobid,
-                        'u': 'root',
-                        'c': command,
-                        'Z': batch,
-                        }
+                j = Job(filename, line)
+                j.environment = environment
+                j.shell = environment.get('SHELL','/bin/sh')
+                j.random_delay = random_delay
+                j.period = period.lower()
+                j.boot_delay = boot_delay
+                j.start_hour = start_hour
+                j.persistent = False if persistent == Persistent.no else True
+                j.jobid = jobid
+                j.command = command
+                j.batch = batch
+                j.valid = True
+                yield j
 
             else:
                 if line.startswith('@'):
                     if len(parts) < 2 + int(withuser):
-                        yield { 'l': line }
+                        yield Job(filename, line)
                         continue
 
                     period = parts[0]
@@ -206,50 +240,53 @@ def parse_crontab(filename:str, withuser:bool=True, monotonic:bool=False):
 
                     user, command = (parts[1], ' '.join(parts[2:])) if withuser else (basename, ' '.join(parts[1:]))
 
-                    yield {
-                            'e': environment_string(environment),
-                            's': environment.get('SHELL','/bin/sh'),
-                            'a': random_delay,
-                            'l': line,
-                            'f': filename,
-                            'p': period.lower(),
-                            'b': boot_delay,
-                            'h': start_hours_range,
-                            'P': False if persistent == Persistent.no else True,
-                            'j': basename,
-                            'u': user,
-                            'c': command,
-                            'Z': batch,
-                            'J': run_parts,
-                            }
+                    j = Job(filename, line)
+                    j.environment = environment
+                    j.shell = environment.get('SHELL','/bin/sh')
+                    j.random_delay = random_delay
+                    j.period = period.lower()
+                    j.boot_delay = boot_delay
+                    j.start_hour = start_hour
+                    j.jobid = jobid
+                    j.command = command
+                    j.batch = batch
+                    j.persistent = False if persistent == Persistent.no else True
+                    j.user = user
+                    j.command = command
+                    j.batch = batch
+                    j.run_parts = run_parts
+                    j.valid = True
+                    yield j
+
                 else:
                     if len(parts) < 6 + int(withuser):
-                        yield { 'l': line }
+                        yield Job(filename, line)
                         continue
 
                     minutes, hours, days = parts[0:3]
                     months, dows = parts[3:5]
                     user, command = (parts[5], ' '.join(parts[6:])) if withuser else (basename, ' '.join(parts[5:]))
 
-                    yield {
-                            'e': environment_string(environment),
-                            's': environment.get('SHELL','/bin/sh'),
-                            'a': random_delay,
-                            'l': line,
-                            'f': filename,
-                            'b': boot_delay,
+                    j = Job(filename, line)
+                    j.jobid = basename
+                    j.environment = environment
+                    j.shell = environment.get('SHELL','/bin/sh')
+                    j.random_delay = random_delay
+                    j.boot_delay = boot_delay
+                    j.persistent = Persistent.yes or False
+                    j.user = user
+                    j.command = command
+                    j.batch = batch
+                    j.run_parts = run_parts
+                    j.valid = True
+                    j.period = {
                             'm': parse_time_unit(filename, line, minutes, MINUTES_SET),
                             'h': parse_time_unit(filename, line, hours, HOURS_SET),
                             'd': parse_time_unit(filename, line, days, DAYS_SET),
                             'w': parse_time_unit(filename, line, dows, DOWS_SET, dow_map),
                             'M': parse_time_unit(filename, line, months, MONTHS_SET, month_map),
-                            'P': True if persistent == Persistent.yes else False,
-                            'j': basename,
-                            'u': user,
-                            'c': command,
-                            'Z': batch,
-                            'J': run_parts,
-                            }
+                    }
+                    yield j
 
 def parse_time_unit(filename:str, line:str, value:str, values, mapping=int) -> List[str]:
     result:List[str]
@@ -300,22 +337,22 @@ def parse_period(mapping=int, base=0):
 
     return parser
 
-def generate_timer_unit(job, seq=None, unit_name=None) -> Optional[str]:
-    persistent = job['P']
-    command = job['c']
+def generate_timer_unit(job:Job, seq=None, unit_name=None) -> Optional[str]:
+    persistent = job.persistent
+    command = job.command
     parts = command.split()
     testremoved = None
     standardoutput = None
-    delay = job['b']
+    delay = job.boot_delay
     daemon_reload = os.path.isfile(REBOOT_FILE)
 
     try:
-        home = pwd.getpwnam(job['u']).pw_dir
+        home = pwd.getpwnam(job.user).pw_dir
     except KeyError:
         home = None
 
     # perform smart substitutions for known shells
-    if 's' not in job or job['s'] in KSH_SHELLS:
+    if job.shell in KSH_SHELLS:
         if home and command.startswith('~/'):
             command = home + command[1:]
 
@@ -324,13 +361,13 @@ def generate_timer_unit(job, seq=None, unit_name=None) -> Optional[str]:
             parts[-1] == '/dev/null'):
             command = ' '.join(parts[0:-2])
             parts = command.split()
-            standardoutput='null';
+            standardoutput='/dev/null';
 
         if (len(parts) >= 2 and
             parts[-1] == '>/dev/null'):
             command = ' '.join(parts[0:-1])
             parts = command.split()
-            standardoutput='null';
+            standardoutput='/dev/null';
 
         if (len(parts) == 6 and
             parts[0] == '[' and
@@ -351,7 +388,8 @@ def generate_timer_unit(job, seq=None, unit_name=None) -> Optional[str]:
                 command = ' '.join(parts[4:])
                 parts = command.split()
 
-        if testremoved and not os.path.isfile(testremoved): return None
+        if testremoved and not os.path.isfile(testremoved):
+            return None
 
         if (len(parts) == 6 and
             parts[0] == '[' and
@@ -366,72 +404,79 @@ def generate_timer_unit(job, seq=None, unit_name=None) -> Optional[str]:
             parts[2] == '/run/systemd/system' and
             parts[3] == '||'): return None
 
-        # TODO: translate  'command%line1%line2%line3
-        # in '/bin/echo -e line1\\nline2\\nline3 | command'
-        # to be POSIX compliant
+    if type(job.period) is str:
+        hour = job.start_hour
 
-    if 'p' in job:
-        hour = job['h'] if 'h' in job else 0
-
-        if job['p'] == 'reboot':
+        if job.period == 'reboot':
             if daemon_reload:
                 return None
             if delay == 0: delay = 1
             schedule = None
             persistent = False
-        elif job['p'] == 'minutely':
-            schedule = job['p']
+        elif job.period == 'minutely':
+            schedule = job.period
             persistent = False
-        elif job['p'] == 'hourly' and delay == 0:
+        elif job.period == 'hourly' and delay == 0:
             schedule = 'hourly'
-        elif job['p'] == 'hourly':
+        elif job.period == 'hourly':
             schedule = '*-*-* *:%s:0' % delay
             delay = 0
-        elif job['p'] == 'midnight' and delay == 0:
+        elif job.period == 'midnight' and delay == 0:
             schedule = 'daily'
-        elif job['p'] == 'midnight':
+        elif job.period == 'midnight':
             schedule = '*-*-* 0:%s:0' % delay
-        elif job['p'] in TIME_UNITS_SET and hour == 0 and delay == 0:
-            schedule = job['p']
-        elif job['p'] == 'daily':
+        elif job.period in TIME_UNITS_SET and hour == 0 and delay == 0:
+            schedule = job.period
+        elif job.period == 'daily':
             schedule = '*-*-* %s:%s:0' % (hour, delay)
-        elif job['p'] == 'weekly':
+        elif job.period == 'weekly':
             schedule = 'Mon *-*-* %s:%s:0' % (hour, delay)
-        elif job['p'] == 'monthly':
+        elif job.period == 'monthly':
             schedule = '*-*-1 %s:%s:0' % (hour, delay)
-        elif job['p'] == 'quarterly':
+        elif job.period == 'quarterly':
             schedule = '*-1,4,7,10-1 %s:%s:0' % (hour, delay)
-        elif job['p'] == 'semi-annually':
+        elif job.period == 'semi-annually':
             schedule = '*-1,7-1 %s:%s:0' % (hour, delay)
-        elif job['p'] == 'yearly':
+        elif job.period == 'yearly':
             schedule = '*-1-1 %s:%s:0' % (hour, delay)
         else:
             try:
-               if int(job['p']) > 31:
+               if int(job.period) > 31:
                     # workaround for anacrontab
-                    schedule = '*-1/%s-1 %s:%s:0' % (int(round(job['p']/30)), hour, delay)
+                    schedule = '*-1/%s-1 %s:%s:0' % (int(round(int(job.period) / 30)), hour, delay)
                else:
-                    schedule = '*-*-1/%s %s:%s:0' % (int(job['p']), hour, delay)
+                    schedule = '*-*-1/%s %s:%s:0' % (int(job.period), hour, delay)
             except ValueError:
-                    log(3, 'unknown schedule in %s: %s' % (job['f'], job['l']))
-                    schedule = job['p']
+                    log(3, 'unknown schedule in %s: %s' % (job.filename, job.line))
+                    schedule = job.period
 
     else:
-        if job['w'] == ['*']:
-            dows=''
+        if job.period['w'] == ['*']:
+            dows = ''
         else:
             dows_sorted = []
             for day in DOWS_SET:
-                if day in job['w']:
+                if day in job.period['w']:
                     dows_sorted.append(day)
             dows = ','.join(dows_sorted) + ' '
 
-        if 0 in job['M']: job['M'].remove(0)
-        if 0 in job['d']: job['d'].remove(0)
-        if not len(job['M']) or not len(job['d']) or not len(job['h']) or not len(job['m']):
+        if 0 in job.period['M']: job.period['M'].remove(0)
+        if 0 in job.period['d']: job.period['d'].remove(0)
+
+        # 2023: I have no clue what this is for
+        if (not len(job.period['M']) or
+           not len(job.period['d']) or
+           not len(job.period['h']) or
+           not len(job.period['m'])):
             return None
-        schedule = '%s*-%s-%s %s:%s:00' % (dows, ','.join(map(str, job['M'])),
-                ','.join(map(str, job['d'])), ','.join(map(str, job['h'])), ','.join(map(str, job['m'])))
+
+        schedule = '%s*-%s-%s %s:%s:00' % (
+                      dows,
+                      ','.join(map(str, job.period['M'])),
+                      ','.join(map(str, job.period['d'])),
+                      ','.join(map(str, job.period['h'])),
+                      ','.join(map(str, job.period['m']))
+                   )
 
     if not unit_name:
         if not persistent:
@@ -440,30 +485,31 @@ def generate_timer_unit(job, seq=None, unit_name=None) -> Optional[str]:
             unit_id = hashlib.md5()
             unit_id.update(bytes('\0'.join([schedule, command]), 'utf-8'))
             unit_id = unit_id.hexdigest()
-        unit_name = "cron-%s-%s-%s" % (job['j'], job['u'], unit_id)
+        unit_name = "cron-%s-%s-%s" % (job.jobid, job.user, unit_id)
 
     if not (len(parts) == 1 and os.path.isfile(command)):
         with open('%s/%s.sh' % (TARGET_DIR, unit_name), 'w', encoding='utf8') as f:
             f.write(command)
-        command=job['s'] + ' ' + TARGET_DIR + '/' + unit_name + '.sh'
+        command=job.shell + ' ' + TARGET_DIR + '/' + unit_name + '.sh'
 
     with open('%s/%s.timer' % (TARGET_DIR, unit_name), 'w' , encoding='utf8') as f:
         f.write('[Unit]\n')
-        f.write('Description=[Timer] "%s"\n' % job['l'].replace('%', '%%'))
+        f.write('Description=[Timer] "%s"\n' % job.line.replace('%', '%%'))
         f.write('Documentation=man:systemd-crontab-generator(8)\n')
         f.write('PartOf=cron.target\n')
-        f.write('SourcePath=%s\n' % job['f'])
-        if testremoved: f.write('ConditionFileIsExecutable=%s\n' % testremoved)
+        f.write('SourcePath=%s\n' % job.filename)
+        if testremoved:
+            f.write('ConditionFileIsExecutable=%s\n' % testremoved)
 
         f.write('\n[Timer]\n')
         f.write('Unit=%s.service\n' % unit_name)
         if schedule: f.write('OnCalendar=%s\n' % schedule)
         else:        f.write('OnBootSec=%sm\n' % delay)
-        if 'a' in job and job['a'] != 1:
+        if job.random_delay > 1:
             if RANDOMIZED_DELAY:
-                f.write('RandomizedDelaySec=%sm\n' % job['a'])
+                f.write('RandomizedDelaySec=%sm\n' % job.random_delay)
             else:
-                f.write('AccuracySec=%sm\n' % job['a'])
+                f.write('AccuracySec=%sm\n' % job.random_delay)
         if persistent: f.write('Persistent=true\n')
 
     try:
@@ -474,16 +520,16 @@ def generate_timer_unit(job, seq=None, unit_name=None) -> Optional[str]:
 
     with open('%s/%s.service' % (TARGET_DIR, unit_name), 'w', encoding='utf8') as f:
         f.write('[Unit]\n')
-        f.write('Description=[Cron] "%s"\n' % job['l'].replace('%', '%%'))
+        f.write('Description=[Cron] "%s"\n' % job.filename.replace('%', '%%'))
         f.write('Documentation=man:systemd-crontab-generator(8)\n')
-        f.write('SourcePath=%s\n' % job['f'])
-        if re.search('MAILTO=(\s+|$)', job['e']):
+        f.write('SourcePath=%s\n' % job.filename)
+        if 'MAILTO' in job.environment:
             pass # mails explicitely disabled
         elif not HAS_SENDMAIL:
             pass # mails automaticaly disabled
         else:
             f.write('OnFailure=cron-failure@%i.service\n')
-        if job['u'] != 'root' or job['f'] == '@statedir@/root':
+        if job.user != 'root' or job.filename == '@statedir@/root':
             f.write('Requires=systemd-user-sessions.service\n')
             if home:
                 f.write('RequiresMountsFor=%s\n' % home)
@@ -497,13 +543,13 @@ def generate_timer_unit(job, seq=None, unit_name=None) -> Optional[str]:
         if schedule and delay:
              f.write('ExecStartPre=-@libdir@/@package@/boot_delay %s\n' % delay)
         f.write('ExecStart=%s\n' % command)
-        if job['e']:
-             f.write('Environment=%s\n' % job['e'])
-        if job['u'] != 'root':
-             f.write('User=%s\n' % job['u'])
+        if job.environment:
+             f.write('Environment=%s\n' % environment_string(job.environment))
+        if job.user:
+             f.write('User=%s\n' % job.user)
         if standardoutput:
              f.write('StandardOutput=%s\n' % standardoutput)
-        if 'Z' in job and job['Z']:
+        if job.batch:
              f.write('CPUSchedulingPolicy=idle\n')
              f.write('IOSchedulingClass=idle\n')
 
@@ -516,7 +562,7 @@ def log(level:int, message:str) -> None:
     else:
         sys.stderr.write('%s: %s\n' % (SELF, message))
 
-seqs = {}
+seqs:Dict[str, int] = {}
 def count():
     n = 0
     while True:
@@ -533,16 +579,18 @@ def main() -> None:
     run_parts = USE_RUNPARTS
     if os.path.isfile('/etc/crontab'):
         for job in parse_crontab('/etc/crontab', withuser=True):
-            if 'J' in job:
-                 run_parts = job['J']
-            if 'c' not in job:
-                 log(3, 'truncated line in /etc/crontab: %s' % job['l'])
+            run_parts = job.run_parts
+            if not job.valid:
+                 log(3, 'truncated line in /etc/crontab: %s' % job.line)
                  continue
-            if '/etc/cron.hourly'  in job['c']: continue
-            if '/etc/cron.daily'   in job['c']: continue
-            if '/etc/cron.weekly'  in job['c']: continue
-            if '/etc/cron.monthly' in job['c']: continue
-            generate_timer_unit(job, seq=seqs.setdefault(job['j']+job['u'], count()))
+            if '/etc/cron.hourly'  in job.command: continue
+            if '/etc/cron.daily'   in job.command: continue
+            if '/etc/cron.weekly'  in job.command: continue
+            if '/etc/cron.monthly' in job.command: continue
+            generate_timer_unit(job,
+                                seq=seqs.setdefault(
+                                    job.jobid+job.user, count()
+                                ))
 
     CRONTAB_FILES = files('/etc/cron.d')
     for filename in CRONTAB_FILES:
@@ -571,10 +619,10 @@ def main() -> None:
             log(5, 'ignoring %s' % filename)
             continue
         for job in parse_crontab(filename, withuser=True):
-            if 'c' not in job:
-                log(3, 'truncated line in %s: %s' % (filename, job['l']))
+            if not job.valid:
+                log(3, 'truncated line in %s: %s' % (filename, job.line))
                 continue
-            generate_timer_unit(job, seq=seqs.setdefault(job['j']+job['u'], count()))
+            generate_timer_unit(job, seq=seqs.setdefault(job.jobid+job.user, count()))
 
     if run_parts:
         open(RUN_PARTS_FLAG, 'a').close()
@@ -582,21 +630,21 @@ def main() -> None:
         if os.path.exists(RUN_PARTS_FLAG):
             os.unlink(RUN_PARTS_FLAG)
         # https://github.com/systemd-cron/systemd-cron/issues/47
-        job_template = dict()
-        job_template['P'] = PERSISTENT
-        job_template['u'] = 'root'
-        job_template['e'] = ''
         i = 0
         for period in ['hourly', 'daily', 'weekly', 'monthly', 'yearly']:
             i = i + 1
-            job_template['b'] = i * 5
             directory = '/etc/cron.' + period
             if not os.path.isdir(directory):
                 continue
             CRONTAB_FILES = files('/etc/cron.' + period)
             for filename in CRONTAB_FILES:
-                job_template['p'] = period
+                job = Job(filename, filename)
+                job.persistent = PERSISTENT
+                job.period = period
+                job.boot_delay = i * 5
+                job.command = filename
                 basename = os.path.basename(filename)
+                job.jobid = period + '-' + basename
                 basename_distro = PART2TIMER.get(basename, basename)
                 if (os.path.exists('@unitdir@/%s.timer' % basename)
                  or os.path.exists('@unitdir@/%s.timer' % basename_distro)
@@ -609,19 +657,14 @@ def main() -> None:
                     log(5, 'ignoring %s' % filename)
                     continue
                 else:
-                    job = job_template
-                    job['l'] = filename
-                    job['f'] = filename
-                    job['j'] = period + '-' + basename
-                    job['c'] = filename
-                    generate_timer_unit(job, unit_name='cron-' + job['j'])
+                    generate_timer_unit(job, unit_name='cron-' + job.jobid)
 
     if os.path.isfile('/etc/anacrontab'):
         for job in parse_crontab('/etc/anacrontab', monotonic=True):
-            if 'c' not in job:
-                 log(3, 'truncated line in /etc/anacrontab: %s' % job['l'])
+            if not job.valid:
+                 log(3, 'truncated line in /etc/anacrontab: %s' % job.line)
                  continue
-            generate_timer_unit(job, seq=seqs.setdefault(job['j']+job['u'], count()))
+            generate_timer_unit(job, seq=seqs.setdefault(job.jobid+job.user, count()))
 
 
     if os.path.isdir('@statedir@'):
@@ -633,7 +676,7 @@ def main() -> None:
                 continue
             else:
                 for job in parse_crontab(filename, withuser=False):
-                    generate_timer_unit(job, seq=seqs.setdefault(job['j']+job['u'], count()))
+                    generate_timer_unit(job, seq=seqs.setdefault(job.jobid+job.user, count()))
         try:
             open(REBOOT_FILE,'a').close()
         except:
