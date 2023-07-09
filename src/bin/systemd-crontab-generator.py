@@ -83,6 +83,8 @@ class Job:
     command:List[str]
     valid:bool
     run_parts:bool
+    standardoutput:Optional[str]
+    testremoved:Optional[str]
 
     def __init__(self, filename:str, line:str) -> None:
         self.filename = filename
@@ -97,16 +99,22 @@ class Job:
         self.valid = False
         self.run_parts = False
         self.batch = False
+        self.standardoutput = None
+        self.testremoved = None
 
     def decode(self) -> bool:
         '''decode & validate'''
         self.jobid = ''.join(c for c in self.jobid if c in VALID_CHARS)
+
 
         if not self.command:
             return False
 
         if 'SHELL' in self.environment:
             self.shell = self.environment['SHELL']
+
+        self.decode_command()
+
 
         if type(self.period) is str:
             self.period = {
@@ -124,6 +132,47 @@ class Job:
 
         self.valid = True
         return True
+
+    def decode_command(self) -> None:
+        '''perform smart substitutions for known shells'''
+        if self.shell not in KSH_SHELLS:
+            return
+
+        try:
+            home = pwd.getpwnam(self.user).pw_dir
+        except KeyError:
+            home = None
+        if home and self.command[0].startswith('~/'):
+            self.command[0] = home + self.command[0][2:]
+
+        if (len(self.command) >= 3 and
+            self.command[-2] == '>' and
+            self.command[-1] == '/dev/null'):
+            self.command = self.command[0:-2]
+            self.standardoutput = '/dev/null'
+
+        if (len(self.command) >= 2 and
+            self.command[-1] == '>/dev/null'):
+            self.command = self.command[0:-1]
+            self.standardoutput = '/dev/null'
+
+        if (len(self.command) == 6 and
+            self.command[0] == '[' and
+            self.command[1] in ['-x','-f','-e'] and
+            self.command[2] == self.command[5] and
+            self.command[3] == ']' and
+            self.command[4] == '&&' ):
+                self.testremoved = self.command[2]
+                self.command = self.command[5:]
+
+        if (len(self.command) == 5 and
+            self.command[0] == 'test' and
+            self.command[1] in ['-x','-f','-e'] and
+            self.command[2] == self.command[4] and
+            self.command[3] == '&&' ):
+                self.testremoved = self.command[2]
+                self.command = self.command[4:]
+
 
 def files(dirname:str) -> List[str]:
     try:
@@ -344,67 +393,27 @@ def parse_period(mapping=int, base=0):
 
 def generate_timer_unit(job:Job, seq=None, unit_name=None) -> Optional[str]:
     persistent = job.persistent
-    testremoved = None
-    standardoutput = None
     delay = job.boot_delay
     daemon_reload = os.path.isfile(REBOOT_FILE)
 
-    try:
-        home = pwd.getpwnam(job.user).pw_dir
-    except KeyError:
-        home = None
+    if job.testremoved and not os.path.isfile(job.testremoved):
+        log(3, '%s is removed, skipping job' % job.testremoved)
+        return None
 
-    # perform smart substitutions for known shells
-    if job.shell in KSH_SHELLS:
-        if home and job.command[0].startswith('~/'):
-            job.command[0] = home + job.command[0][2:]
-
-        if (len(job.command) >= 3 and
-            job.command[-2] == '>' and
-            job.command[-1] == '/dev/null'):
-            job.command = job.command[0:-2]
-            standardoutput='/dev/null'
-
-        if (len(job.command) >= 2 and
-            job.command[-1] == '>/dev/null'):
-            job.command = job.command[0:-1]
-            standardoutput = '/dev/null'
-
-        if (len(job.command) == 6 and
-            job.command[0] == '[' and
-            job.command[1] in ['-x','-f','-e'] and
-            job.command[2] == job.command[5] and
-            job.command[3] == ']' and
-            job.command[4] == '&&' ):
-                testremoved = job.command[2]
-                job.command = job.command[5:]
-
-        if (len(job.command) == 5 and
-            job.command[0] == 'test' and
-            job.command[1] in ['-x','-f','-e'] and
-            job.command[2] == job.command[4] and
-            job.command[3] == '&&' ):
-                testremoved = job.command[2]
-                job.command = job.command[4:]
-
-        if testremoved and not os.path.isfile(testremoved):
-            log(3, '%s is removed, skipping job' % testremoved)
+    if (len(job.command) == 6 and
+        job.command[0] == '[' and
+        job.command[1] in ['-d','-e'] and
+        job.command[2] == '/run/systemd/system' and
+        job.command[3] == ']' and
+        job.command[4] == '||'):
             return None
 
-        if (len(job.command) == 6 and
-            job.command[0] == '[' and
-            job.command[1] in ['-d','-e'] and
-            job.command[2] == '/run/systemd/system' and
-            job.command[3] == ']' and
-            job.command[4] == '||'):
-             return None
-
-        if (len(job.command) == 5 and
-            job.command[0] == 'test' and
-            job.command[1] in ['-d','-e'] and
-            job.command[2] == '/run/systemd/system' and
-            job.command[3] == '||'):
-             return None
+    if (len(job.command) == 5 and
+        job.command[0] == 'test' and
+        job.command[1] in ['-d','-e'] and
+        job.command[2] == '/run/systemd/system' and
+        job.command[3] == '||'):
+            return None
 
     if type(job.period) is str:
         hour = job.start_hour
@@ -485,7 +494,7 @@ def generate_timer_unit(job:Job, seq=None, unit_name=None) -> Optional[str]:
             unit_id = next(seq)
         else:
             unit_id = hashlib.md5()
-            unit_id.update(bytes('\0'.join([schedule, command]), 'utf-8'))
+            unit_id.update(bytes('\0'.join([schedule] + command), 'utf-8'))
             unit_id = unit_id.hexdigest()
         unit_name = "cron-%s-%s-%s" % (job.jobid, job.user, unit_id)
 
@@ -503,8 +512,8 @@ def generate_timer_unit(job:Job, seq=None, unit_name=None) -> Optional[str]:
         f.write('Documentation=man:systemd-crontab-generator(8)\n')
         f.write('PartOf=cron.target\n')
         f.write('SourcePath=%s\n' % job.filename)
-        if testremoved:
-            f.write('ConditionFileIsExecutable=%s\n' % testremoved)
+        if job.testremoved:
+            f.write('ConditionFileIsExecutable=%s\n' % job.testremoved)
 
         f.write('\n[Timer]\n')
         f.write('Unit=%s.service\n' % unit_name)
@@ -552,8 +561,8 @@ def generate_timer_unit(job:Job, seq=None, unit_name=None) -> Optional[str]:
              f.write('Environment=%s\n' % environment_string(job.environment))
         if job.user:
              f.write('User=%s\n' % job.user)
-        if standardoutput:
-             f.write('StandardOutput=%s\n' % standardoutput)
+        if job.standardoutput:
+             f.write('StandardOutput=%s\n' % job.standardoutput)
         if job.batch:
              f.write('CPUSchedulingPolicy=idle\n')
              f.write('IOSchedulingClass=idle\n')
@@ -647,7 +656,7 @@ def main() -> None:
                 job.persistent = PERSISTENT
                 job.period = period
                 job.boot_delay = i * 5
-                job.command = filename
+                job.command = [filename]
                 basename = os.path.basename(filename)
                 job.jobid = period + '-' + basename
                 job.decode() # ensure clean jobid
