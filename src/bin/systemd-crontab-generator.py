@@ -538,7 +538,7 @@ def generate_timer_unit(job:Job, seq=None, unit_name=None) -> Optional[str]:
         f.write('Description=[Cron] "%s"\n' % job.line.replace('%', '%%'))
         f.write('Documentation=man:systemd-crontab-generator(8)\n')
         f.write('SourcePath=%s\n' % job.filename)
-        if 'MAILTO' in job.environment:
+        if 'MAILTO' in job.environment and not job.environment['MAILTO']:
             pass # mails explicitely disabled
         elif not HAS_SENDMAIL:
             pass # mails automaticaly disabled
@@ -592,9 +592,12 @@ def main() -> None:
             raise
 
     run_parts = USE_RUNPARTS
+    fallback_mailto = None
+
     if os.path.isfile('/etc/crontab'):
         for job in parse_crontab('/etc/crontab', withuser=True):
             run_parts = job.run_parts
+            fallback_mailto = job.environment.get('MAILTO')
             if not job.valid:
                  log(3, 'truncated line in /etc/crontab: %s' % job.line)
                  continue
@@ -637,6 +640,8 @@ def main() -> None:
             if not job.valid:
                 log(3, 'truncated line in %s: %s' % (filename, job.line))
                 continue
+            if fallback_mailto and 'MAILTO' not in job.environment:
+                job.environment['MAILTO'] = fallback_mailto
             generate_timer_unit(job, seq=seqs.setdefault(job.jobid+job.user, count()))
 
     if run_parts:
@@ -661,6 +666,8 @@ def main() -> None:
                 basename = os.path.basename(filename)
                 job.jobid = period + '-' + basename
                 job.decode() # ensure clean jobid
+                if fallback_mailto and 'MAILTO' not in job.environment:
+                    job.environment['MAILTO'] = fallback_mailto
                 basename_distro = PART2TIMER.get(basename, basename)
                 if (os.path.exists('/lib/systemd/system/%s.timer' % basename)
                  or os.path.exists('/lib/systemd/system/%s.timer' % basename_distro)

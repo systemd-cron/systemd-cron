@@ -1,6 +1,8 @@
 v1.16 : 2023-07-10
 
      * major rewrite
+     * MAILTO= : /etc/cron.*/ will inherit this from
+                 /etc/crontab if they don't provide their own
 
 v1.15.22 : 2023-07-04
 
