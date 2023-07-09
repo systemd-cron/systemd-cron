@@ -167,12 +167,13 @@ def parse_crontab(filename:str,
     persistent:int = Persistent.yes if monotonic else Persistent.auto
     batch:bool = False
     run_parts:bool = USE_RUNPARTS
-    with open(filename, 'r', encoding='utf8') as f:
-        for line in f.readlines():
-            line = line.strip()
-            if not line or line.startswith('#'):
+    with open(filename, 'rb') as f:
+        for rawline in f.readlines():
+            rawline = rawline.strip()
+            if not rawline or rawline.startswith(b'#'):
                 continue
 
+            line = rawline.decode('utf8')
             envvar = envvar_re.match(line)
             if envvar:
                 value = envvar.group(2)
