@@ -560,7 +560,7 @@ def generate_timer_unit(job:Job, seq=None, unit_name=None) -> Optional[str]:
         f.write('ExecStart=%s\n' % command)
         if job.environment:
              f.write('Environment=%s\n' % environment_string(job.environment))
-        if job.user:
+        if job.user and job.user != 'root':
              f.write('User=%s\n' % job.user)
         if job.standardoutput:
              f.write('StandardOutput=%s\n' % job.standardoutput)
