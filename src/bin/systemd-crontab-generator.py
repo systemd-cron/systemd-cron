@@ -331,7 +331,7 @@ def parse_crontab(filename:str,
                         j.user = basename
                         j.command = parts[5:]
                     j.jobid = basename
-                    j.persistent = Persistent.yes or False
+                    j.persistent = True if persistent == Persistent.yes else False
                     j.period = {
                             'm': parse_time_unit(filename, line, minutes, MINUTES_SET),
                             'h': parse_time_unit(filename, line, hours, HOURS_SET),
@@ -495,7 +495,7 @@ def generate_timer_unit(job:Job, seq=None, unit_name=None) -> Optional[str]:
             unit_id = next(seq)
         else:
             unit_id = hashlib.md5()
-            unit_id.update(bytes('\0'.join([schedule] + job.command), 'utf-8'))
+            unit_id.update(bytes('\0'.join([schedule, ' '.join(job.command)]), 'utf-8'))
             unit_id = unit_id.hexdigest()
         unit_name = "cron-%s-%s-%s" % (job.jobid, job.user, unit_id)
 
@@ -535,7 +535,7 @@ def generate_timer_unit(job:Job, seq=None, unit_name=None) -> Optional[str]:
 
     with open('%s/%s.service' % (TARGET_DIR, unit_name), 'w', encoding='utf8') as f:
         f.write('[Unit]\n')
-        f.write('Description=[Cron] "%s"\n' % job.filename.replace('%', '%%'))
+        f.write('Description=[Cron] "%s"\n' % job.line.replace('%', '%%'))
         f.write('Documentation=man:systemd-crontab-generator(8)\n')
         f.write('SourcePath=%s\n' % job.filename)
         if 'MAILTO' in job.environment:
@@ -598,10 +598,10 @@ def main() -> None:
             if not job.valid:
                  log(3, 'truncated line in /etc/crontab: %s' % job.line)
                  continue
-            if '/etc/cron.hourly'  in job.command: continue
-            if '/etc/cron.daily'   in job.command: continue
-            if '/etc/cron.weekly'  in job.command: continue
-            if '/etc/cron.monthly' in job.command: continue
+            if '/etc/cron.hourly'  in job.line: continue
+            if '/etc/cron.daily'   in job.line: continue
+            if '/etc/cron.weekly'  in job.line: continue
+            if '/etc/cron.monthly' in job.line: continue
             generate_timer_unit(job,
                                 seq=seqs.setdefault(
                                     job.jobid+job.user, count()
