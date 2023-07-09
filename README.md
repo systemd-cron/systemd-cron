@@ -21,16 +21,21 @@ The scripts should now be automatically run by systemd. See man:systemd.cron(7) 
 
 Dependencies
 ----------------
-* systemd ≥ 197
-    * systemd ≥ 209, yearly timers
-    * systemd ≥ 212, persistent timers
-    * systemd ≥ 217, minutely, quarterly & semi-annually timers
-    * systemd ≥ 229, real random delay support with `RandomizedDelaySec` option
+* systemd ≥ 236
 * python 3
 * [run-parts][3] (optional)
 * /usr/sbin/sendmail (optional, evaluated at runtime)
 * gcc or clang (needed to build `crontab_setgid.c`; this helper is optional and evaluated at runtime)
 * support for /usr/lib/sysusers.d/*.conf (optional)
+
+Dependencies history
+------------------------
+* systemd ≥ 197, first support for timers
+* systemd ≥ 209, yearly timers
+* systemd ≥ 212, persistent timers
+* systemd ≥ 217, minutely, quarterly & semi-annually timers
+* systemd ≥ 229, real random delay support with `RandomizedDelaySec` option
+* systemd ≥ 236, `LogLevelMax` option
 
 Installation
 ----------------

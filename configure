@@ -25,7 +25,7 @@ enable_monthly=yes
 enable_yearly=no
 
 # systemd ≥ 212
-enable_persistent=no
+enable_persistent=yes
 
 # systemd ≥ 217
 enable_minutely=no

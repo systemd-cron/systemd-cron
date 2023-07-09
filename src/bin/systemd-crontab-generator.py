@@ -20,9 +20,12 @@ TIME_UNITS_SET = ['daily', 'weekly', 'monthly', 'quarterly', 'semi-annually', 'y
 
 KSH_SHELLS = ['/bin/sh', '/bin/dash', '/bin/ksh', '/bin/bash', '/usr/bin/zsh']
 REBOOT_FILE = '/run/crond.reboot'
-RANDOMIZED_DELAY = @randomized_delay@
 RUN_PARTS_FLAG = '/run/systemd/use_run_parts'
 USE_LOGLEVELMAX = '@use_loglevelmax@'
+
+RANDOMIZED_DELAY = "@randomized_delay@" == "True"
+USE_RUNPARTS = "@use_runparts@" == "True"
+PERSISTENT = "@persistent@" == "True"
 
 SELF = os.path.basename(sys.argv[0])
 
@@ -97,7 +100,7 @@ def parse_crontab(filename:str, withuser:bool=True, monotonic:bool=False):
     boot_delay = 0
     persistent = Persistent.yes if monotonic else Persistent.auto
     batch = False
-    run_parts = @use_runparts@
+    run_parts = USE_RUNPARTS
     with open(filename, 'r', encoding='utf8') as f:
         for line in f.readlines():
             line = line.strip()
@@ -461,7 +464,7 @@ def generate_timer_unit(job, seq=None, unit_name=None) -> Optional[str]:
                 f.write('RandomizedDelaySec=%sm\n' % job['a'])
             else:
                 f.write('AccuracySec=%sm\n' % job['a'])
-        if @persistent@ and persistent: f.write('Persistent=true\n')
+        if persistent: f.write('Persistent=true\n')
 
     try:
         os.symlink('%s/%s.timer' % (TARGET_DIR, unit_name), '%s/%s.timer' % (TIMERS_DIR, unit_name))
@@ -527,7 +530,7 @@ def main() -> None:
         if e.errno != errno.EEXIST:
             raise
 
-    run_parts = @use_runparts@
+    run_parts = USE_RUNPARTS
     if os.path.isfile('/etc/crontab'):
         for job in parse_crontab('/etc/crontab', withuser=True):
             if 'J' in job:
@@ -580,7 +583,7 @@ def main() -> None:
             os.unlink(RUN_PARTS_FLAG)
         # https://github.com/systemd-cron/systemd-cron/issues/47
         job_template = dict()
-        job_template['P'] = @persistent@
+        job_template['P'] = PERSISTENT
         job_template['u'] = 'root'
         job_template['e'] = ''
         i = 0
