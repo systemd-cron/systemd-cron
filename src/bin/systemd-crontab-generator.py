@@ -15,7 +15,7 @@ envvar_re = re.compile(r'^([A-Za-z_0-9]+)\s*=\s*(.*)$')
 MINUTES_SET = list(range(0, 60))
 HOURS_SET = list(range(0, 24))
 DAYS_SET = list(range(1, 32))
-DOWS_SET = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+DOWS_SET = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 MONTHS_SET = list(range(1, 13))
 TIME_UNITS_SET = ['daily', 'weekly', 'monthly', 'quarterly', 'semi-annually', 'yearly']
 
@@ -174,6 +174,10 @@ def parse_crontab(filename:str,
                 continue
 
             line = rawline.decode('utf8')
+
+            while '  ' in line:
+                line = line.replace('  ', ' ')
+
             envvar = envvar_re.match(line)
             if envvar:
                 value = envvar.group(2)
@@ -316,7 +320,7 @@ def month_map(month:str) -> int:
 
 def dow_map(dow:str) -> int:
     try:
-        return ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'].index(dow[0:3].lower())
+        return ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].index(dow[0:3].lower())
     except ValueError:
         return int(dow) % 7
 
