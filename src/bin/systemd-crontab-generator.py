@@ -27,6 +27,7 @@ USE_LOGLEVELMAX = "@use_loglevelmax@"
 RANDOMIZED_DELAY = "@randomized_delay@" == "True"
 USE_RUNPARTS = "@use_runparts@" == "True"
 PERSISTENT = "@persistent@" == "True"
+LIBDIR = "@libdir@"
 STATEDIR = "@statedir@"
 
 SELF = os.path.basename(sys.argv[0])
@@ -203,7 +204,7 @@ class Job:
         if USE_LOGLEVELMAX != 'no':
             lines.append('LogLevelMax=%s' % USE_LOGLEVELMAX)
         if self.schedule and self.boot_delay:
-            lines.append('ExecStartPre=-@libdir@/systemd-cron/boot_delay %s' % self.boot_delay)
+            lines.append('ExecStartPre=-%s/systemd-cron/boot_delay %s' % (LIBDIR, self.boot_delay))
         lines.append('ExecStart=%s' % self.execstart)
         if self.environment:
              lines.append('Environment=%s' % environment_string(self.environment))
