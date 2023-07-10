@@ -7,7 +7,7 @@ import re
 import string
 import sys
 from functools import reduce
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
 from typing import Any #XXX
 
 envvar_re = re.compile(r'^([A-Za-z_0-9]+)\s*=\s*(.*)$')
@@ -75,14 +75,17 @@ class Job:
     random_delay:int
     #period:Union[str:Dict[str, int]]
     period:Any #XXX
+    schedule:Optional[str]
     boot_delay:int
     start_hour:int
-    persistent:int # tristate
+    persistent:bool
     batch:bool
     jobid:str
+    unit_name:Optional[str]
     user:str
     home:Optional[str]
     command:List[str]
+    execstart:str
     valid:bool
     run_parts:bool
     standardoutput:Optional[str]
@@ -96,7 +99,7 @@ class Job:
         self.boot_delay = 0
         self.start_hour = 0
         self.random_delay = 0
-        self.persistent = Persistent.auto
+        self.persistent = False
         self.user = 'root'
         self.valid = False
         self.run_parts = False
@@ -107,7 +110,7 @@ class Job:
     def decode(self) -> bool:
         '''decode & validate'''
         self.jobid = ''.join(c for c in self.jobid if c in VALID_CHARS)
-
+        self.unit_name = None
 
         if not self.command:
             return False
@@ -174,6 +177,71 @@ class Job:
             self.command[3] == '&&' ):
                 self.testremoved = self.command[2]
                 self.command = self.command[4:]
+
+    def generate_service(self) -> str:
+        lines = list()
+        lines.append('[Unit]')
+        lines.append('Description=[Cron] "%s"' % self.line.replace('%', '%%'))
+        lines.append('Documentation=man:systemd-crontab-generator(8)')
+        lines.append('SourcePath=%s' % self.filename)
+        if 'MAILTO' in self.environment and not self.environment['MAILTO']:
+            pass # mails explicitely disabled
+        elif not HAS_SENDMAIL:
+            pass # mails automaticaly disabled
+        else:
+            lines.append('OnFailure=cron-failure@%i.service')
+        if self.user != 'root' or self.filename == os.path.join(STATEDIR, 'root'):
+            lines.append('Requires=systemd-user-sessions.service')
+            if self.home:
+                lines.append('RequiresMountsFor=%s\n' % self.home)
+        lines.append('')
+
+        lines.append('[Service]')
+        lines.append('Type=oneshot')
+        lines.append('IgnoreSIGPIPE=false')
+        lines.append('KillMode=process')
+        if USE_LOGLEVELMAX != 'no':
+            lines.append('LogLevelMax=%s' % USE_LOGLEVELMAX)
+        if self.schedule and self.boot_delay:
+            lines.append('ExecStartPre=-@libdir@/@package@/boot_delay %s' % self.boot_delay)
+        lines.append('ExecStart=%s' % self.execstart)
+        if self.environment:
+             lines.append('Environment=%s' % environment_string(self.environment))
+        lines.append('User=%s' % self.user)
+        if self.standardoutput:
+             lines.append('StandardOutput=%s' % self.standardoutput)
+        if self.batch:
+             lines.append('CPUSchedulingPolicy=idle')
+             lines.append('IOSchedulingClass=idle')
+
+        return '\n'.join(lines) + '\n'
+
+    def generate_timer(self) -> str:
+        lines = list()
+        lines.append('[Unit]')
+        lines.append('Description=[Timer] "%s"' % self.line.replace('%', '%%'))
+        lines.append('Documentation=man:systemd-crontab-generator(8)')
+        lines.append('PartOf=cron.target')
+        lines.append('SourcePath=%s' % self.filename)
+        if self.testremoved:
+            lines.append('ConditionFileIsExecutable=%s\n' % self.testremoved)
+        lines.append('')
+
+        lines.append('[Timer]')
+        lines.append('Unit=%s.service' % self.unit_name)
+        if self.schedule:
+            lines.append('OnCalendar=%s' % self.schedule)
+        else:
+            lines.append('OnBootSec=%sm' % self.boot_delay)
+        if self.random_delay > 1:
+            if RANDOMIZED_DELAY:
+                lines.append('RandomizedDelaySec=%sm' % self.random_delay)
+            else:
+                lines.append('AccuracySec=%sm' % self.random_delay)
+        if self.persistent:
+            lines.append('Persistent=true')
+
+        return '\n'.join(lines) + '\n'
 
 
 def files(dirname:str) -> List[str]:
@@ -380,7 +448,7 @@ def parse_period(mapping=int, base=0):
             range, step = value.split('/')
         except ValueError:
             range = value
-            step = 1
+            step = '1'
 
         if range == '*':
             return slice(None, None, int(step))
@@ -394,9 +462,7 @@ def parse_period(mapping=int, base=0):
 
     return parser
 
-def generate_timer_unit(job:Job, seq=None, unit_name=None) -> Optional[str]:
-    persistent = job.persistent
-    delay = job.boot_delay
+def generate_timer_unit(job:Job, seq=None) -> Optional[str]:
     daemon_reload = os.path.isfile(REBOOT_FILE)
 
     if job.testremoved and not os.path.isfile(job.testremoved):
@@ -424,45 +490,46 @@ def generate_timer_unit(job:Job, seq=None, unit_name=None) -> Optional[str]:
         if job.period == 'reboot':
             if daemon_reload:
                 return None
-            if delay == 0: delay = 1
-            schedule = None
-            persistent = False
+            if job.boot_delay == 0:
+                job.boot_delay = 1
+            job.schedule = None
+            job.persistent = False
         elif job.period == 'minutely':
-            schedule = job.period
-            persistent = False
-        elif job.period == 'hourly' and delay == 0:
-            schedule = 'hourly'
+            job.schedule = job.period
+            job.persistent = False
+        elif job.period == 'hourly' and job.boot_delay == 0:
+            job.schedule = 'hourly'
         elif job.period == 'hourly':
-            schedule = '*-*-* *:%s:0' % delay
-            delay = 0
-        elif job.period == 'midnight' and delay == 0:
-            schedule = 'daily'
+            job.schedule = '*-*-* *:%s:0' % job.boot_delay
+            job.boot_delay = 0
+        elif job.period == 'midnight' and job.boot_delay == 0:
+            job.schedule = 'daily'
         elif job.period == 'midnight':
-            schedule = '*-*-* 0:%s:0' % delay
-        elif job.period in TIME_UNITS_SET and hour == 0 and delay == 0:
-            schedule = job.period
+            job.schedule = '*-*-* 0:%s:0' % job.boot_delay
+        elif job.period in TIME_UNITS_SET and hour == 0 and job.boot_delay == 0:
+            job.schedule = job.period
         elif job.period == 'daily':
-            schedule = '*-*-* %s:%s:0' % (hour, delay)
+            job.schedule = '*-*-* %s:%s:0' % (hour, job.boot_delay)
         elif job.period == 'weekly':
-            schedule = 'Mon *-*-* %s:%s:0' % (hour, delay)
+            job.schedule = 'Mon *-*-* %s:%s:0' % (hour, job.boot_delay)
         elif job.period == 'monthly':
-            schedule = '*-*-1 %s:%s:0' % (hour, delay)
+            job.schedule = '*-*-1 %s:%s:0' % (hour, job.boot_delay)
         elif job.period == 'quarterly':
-            schedule = '*-1,4,7,10-1 %s:%s:0' % (hour, delay)
+            job.schedule = '*-1,4,7,10-1 %s:%s:0' % (hour, job.boot_delay)
         elif job.period == 'semi-annually':
-            schedule = '*-1,7-1 %s:%s:0' % (hour, delay)
+            job.schedule = '*-1,7-1 %s:%s:0' % (hour, job.boot_delay)
         elif job.period == 'yearly':
-            schedule = '*-1-1 %s:%s:0' % (hour, delay)
+            job.schedule = '*-1-1 %s:%s:0' % (hour, job.boot_delay)
         else:
             try:
                if int(job.period) > 31:
                     # workaround for anacrontab
-                    schedule = '*-1/%s-1 %s:%s:0' % (int(round(int(job.period) / 30)), hour, delay)
+                    job.schedule = '*-1/%s-1 %s:%s:0' % (int(round(int(job.period) / 30)), hour, job.boot_delay)
                else:
-                    schedule = '*-*-1/%s %s:%s:0' % (int(job.period), hour, delay)
+                    job.schedule = '*-*-1/%s %s:%s:0' % (int(job.period), hour, job.boot_delay)
             except ValueError:
                     log(3, 'unknown schedule in %s: %s' % (job.filename, job.line))
-                    schedule = job.period
+                    job.schedule = job.period
 
     else:
         if job.period['w'] == ['*']:
@@ -484,7 +551,7 @@ def generate_timer_unit(job:Job, seq=None, unit_name=None) -> Optional[str]:
            not len(job.period['m'])):
             return None
 
-        schedule = '%s*-%s-%s %s:%s:00' % (
+        job.schedule = '%s*-%s-%s %s:%s:00' % (
                       dows,
                       ','.join(map(str, job.period['M'])),
                       ','.join(map(str, job.period['d'])),
@@ -492,84 +559,38 @@ def generate_timer_unit(job:Job, seq=None, unit_name=None) -> Optional[str]:
                       ','.join(map(str, job.period['m']))
                    )
 
-    if not unit_name:
-        if not persistent:
+    if not job.unit_name:
+        if not job.persistent:
             unit_id = next(seq)
         else:
             unit_id = hashlib.md5()
-            unit_id.update(bytes('\0'.join([schedule, ' '.join(job.command)]), 'utf-8'))
+            unit_id.update(bytes('\0'.join([job.schedule, ' '.join(job.command)]), 'utf-8'))
             unit_id = unit_id.hexdigest()
-        unit_name = "cron-%s-%s-%s" % (job.jobid, job.user, unit_id)
+        job.unit_name = "cron-%s-%s-%s" % (job.jobid, job.user, unit_id)
 
     if len(job.command) == 1 and os.path.isfile(job.command[0]):
-        command = job.command[0]
+        job.execstart = job.command[0]
     else:
-        scriptlet = os.path.join(TARGET_DIR, '%s.sh' % unit_name)
+        scriptlet = os.path.join(TARGET_DIR, '%s.sh' % job.unit_name)
         with open(scriptlet, 'w', encoding='utf8') as f:
             f.write(' '.join(job.command) + '\n')
-        command = job.shell + ' ' + scriptlet
+        job.execstart = job.shell + ' ' + scriptlet
 
-    with open('%s/%s.timer' % (TARGET_DIR, unit_name), 'w' , encoding='utf8') as f:
-        f.write('[Unit]\n')
-        f.write('Description=[Timer] "%s"\n' % job.line.replace('%', '%%'))
-        f.write('Documentation=man:systemd-crontab-generator(8)\n')
-        f.write('PartOf=cron.target\n')
-        f.write('SourcePath=%s\n' % job.filename)
-        if job.testremoved:
-            f.write('ConditionFileIsExecutable=%s\n' % job.testremoved)
-
-        f.write('\n[Timer]\n')
-        f.write('Unit=%s.service\n' % unit_name)
-        if schedule: f.write('OnCalendar=%s\n' % schedule)
-        else:        f.write('OnBootSec=%sm\n' % delay)
-        if job.random_delay > 1:
-            if RANDOMIZED_DELAY:
-                f.write('RandomizedDelaySec=%sm\n' % job.random_delay)
-            else:
-                f.write('AccuracySec=%sm\n' % job.random_delay)
-        if persistent: f.write('Persistent=true\n')
+    timer = os.path.join(TARGET_DIR, '%s.timer' % job.unit_name)
+    with open(timer, 'w', encoding='utf8') as f:
+        f.write(job.generate_timer())
 
     try:
-        os.symlink('%s/%s.timer' % (TARGET_DIR, unit_name), '%s/%s.timer' % (TIMERS_DIR, unit_name))
+        os.symlink(timer, os.path.join(TIMERS_DIR, '%s.timer' % job.unit_name))
     except OSError as e:
         if e.errno != errno.EEXIST:
             raise
 
-    with open('%s/%s.service' % (TARGET_DIR, unit_name), 'w', encoding='utf8') as f:
-        f.write('[Unit]\n')
-        f.write('Description=[Cron] "%s"\n' % job.line.replace('%', '%%'))
-        f.write('Documentation=man:systemd-crontab-generator(8)\n')
-        f.write('SourcePath=%s\n' % job.filename)
-        if 'MAILTO' in job.environment and not job.environment['MAILTO']:
-            pass # mails explicitely disabled
-        elif not HAS_SENDMAIL:
-            pass # mails automaticaly disabled
-        else:
-            f.write('OnFailure=cron-failure@%i.service\n')
-        if job.user != 'root' or job.filename == os.path.join(STATEDIR, 'root'):
-            f.write('Requires=systemd-user-sessions.service\n')
-            if job.home:
-                f.write('RequiresMountsFor=%s\n' % job.home)
+    service = os.path.join(TARGET_DIR, '%s.service' % job.unit_name)
+    with open(service, 'w', encoding='utf8') as f:
+        f.write(job.generate_service())
 
-        f.write('\n[Service]\n')
-        f.write('Type=oneshot\n')
-        f.write('IgnoreSIGPIPE=false\n')
-        f.write('KillMode=process\n')
-        if USE_LOGLEVELMAX != 'no':
-            f.write('LogLevelMax=%s\n' % USE_LOGLEVELMAX)
-        if schedule and delay:
-             f.write('ExecStartPre=-@libdir@/@package@/boot_delay %s\n' % delay)
-        f.write('ExecStart=%s\n' % command)
-        if job.environment:
-             f.write('Environment=%s\n' % environment_string(job.environment))
-        f.write('User=%s\n' % job.user)
-        if job.standardoutput:
-             f.write('StandardOutput=%s\n' % job.standardoutput)
-        if job.batch:
-             f.write('CPUSchedulingPolicy=idle\n')
-             f.write('IOSchedulingClass=idle\n')
-
-    return '%s.timer' % unit_name
+    return timer
 
 def log(level:int, message:str) -> None:
     if len(sys.argv) == 4:
@@ -681,7 +702,8 @@ def main() -> None:
                     log(5, 'ignoring %s' % filename)
                     continue
                 else:
-                    generate_timer_unit(job, unit_name='cron-' + job.jobid)
+                    job.unit_name = 'cron-' + job.jobid
+                    generate_timer_unit(job)
 
     if os.path.isfile('/etc/anacrontab'):
         for job in parse_crontab('/etc/anacrontab', monotonic=True):
