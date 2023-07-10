@@ -26,7 +26,9 @@ EDITOR = (os.environ.get('EDITOR') or
           editor)
 
 SELF = os.path.basename(sys.argv[0])
+
 CRONTAB_DIR = '@statedir@'
+GENERATOR_DIR= '@generatordir@'
 SETGID_HELPER = '@libdir@/systemd-cron/crontab_setgid'
 
 HAS_SETGID =     os.geteuid() != 0 \
@@ -51,7 +53,8 @@ def confirm(message:str) -> bool:
 
 def check(cron_file:str) -> bool:
     good = True
-    loader = importlib.machinery.SourceFileLoader('name', '@generatordir@/systemd-crontab-generator')
+    loader = importlib.machinery.SourceFileLoader('name',
+                os.path.join(GENERATOR_DIR, 'systemd-crontab-generator'))
     parser = loader.load_module()
     for job in parser.parse_crontab(cron_file, withuser=False):
         if not job.valid:
