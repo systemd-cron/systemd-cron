@@ -6,6 +6,7 @@ v1.16 : 2023-07-10
      * always explicitely set `User=root`, this way systemd will itself
        provide fallback for HOME=, LOGNAME=, USER= & SHELL= env. variables.
        (issue #65)
+     * accept a days-of-week range that ends with '...-7' (#57)
 
 v1.15.22 : 2023-07-04
 
