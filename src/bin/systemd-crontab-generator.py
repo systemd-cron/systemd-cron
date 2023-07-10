@@ -337,6 +337,7 @@ def parse_crontab(filename:str,
                             'h': parse_time_unit(filename, line, hours, HOURS_SET),
                             'd': parse_time_unit(filename, line, days, DAYS_SET),
                             'w': parse_time_unit(filename, line, dows, DOWS_SET, dow_map),
+                            'W': dows.endswith('7') or dows.title().endswith('Sun'),
                             'M': parse_time_unit(filename, line, months, MONTHS_SET, month_map),
                     }
 
@@ -368,12 +369,12 @@ def month_map(month:str) -> int:
 
 def dow_map(dow:str) -> int:
     try:
-        return ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].index(dow[0:3].lower())
+        return ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'].index(dow[0:3].lower())
     except ValueError:
-        return int(dow) % 7
+        return int(dow) #% 7
 
 def parse_period(mapping=int, base=0):
-    def parser(value):
+    def parser(value:str):
         try:
             range, step = value.split('/')
         except ValueError:
@@ -467,8 +468,8 @@ def generate_timer_unit(job:Job, seq=None, unit_name=None) -> Optional[str]:
             dows = ''
         else:
             dows_sorted = []
-            for day in DOWS_SET:
-                if day in job.period['w']:
+            for day in DOWS_SET[int(job.period['W']):]:
+                if day in job.period['w'] and not day in dows_sorted:
                     dows_sorted.append(day)
             dows = ','.join(dows_sorted) + ' '
 
@@ -504,7 +505,7 @@ def generate_timer_unit(job:Job, seq=None, unit_name=None) -> Optional[str]:
     else:
         scriptlet = os.path.join(TARGET_DIR, '%s.sh' % unit_name)
         with open(scriptlet, 'w', encoding='utf8') as f:
-            f.write(' '.join(job.command))
+            f.write(' '.join(job.command) + '\n')
         command = job.shell + ' ' + scriptlet
 
     with open('%s/%s.timer' % (TARGET_DIR, unit_name), 'w' , encoding='utf8') as f:
