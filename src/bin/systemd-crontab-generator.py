@@ -22,11 +22,12 @@ TIME_UNITS_SET = ['daily', 'weekly', 'monthly', 'quarterly', 'semi-annually', 'y
 KSH_SHELLS = ['/bin/sh', '/bin/dash', '/bin/ksh', '/bin/bash', '/usr/bin/zsh']
 REBOOT_FILE = '/run/crond.reboot'
 RUN_PARTS_FLAG = '/run/systemd/use_run_parts'
-USE_LOGLEVELMAX = '@use_loglevelmax@'
 
+USE_LOGLEVELMAX = "@use_loglevelmax@"
 RANDOMIZED_DELAY = "@randomized_delay@" == "True"
 USE_RUNPARTS = "@use_runparts@" == "True"
 PERSISTENT = "@persistent@" == "True"
+STATEDIR = "@statedir@"
 
 SELF = os.path.basename(sys.argv[0])
 VALID_CHARS = "-_" + string.ascii_letters + string.digits
@@ -545,7 +546,7 @@ def generate_timer_unit(job:Job, seq=None, unit_name=None) -> Optional[str]:
             pass # mails automaticaly disabled
         else:
             f.write('OnFailure=cron-failure@%i.service\n')
-        if job.user != 'root' or job.filename == '@statedir@/root':
+        if job.user != 'root' or job.filename == os.path.join(STATEDIR, 'root'):
             f.write('Requires=systemd-user-sessions.service\n')
             if job.home:
                 f.write('RequiresMountsFor=%s\n' % job.home)
@@ -690,9 +691,9 @@ def main() -> None:
             generate_timer_unit(job, seq=seqs.setdefault(job.jobid+job.user, count()))
 
 
-    if os.path.isdir('@statedir@'):
+    if os.path.isdir(STATEDIR):
         # /var is avaible
-        USERCRONTAB_FILES = files('@statedir@')
+        USERCRONTAB_FILES = files(STATEDIR)
         for filename in USERCRONTAB_FILES:
             basename = os.path.basename(filename)
             if '.' in basename:
@@ -711,7 +712,7 @@ def main() -> None:
             f.write('Description=Rerun systemd-crontab-generator because /var is a separate mount\n')
             f.write('Documentation=man:systemd.cron(7)\n')
             f.write('After=cron.target\n')
-            f.write('ConditionDirectoryNotEmpty=@statedir@\n')
+            f.write('ConditionDirectoryNotEmpty=%s\n' % STATEDIR)
 
             f.write('\n[Service]\n')
             f.write('Type=oneshot\n')
