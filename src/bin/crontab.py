@@ -25,8 +25,8 @@ EDITOR = (os.environ.get('EDITOR') or
           os.environ.get('VISUAL') or
           editor)
 
+SELF = os.path.basename(sys.argv[0])
 CRONTAB_DIR = '@statedir@'
-
 SETGID_HELPER = '@libdir@/systemd-cron/crontab_setgid'
 
 HAS_SETGID =     os.geteuid() != 0 \
@@ -38,42 +38,6 @@ HAS_SETGID =     os.geteuid() != 0 \
 
 REBOOT_FILE = '/run/crond.reboot'
 
-args_parser = argparse.ArgumentParser(description='maintain crontab files for individual users')
-
-group = args_parser.add_mutually_exclusive_group()
-
-args_parser.add_argument('-u', '--user', type=str, dest='user', default=getpass.getuser(),
-        help='''It specifies the name of the user whose crontab is to be
- tweaked. If this option is not given, crontab examines "your" crontab, i.e., the crontab of the person
- executing the command. Note that su(8) can confuse crontab and that if you are running inside of su(8) you
- should always use the -u option for safety's sake. The first form of this command is used to install a new
- crontab from some named file or standard input if the pseudo-filename "-" is given.''')
-
-args_parser.add_argument('file', type=str, default='-', nargs='?')
-
-group.add_argument('-l', '--list', dest='action', action='store_const', const='list',
-        help='''The current crontab will be displayed on standard output.''')
-
-group.add_argument('-r', '--remove', dest='action', action='store_const', const='remove',
-        help='''The current crontab will be removed.''')
-
-group.add_argument('-e', '--edit', dest='action', action='store_const', const='edit',
-        help='''This option is used to edit the current crontab using the editor
- specified by the VISUAL or EDITOR environment variables. After
- you exit from the editor, the modified crontab will be installed
- automatically.''')
-
-group.add_argument('-s', '--show', dest='action', action='store_const', const='show',
-        help='''Show all user who have a crontab.''')
-
-args_parser.add_argument('-i', '--ask', dest='ask', action='store_true', default=False,
-        help='''This option modifies the -r option to prompt the user for a
- 'y/Y' response before actually removing the crontab.''')
-
-#args_parser.add_argument('-s', '--secure', dest='secure', action='store_true', default=False,
-        #help='''It will append the current SELinux security context string as an
- #MLS_LEVEL setting to the crontab file before editing / replacement occurs
- #- see the documentation of MLS_LEVEL in crontab(5).''')
 
 def confirm(message:str) -> bool:
     while True:
@@ -84,8 +48,11 @@ def confirm(message:str) -> bool:
 
         return answer == 'y'
 
+
 def check(cron_file:str) -> bool:
     good = True
+    loader = importlib.machinery.SourceFileLoader('name', '@generatordir@/systemd-crontab-generator')
+    parser = loader.load_module()
     for job in parser.parse_crontab(cron_file, withuser=False):
         if not job.valid:
             good = False
@@ -108,13 +75,28 @@ def check(cron_file:str) -> bool:
                 good = False
     return good
 
-def try_chmod(cron_file:str, user:str):
-    if CRON_GROUP:
+
+def try_chmod(cron_file:Optional[str]=None,
+              user:Optional[str]=None) -> None:
+    '''trying to fixup things if run as root'''
+    try:
+        CRON_GROUP = os.stat(SETGID_HELPER).st_gid
+    except:
+        return
+
+    try:
+        os.chown(CRONTAB_DIR, 0, CRON_GROUP)
+        os.chmod(CRONTAB_DIR, stat.S_ISVTX | stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IWGRP | stat.S_IXGRP)
+    except:
+        pass
+
+    if cron_file and user:
         try:
             os.chown(cron_file, pwd.getpwnam(user).pw_uid, CRON_GROUP)
             os.chmod(cron_file, stat.S_IRUSR | stat.S_IWUSR)
         except (PermissionError, KeyError):
             pass
+
 
 def list(cron_file:str, args) -> None:
     try:
@@ -137,7 +119,9 @@ def list(cron_file:str, args) -> None:
         else:
             raise
 
+
 def remove(cron_file:str, args):
+    try_chmod()
     if not args.ask or confirm('Are you sure you want to delete %s (y/n)? ' % cron_file):
         try:
             os.unlink(cron_file)
@@ -158,6 +142,7 @@ def remove(cron_file:str, args):
                 sys.stderr.write("couldn't remove %s , wiped it instead\n" % cron_file)
             else:
                 raise
+
 
 def edit(cron_file:str, args):
     tmp = tempfile.NamedTemporaryFile(mode='w+', encoding='UTF-8', delete=False, prefix='crontab_')
@@ -228,7 +213,8 @@ def edit(cron_file:str, args):
             sys.stderr.write("unexpected error, your edit is kept here:%s\n" % tmp.name)
             raise
 
-def show(cron_file:str, args):
+
+def show(cron_file:str, args) -> None:
     if os.geteuid() != 0:
         sys.exit("must be privileged to use -s")
 
@@ -240,7 +226,8 @@ def show(cron_file:str, args):
         except KeyError:
             sys.stderr.write("WARNING: crontab found with no matching user: %s\n" % user)
 
-def replace(cron_file:str, args):
+
+def replace(cron_file:str, args) -> None:
     if args.file == '-':
         try:
             crontab = sys.stdin.read()
@@ -291,8 +278,38 @@ def replace(cron_file:str, args):
             raise
 
 
-if __name__ == '__main__':
-    SELF = os.path.basename(sys.argv[0])
+def main() -> None:
+    args_parser = argparse.ArgumentParser(description='maintain crontab files for individual users')
+
+    group = args_parser.add_mutually_exclusive_group()
+
+    args_parser.add_argument('-u', '--user', type=str, dest='user', default=getpass.getuser(),
+            help='''It specifies the name of the user whose crontab is to be
+     tweaked. If this option is not given, crontab examines "your" crontab, i.e., the crontab of the person
+     executing the command. Note that su(8) can confuse crontab and that if you are running inside of su(8) you
+     should always use the -u option for safety's sake. The first form of this command is used to install a new
+     crontab from some named file or standard input if the pseudo-filename "-" is given.''')
+
+    args_parser.add_argument('file', type=str, default='-', nargs='?')
+
+    group.add_argument('-l', '--list', dest='action', action='store_const', const='list',
+            help='''The current crontab will be displayed on standard output.''')
+
+    group.add_argument('-r', '--remove', dest='action', action='store_const', const='remove',
+           help='''The current crontab will be removed.''')
+
+    group.add_argument('-e', '--edit', dest='action', action='store_const', const='edit',
+           help='''This option is used to edit the current crontab using the editor
+     specified by the VISUAL or EDITOR environment variables. After
+     you exit from the editor, the modified crontab will be installed
+     automatically.''')
+
+    group.add_argument('-s', '--show', dest='action', action='store_const', const='show',
+            help='''Show all user who have a crontab.''')
+
+    args_parser.add_argument('-i', '--ask', dest='ask', action='store_true', default=False,
+            help='''This option modifies the -r option to prompt the user for a
+     'y/Y' response before actually removing the crontab.''')
 
     # try to fixup CRONTAB_DIR if it has not been handled in package script
     try:
@@ -300,19 +317,6 @@ if __name__ == '__main__':
             os.makedirs(CRONTAB_DIR)
     except:
         sys.exit("%s doesn't exists!" % CRONTAB_DIR)
-
-    CRON_GROUP:Optional[int]
-    try:
-        CRON_GROUP = os.stat(SETGID_HELPER).st_gid
-    except:
-        CRON_GROUP = None
-
-    if CRON_GROUP:
-        try:
-            os.chown(CRONTAB_DIR, 0, CRON_GROUP)
-            os.chmod(CRONTAB_DIR, stat.S_ISVTX | stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IWGRP | stat.S_IXGRP)
-        except:
-            pass
 
     args = args_parser.parse_args()
 
@@ -339,7 +343,7 @@ if __name__ == '__main__':
             'show': show,
             }.get(args.action, replace)
 
-    loader = importlib.machinery.SourceFileLoader('name', '@generatordir@/systemd-crontab-generator')
-    parser = loader.load_module()
-
     action(cron_file, args)
+
+if __name__ == '__main__':
+    main()
