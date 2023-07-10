@@ -180,9 +180,11 @@ $(builddir)/man/systemd.cron.7: $(srcdir)/man/systemd.cron.7.in
 
 $(builddir)/bin/systemd-crontab-generator: $(srcdir)/bin/systemd-crontab-generator.py
 	$(call in2out,$<,$@)
+ifneq ($(enable_runparts),no)
 	# BUG: this should only run if schedule_not in hourly/daily/weekly/monthly
 	$(foreach schedule_not,$(schedules_not),\
 		sed -i $@ -e '/\/etc\/cron.$(schedule_not)/d' ${\n})
+endif
 	chmod +x $@
 
 $(builddir)/bin/%: $(srcdir)/bin/%.py
