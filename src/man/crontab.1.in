@@ -1,4 +1,4 @@
-.TH "CRONTAB" "1" "2014-12-10" "@package@ @version@" "crontab"
+.TH "CRONTAB" "1" "2014-12-10" "systemd-cron @version@" "crontab"
 
 .SH NAME
 crontab - maintain crontab files for individual users

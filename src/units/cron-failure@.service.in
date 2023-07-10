@@ -1,5 +1,5 @@
 [Unit]
-Description=@package@ OnFailure for %i
+Description=systemd-cron OnFailure for %i
 Documentation=man:systemd.cron(7)
 RefuseManualStart=true
 RefuseManualStop=true
@@ -7,7 +7,7 @@ ConditionFileIsExecutable=/usr/sbin/sendmail
 
 [Service]
 Type=oneshot
-ExecStart=@libdir@/@package@/mail_on_failure %i
+ExecStart=@libdir@/systemd-cron/mail_on_failure %i
 DynamicUser=no
 User=_cron-failure
 Group=systemd-journal

@@ -1,5 +1,5 @@
 [Unit]
-Description=@package@ @schedule@ script service
+Description=systemd-cron @schedule@ script service
 Documentation=man:systemd.cron(7)
 PartOf=cron-@schedule@.target
 ConditionDirectoryNotEmpty=@confdir@/cron.@schedule@

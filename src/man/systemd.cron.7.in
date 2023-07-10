@@ -1,4 +1,4 @@
-.TH SYSTEMD.CRON 7 "" "@package@ @version@" systemd.cron
+.TH SYSTEMD.CRON 7 "" "systemd-cron @version@" systemd.cron
 
 .SH NAME
 systemd.cron - systemd cron units

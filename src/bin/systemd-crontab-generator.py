@@ -203,7 +203,7 @@ class Job:
         if USE_LOGLEVELMAX != 'no':
             lines.append('LogLevelMax=%s' % USE_LOGLEVELMAX)
         if self.schedule and self.boot_delay:
-            lines.append('ExecStartPre=-@libdir@/@package@/boot_delay %s' % self.boot_delay)
+            lines.append('ExecStartPre=-@libdir@/systemd-cron/boot_delay %s' % self.boot_delay)
         lines.append('ExecStart=%s' % self.execstart)
         if self.environment:
              lines.append('Environment=%s' % environment_string(self.environment))

@@ -1,5 +1,5 @@
 [Unit]
-Description=@package@ update units
+Description=systemd-cron update units
 Documentation=man:systemd.cron(7)
 
 [Service]

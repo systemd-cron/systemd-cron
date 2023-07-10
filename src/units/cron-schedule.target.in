@@ -1,5 +1,5 @@
 [Unit]
-Description=@package@ @schedule@ target
+Description=systemd-cron @schedule@ target
 Documentation=man:systemd.cron(7)
 Requires=cron-@schedule@.service
 StopWhenUnneeded=yes

@@ -1,5 +1,5 @@
 [Unit]
-Description=@package@
+Description=systemd-cron
 Documentation=man:systemd.cron(7)
 @requires@
 Wants=cron-update.path

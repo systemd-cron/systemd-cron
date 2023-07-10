@@ -1,5 +1,5 @@
 [Unit]
-Description=@package@ path monitor
+Description=systemd-cron path monitor
 Documentation=man:systemd.cron(7)
 
 [Path]

@@ -17,15 +17,15 @@
 .\"
 .\" $Id: crontab.5,v 2.4 1994/01/15 20:43:43 vixie Exp $
 .\"
-.TH CRONTAB 5 "03 July 2014" "@package@ @version@" "crontab"
+.TH CRONTAB 5 "03 July 2014" "systemd-cron @version@" "crontab"
 .UC 4
 .SH NAME
-crontab \- tables for driving @package@
+crontab \- tables for driving systemd-cron
 .SH DESCRIPTION
 A
 .I crontab
 file contains instructions to
-.IR @package@
+.IR systemd-cron
 of the general form: ``run this command at this time on this date''.
 Each user has their own crontab, and commands in any given crontab will be
 executed as the user who owns the crontab.

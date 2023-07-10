@@ -1,7 +1,6 @@
 CFLAGS ?= -O2
 CFLAGS += -Wall
 
-package		:= $(shell head -n1 README.md)
 version		:= $(shell cat VERSION)
 
 schedules			:= @schedules@
@@ -28,7 +27,7 @@ runparts	:= @runparts@
 srcdir		:= $(CURDIR)/src
 outdir		:= $(CURDIR)/out
 builddir	:= $(outdir)/build
-distname	:= $(package)-$(version)
+distname	:= systemd-cron-$(version)
 distdir		:= $(outdir)/dist/$(distname)
 tarball		:= $(outdir)/dist/$(distname).tar.xz
 
@@ -61,7 +60,6 @@ randomized_delay = $(if $(filter $(enable_randomized_delay),yes),True,False)
 define in2out
 
 	sed \
-		-e "s|\@package\@|$(package)|g" \
 		-e "s|\@confdir\@|$(confdir)|g" \
 		-e "s|\@statedir\@|$(statedir)|g" \
 		-e "s|\@bindir\@|$(bindir)|g" \
@@ -103,15 +101,15 @@ test: all
 install: all
 	install -m755 -D $(builddir)/bin/crontab $(DESTDIR)$(bindir)/crontab
 	install -m755 -D $(builddir)/bin/systemd-crontab-generator $(DESTDIR)$(generatordir)/systemd-crontab-generator
-	install -m755 -D $(builddir)/bin/remove_stale_stamps $(DESTDIR)$(libdir)/$(package)/remove_stale_stamps
-	install -m755 -D $(builddir)/bin/mail_on_failure $(DESTDIR)$(libdir)/$(package)/mail_on_failure
-	install -m755 -D $(builddir)/bin/boot_delay $(DESTDIR)$(libdir)/$(package)/boot_delay
+	install -m755 -D $(builddir)/bin/remove_stale_stamps $(DESTDIR)$(libdir)/systemd-cron/remove_stale_stamps
+	install -m755 -D $(builddir)/bin/mail_on_failure $(DESTDIR)$(libdir)/systemd-cron/mail_on_failure
+	install -m755 -D $(builddir)/bin/boot_delay $(DESTDIR)$(libdir)/systemd-cron/boot_delay
 	install -m644 -D $(srcdir)/lib/sysusers.d/systemd-cron.conf $(DESTDIR)$(libdir)/sysusers.d/systemd-cron.conf
 ifneq ($(enable_setgid),no)
-	install -m755 -D $(builddir)/bin/crontab_setgid $(DESTDIR)$(libdir)/$(package)/crontab_setgid
+	install -m755 -D $(builddir)/bin/crontab_setgid $(DESTDIR)$(libdir)/systemd-cron/crontab_setgid
 	if getent group cron > /dev/null 2>&1; then \
-	    chgrp cron $(DESTDIR)$(libdir)/$(package)/crontab_setgid ; \
-	    chmod 2755 $(DESTDIR)$(libdir)/$(package)/crontab_setgid ; \
+	    chgrp cron $(DESTDIR)$(libdir)/systemd-cron/crontab_setgid ; \
+	    chmod 2755 $(DESTDIR)$(libdir)/systemd-cron/crontab_setgid ; \
 	fi
 endif
 

@@ -1,4 +1,4 @@
-.TH ANACRONTAB 5 "2014-09-16" "@package@ @version@" anacrontab
+.TH ANACRONTAB 5 "2014-09-16" "systemd-cron @version@" anacrontab
 
 .SH NAME
 /etc/anacrontab \- monotonic jobs

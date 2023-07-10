@@ -27,7 +27,7 @@ EDITOR = (os.environ.get('EDITOR') or
 
 CRONTAB_DIR = '@statedir@'
 
-SETGID_HELPER = '@libdir@/@package@/crontab_setgid'
+SETGID_HELPER = '@libdir@/systemd-cron/crontab_setgid'
 
 HAS_SETGID =     os.geteuid() != 0 \
              and os.path.isfile(SETGID_HELPER) \
