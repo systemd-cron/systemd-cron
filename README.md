@@ -135,10 +135,10 @@ The project is licensed under MIT.
 
 Copyright
 -------------
-© 2014, Dwayne Bent : original package with static units
-© 2014, Konstantin Stepanov (me@kstep.me) : author of crontab generator
-© 2014, Daniel Schaal : review of crontab generator
-© 2014, Alexandre Detiste (alexandre@detiste.be) : manpage for crontab generator
+© 2014, Dwayne Bent : original package with static units  
+© 2014, Konstantin Stepanov (me@kstep.me) : author of crontab generator  
+© 2014, Daniel Schaal : review of crontab generator  
+© 2014, Alexandre Detiste (alexandre@detiste.be) : manpage for crontab generator  
 
 
 [1]: http://www.freedesktop.org/wiki/Software/systemd/ "systemd"
