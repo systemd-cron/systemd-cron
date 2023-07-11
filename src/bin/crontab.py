@@ -69,17 +69,17 @@ def translate(line:str, args) -> None:
     print(line)
 
     job = parser.Job('-', line)
-    job.jobid = '-'
+    job.parse_crontab_auto()
     ### TO MOVE INSIDE OBJECT ###
-    job.period = 'daily'
     job.schedule = 'daily'
-    job.command = ['sleep', '10']
-    job.execstart = 'sleep 10'
     #############################
     job.decode()
 
     blue('# /run/systemd/generator/<unit>.timer')
     print(job.generate_timer())
+    print('#Persistent=true')
+    print()
+
     blue('# /run/systemd/generator/<unit>.service')
     print(job.generate_service())
 

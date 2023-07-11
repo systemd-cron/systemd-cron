@@ -4,6 +4,7 @@ import hashlib
 import os
 import pwd
 import re
+import stat
 import string
 import sys
 from functools import reduce
@@ -70,7 +71,9 @@ class Persistent:
 class Job:
     '''Job definition'''
     filename:str
+    basename:str
     line:str
+    parts:List[str]
     environment:Dict[str, str]
     shell:str
     random_delay:int
@@ -87,6 +90,7 @@ class Job:
     home:Optional[str]
     command:List[str]
     execstart:str
+    scriptlet:Optional[str]
     valid:bool
     run_parts:bool
     standardoutput:Optional[str]
@@ -94,7 +98,9 @@ class Job:
 
     def __init__(self, filename:str, line:str) -> None:
         self.filename = filename
+        self.basename = os.path.basename(filename)
         self.line = line
+        self.parts = line.split()
         self.environment = dict()
         self.shell = '/bin/sh'
         self.boot_delay = 0
@@ -102,11 +108,118 @@ class Job:
         self.random_delay = 0
         self.persistent = False
         self.user = 'root'
+        self.command = []
         self.valid = False
         self.run_parts = False
         self.batch = False
         self.standardoutput = None
         self.testremoved = None
+
+
+    def parse_anacrontab(self) -> None:
+        if len(self.parts) < 4:
+            return
+
+        period, delay, self.jobid = self.parts[0:3]
+        period = period.lower()
+        self.period = {
+             '1': 'daily',
+             '7': 'weekly',
+             '30': 'monthly',
+             '31': 'monthly',
+             '@biannually': 'semi-annually',
+             '@bi-annually': 'semi-annually',
+             '@semiannually': 'semi-annually',
+             '@anually': 'yearly',
+             '@annually': 'yearly',
+        }.get(period, '') or period.lstrip('@')
+        try:
+            boot_delay = int(delay)
+            if boot_delay > 0:
+                self.boot_delay = boot_delay
+        except ValueError:
+            log(4, 'invalid DELAY in %s: %s' % (self.filename, self.line))
+        self.command = self.parts[3:]
+
+    def parse_crontab_auto(self) -> None:
+        '''crontab --translate <something>'''
+        if self.line.startswith('@'):
+            self.parse_crontab_at(False)
+        else:
+            self.parse_crontab_timespec(False)
+
+        if self.command:
+            maybe_user = self.command[0]
+            try:
+                pwd.getpwnam(maybe_user)
+                self.user = maybe_user
+                self.command = self.command[1:]
+            except:
+                self.user = os.getlogin()
+            pgm = which(self.command[0])
+            if pgm:
+                self.command[0] = pgm
+            self.execstart = ' '.join(self.command)
+
+    def parse_crontab_at(self, withuser:bool) -> None:
+        '''@daily (user) do something'''
+        self.jobid = self.basename
+        if len(self.parts) < (2 + int(withuser)):
+            return
+
+        period = self.parts[0].lower()
+        self.period = {
+            '@biannually': 'semi-annually',
+            '@bi-annually': 'semi-annually',
+            '@semiannually': 'semi-annually',
+            '@anually': 'yearly',
+            '@annually': 'yearly',
+        }.get(period, '') or period.lstrip('@')
+        if withuser:
+            self.user = self.parts[1]
+            self.command = self.parts[2:]
+        else:
+            self.user = self.basename
+            self.command = self.parts[1:]
+
+    def parse_crontab_timespec(self, withuser:bool) -> None:
+        '''6 2 * * * (user) do something'''
+        self.jobid = self.basename
+        if len(self.parts) < (6 + int(withuser)):
+            return
+
+        minutes, hours, days, months, dows = self.parts[0:5]
+        self.period = {
+             'm': self.parse_time_unit(minutes, MINUTES_SET),
+             'h': self.parse_time_unit(hours, HOURS_SET),
+             'd': self.parse_time_unit(days, DAYS_SET),
+             'w': self.parse_time_unit(dows, DOWS_SET, dow_map),
+             'W': dows.endswith('7') or dows.title().endswith('Sun'),
+             'M': self.parse_time_unit(months, MONTHS_SET, month_map),
+        }
+        if withuser:
+            self.user = self.parts[5]
+            self.command = self.parts[6:]
+        else:
+            self.user = self.basename
+            self.command = self.parts[5:]
+
+    def parse_time_unit(self, value:str, values, mapping=int) -> List[str]:
+        result:List[str]
+        if value == '*':
+            return ['*']
+        try:
+            base = min(values)
+            # day of weeks
+            if isinstance(base, str):
+                base = 0
+            result = sorted(reduce(lambda a, i: a.union(set(i)), list(map(values.__getitem__,
+            list(map(parse_period(mapping, base), value.split(','))))), set()))
+        except ValueError:
+            result = []
+        if not len(result):
+            log(3, 'garbled time in %s [%s]: %s' % (self.filename, self.line, value))
+        return result
 
     def decode(self) -> bool:
         '''decode & validate'''
@@ -179,12 +292,29 @@ class Job:
                 self.testremoved = self.command[2]
                 self.command = self.command[4:]
 
+    def generate_scriptlet(self) -> Optional[str]:
+        '''...only if needed'''
+        if len(self.command) == 1:
+            if os.path.isfile(self.command[0]):
+                self.execstart = self.command[0]
+                return None
+            else:
+                pgm = which(self.command[0])
+                if pgm:
+                    self.execstart = pgm
+                    return None
+
+        self.scriptlet = os.path.join(TARGET_DIR, '%s.sh' % self.unit_name)
+        self.execstart = self.shell + ' ' + self.scriptlet
+        return ' '.join(self.command)
+
     def generate_service(self) -> str:
         lines = list()
         lines.append('[Unit]')
         lines.append('Description=[Cron] "%s"' % self.line.replace('%', '%%'))
         lines.append('Documentation=man:systemd-crontab-generator(8)')
-        lines.append('SourcePath=%s' % self.filename)
+        if self.filename != '-':
+            lines.append('SourcePath=%s' % self.filename)
         if 'MAILTO' in self.environment and not self.environment['MAILTO']:
             pass # mails explicitely disabled
         elif not HAS_SENDMAIL:
@@ -194,7 +324,7 @@ class Job:
         if self.user != 'root' or self.filename == os.path.join(STATEDIR, 'root'):
             lines.append('Requires=systemd-user-sessions.service')
             if self.home:
-                lines.append('RequiresMountsFor=%s\n' % self.home)
+                lines.append('RequiresMountsFor=%s' % self.home)
         lines.append('')
 
         lines.append('[Service]')
@@ -215,7 +345,7 @@ class Job:
              lines.append('CPUSchedulingPolicy=idle')
              lines.append('IOSchedulingClass=idle')
 
-        return '\n'.join(lines) + '\n'
+        return '\n'.join(lines)
 
     def generate_timer(self) -> str:
         lines = list()
@@ -223,13 +353,13 @@ class Job:
         lines.append('Description=[Timer] "%s"' % self.line.replace('%', '%%'))
         lines.append('Documentation=man:systemd-crontab-generator(8)')
         lines.append('PartOf=cron.target')
-        lines.append('SourcePath=%s' % self.filename)
+        if self.filename != '-':
+            lines.append('SourcePath=%s' % self.filename)
         if self.testremoved:
-            lines.append('ConditionFileIsExecutable=%s\n' % self.testremoved)
+            lines.append('ConditionFileIsExecutable=%s' % self.testremoved)
         lines.append('')
 
         lines.append('[Timer]')
-        lines.append('Unit=%s.service' % self.unit_name)
         if self.schedule:
             lines.append('OnCalendar=%s' % self.schedule)
         else:
@@ -242,8 +372,21 @@ class Job:
         if self.persistent:
             lines.append('Persistent=true')
 
-        return '\n'.join(lines) + '\n'
+        return '\n'.join(lines)
 
+
+def which(exe):
+    '''TODO: we could use the PATH= variable from the crontab'''
+    for path in os.environ.get('PATH', '/usr/bin:/bin').split(os.pathsep):
+        try:
+            abspath = os.path.join(path, exe)
+            statbuf = os.stat(abspath)
+        except:
+            continue
+        if stat.S_IMODE(statbuf.st_mode) & 0o111:
+            return abspath
+
+    return None
 
 def files(dirname:str) -> List[str]:
     try:
@@ -277,7 +420,6 @@ def parse_crontab(filename:str,
                   monotonic:bool=False):
     '''parser shared with /usr/bin/crontab'''
 
-    basename:str = os.path.basename(filename)
     environment:Dict[str,str] = dict()
     random_delay:int = 1
     start_hour:int = 6
@@ -318,6 +460,7 @@ def parse_crontab(filename:str,
                 elif envvar.group(1) == 'PERSISTENT':
                      persistent = Persistent.parse(value)
                 elif not withuser and envvar.group(1) == 'PATH':
+                     basename:str = os.path.basename(filename)
                      environment['PATH'] = expand_home_path(value, basename)
                 elif envvar.group(1) == 'BATCH':
                      batch = (value.strip().lower() in ['yes','true','1'])
@@ -341,95 +484,18 @@ def parse_crontab(filename:str,
             j.random_delay = random_delay
             j.environment = environment
             j.start_hour = start_hour
-
             if monotonic:
-                if len(parts) < 4:
-                    yield j
-                    continue
-
-                period, delay, j.jobid = parts[0:3]
-                period = period.lower()
-                j.period = {
-                        '1': 'daily',
-                        '7': 'weekly',
-                        '30': 'monthly',
-                        '31': 'monthly',
-                        '@biannually': 'semi-annually',
-                        '@bi-annually': 'semi-annually',
-                        '@semiannually': 'semi-annually',
-                        '@anually': 'yearly',
-                        '@annually': 'yearly',
-                        }.get(period, '') or period.lstrip('@')
-                try:
-                    boot_delay = int(delay)
-                    if boot_delay > 0:
-                        j.boot_delay = boot_delay
-                except ValueError:
-                    log(4, 'invalid DELAY in %s: %s' % (filename, line))
                 j.persistent = False if persistent == Persistent.no else True
-                j.command = parts[3:]
+                j.parse_anacrontab()
+            elif line.startswith('@'):
+                j.persistent = False if persistent == Persistent.no else True
+                j.parse_crontab_at(withuser)
             else:
-                if line.startswith('@'):
-                    if len(parts) < 2 + int(withuser):
-                        yield j
-                        continue
-                    period = parts[0].lower()
-                    j.period = {
-                            '@biannually': 'semi-annually',
-                            '@bi-annually': 'semi-annually',
-                            '@semiannually': 'semi-annually',
-                            '@anually': 'yearly',
-                            '@annually': 'yearly',
-                            }.get(period, '') or period.lstrip('@')
-                    if withuser:
-                        j.user = parts[1]
-                        j.command = parts[2:]
-                    else:
-                        j.user = basename
-                        j.command = parts[1:]
-                    j.jobid = basename
-                    j.persistent = False if persistent == Persistent.no else True
-                else:
-                    if len(parts) < 6 + int(withuser):
-                        yield j
-                        continue
-                    minutes, hours, days, months, dows = parts[0:5]
-                    if withuser:
-                        j.user = parts[5]
-                        j.command = parts[6:]
-                    else:
-                        j.user = basename
-                        j.command = parts[5:]
-                    j.jobid = basename
-                    j.persistent = True if persistent == Persistent.yes else False
-                    j.period = {
-                            'm': parse_time_unit(filename, line, minutes, MINUTES_SET),
-                            'h': parse_time_unit(filename, line, hours, HOURS_SET),
-                            'd': parse_time_unit(filename, line, days, DAYS_SET),
-                            'w': parse_time_unit(filename, line, dows, DOWS_SET, dow_map),
-                            'W': dows.endswith('7') or dows.title().endswith('Sun'),
-                            'M': parse_time_unit(filename, line, months, MONTHS_SET, month_map),
-                    }
-
+                j.persistent = True if persistent == Persistent.yes else False
+                j.parse_crontab_timespec(withuser)
             j.decode()
             yield j
 
-def parse_time_unit(filename:str, line:str, value:str, values, mapping=int) -> List[str]:
-    result:List[str]
-    if value == '*':
-        return ['*']
-    try:
-        base = min(values)
-        # day of weeks
-        if isinstance(base, str):
-            base = 0
-        result = sorted(reduce(lambda a, i: a.union(set(i)), list(map(values.__getitem__,
-        list(map(parse_period(mapping, base), value.split(','))))), set()))
-    except ValueError:
-        result = []
-    if not len(result):
-        log(3, 'garbled time in %s [%s]: %s' % (filename, line, value))
-    return result
 
 def month_map(month:str) -> int:
     try:
@@ -569,17 +635,16 @@ def generate_timer_unit(job:Job, seq=None) -> Optional[str]:
             unit_id = unit_id.hexdigest()
         job.unit_name = "cron-%s-%s-%s" % (job.jobid, job.user, unit_id)
 
-    if len(job.command) == 1 and os.path.isfile(job.command[0]):
-        job.execstart = job.command[0]
-    else:
-        scriptlet = os.path.join(TARGET_DIR, '%s.sh' % job.unit_name)
-        with open(scriptlet, 'w', encoding='utf8') as f:
-            f.write(' '.join(job.command) + '\n')
-        job.execstart = job.shell + ' ' + scriptlet
+
+    code = job.generate_scriptlet()
+    if code:
+        with open(job.scriptlet, 'w', encoding='utf8') as f:
+            f.write(code + '\n')
+
 
     timer = os.path.join(TARGET_DIR, '%s.timer' % job.unit_name)
     with open(timer, 'w', encoding='utf8') as f:
-        f.write(job.generate_timer())
+        f.write(job.generate_timer() + '\n')
 
     try:
         os.symlink(timer, os.path.join(TIMERS_DIR, '%s.timer' % job.unit_name))
@@ -589,7 +654,7 @@ def generate_timer_unit(job:Job, seq=None) -> Optional[str]:
 
     service = os.path.join(TARGET_DIR, '%s.service' % job.unit_name)
     with open(service, 'w', encoding='utf8') as f:
-        f.write(job.generate_service())
+        f.write(job.generate_service() + '\n')
 
     return timer
 
