@@ -812,11 +812,15 @@ def main() -> None:
 
 
 if __name__ == '__main__':
-    if len(sys.argv) == 1 or not os.path.isdir(sys.argv[1]):
+    if len(sys.argv) == 1 or (os.path.exists(sys.argv[1])
+                      and not os.path.isdir(sys.argv[1])):
         sys.exit("Usage: %s <destination_folder>" % sys.argv[0])
 
     TARGET_DIR = sys.argv[1]
     TIMERS_DIR = os.path.join(TARGET_DIR, 'cron.target.wants')
+
+    if not os.path.isdir(TARGET_DIR):
+        os.makedirs(TARGET_DIR)
 
     try:
         main()
