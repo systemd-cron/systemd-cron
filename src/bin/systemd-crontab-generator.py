@@ -434,7 +434,7 @@ class Job:
             pass # mails automaticaly disabled
         else:
             lines.append('OnFailure=cron-failure@%i.service')
-        if self.user != 'root' or self.filename == os.path.join(STATEDIR, 'root'):
+        if self.user != 'root' or STATEDIR in self.filename:
             lines.append('Requires=systemd-user-sessions.service')
             if self.home:
                 lines.append('RequiresMountsFor=%s' % self.home)
