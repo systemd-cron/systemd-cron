@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+import copy
 import errno
 import hashlib
 import os
@@ -113,7 +114,7 @@ class Job:
         self.schedule = ''
 
     def log(self, priority:int, message:str) -> None:
-        log(4, '%s in %s:%s' % message, self.filename, self.line)
+        log(4, '%s in %s:%s' % (message, self.filename, self.line))
 
     def decode_environment(self, default_persistent:bool) -> None:
         '''decode some environment variables that influence
@@ -151,7 +152,7 @@ class Job:
                 self.log(4, 'invalid DELAY')
 
         if 'BATCH' in self.environment:
-            self.batch = self.environement['BATCH'].lower() in ['yes','true','1']
+            self.batch = self.environment['BATCH'].lower() in ['yes','true','1']
             del self.environment['BATCH']
 
     def parse_anacrontab(self) -> None:
@@ -363,13 +364,12 @@ class Job:
             self.schedule = '*-1-1 %s:%s:0' % (hour, self.boot_delay)
         else:
             try:
-               period = int(self.period)
-               if period > 31:
+               if int(self.period) > 31:
                     # workaround for anacrontab
-                    divisor = int(round(period / 30))
+                    divisor = int(round(int(self.period) / 30))
                     self.schedule = '*-1/%s-1 %s:%s:0' % (divisor, hour, self.boot_delay)
                else:
-                    self.schedule = '*-*-1/%s %s:%s:0' % (period, hour, self.boot_delay)
+                    self.schedule = '*-*-1/%s %s:%s:0' % (self.period, hour, self.boot_delay)
             except ValueError:
                log(3, 'unknown schedule in %s: %s' % (self.filename, self.line))
                self.schedule = self.period
@@ -402,8 +402,6 @@ class Job:
                       ','.join(map(str, self.timespec_hour)),
                       ','.join(map(str, self.timespec_minute))
                    )
-
-
 
     def generate_scriptlet(self) -> Optional[str]:
         '''...only if needed'''
@@ -549,15 +547,15 @@ def parse_crontab(filename:str,
                 continue
 
             j = Job(filename, line)
-            j.environment = environment
+            j.environment = copy.deepcopy(environment)
             if monotonic:
-                j.decode_environment(default_peristent=True)
+                j.decode_environment(default_persistent=True)
                 j.parse_anacrontab()
             elif line.startswith('@'):
-                j.decode_environment(default_peristent=True)
+                j.decode_environment(default_persistent=True)
                 j.parse_crontab_at(withuser)
             else:
-                j.decode_environment(default_peristent=False)
+                j.decode_environment(default_persistent=False)
                 j.parse_crontab_timespec(withuser)
             j.decode()
             j.generate_schedule()
