@@ -70,10 +70,9 @@ def translate(line:str, args) -> None:
 
     job = parser.Job('-', line)
     job.parse_crontab_auto()
-    ### TO MOVE INSIDE OBJECT ###
-    job.schedule = 'daily'
-    #############################
     job.decode()
+    job.decode_command()
+    job.generate_schedule()
 
     blue('# /run/systemd/generator/<unit>.timer')
     print(job.generate_timer())

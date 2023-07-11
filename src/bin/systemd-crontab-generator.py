@@ -126,6 +126,7 @@ class Job:
         self.timespec_dom = []
         self.timespec_month = []
         self.sunday_is_seven = False
+        self.schedule = ''
 
     def parse_anacrontab(self) -> None:
         if len(self.parts) < 4:
@@ -226,6 +227,7 @@ class Job:
         if self.period:
             self.period = self.period.lower().lstrip('@')
             self.period = {
+                'boot': 'reboot',
                 '1': 'daily',
                 '7': 'weekly',
                 '30': 'monthly',
@@ -280,6 +282,89 @@ class Job:
             self.command[3] == '&&' ):
                 self.testremoved = self.command[2]
                 self.command = self.command[4:]
+
+    def generate_schedule(self) -> None:
+        if self.period:
+             self.generate_schedule_from_period()
+        else:
+             self.generate_schedule_from_timespec()
+
+    def generate_schedule_from_period(self) -> None:
+        hour = self.start_hour
+
+        if self.period == 'reboot':
+            self.boot_delay = max(self.boot_delay, 1)
+            self.schedule = self.period
+            self.persistent = False
+        elif self.period == 'minutely':
+            self.schedule = self.period
+            self.persistent = False
+        elif self.period == 'hourly' and self.boot_delay == 0:
+            self.schedule = 'hourly'
+        elif self.period == 'hourly':
+            self.schedule = '*-*-* *:%s:0' % self.boot_delay
+            self.boot_delay = 0
+        elif self.period == 'midnight' and self.boot_delay == 0:
+            self.schedule = 'daily'
+        elif self.period == 'midnight':
+            self.schedule = '*-*-* 0:%s:0' % self.boot_delay
+        elif self.period in TIME_UNITS_SET and hour == 0 and self.boot_delay == 0:
+            self.schedule = self.period
+        elif self.period == 'daily':
+            self.schedule = '*-*-* %s:%s:0' % (hour, self.boot_delay)
+        elif self.period == 'weekly':
+            self.schedule = 'Mon *-*-* %s:%s:0' % (hour, self.boot_delay)
+        elif self.period == 'monthly':
+            self.schedule = '*-*-1 %s:%s:0' % (hour, self.boot_delay)
+        elif self.period == 'quarterly':
+            self.schedule = '*-1,4,7,10-1 %s:%s:0' % (hour, self.boot_delay)
+        elif self.period == 'semi-annually':
+            self.schedule = '*-1,7-1 %s:%s:0' % (hour, self.boot_delay)
+        elif self.period == 'yearly':
+            self.schedule = '*-1-1 %s:%s:0' % (hour, self.boot_delay)
+        else:
+            try:
+               period = int(self.period)
+               if period > 31:
+                    # workaround for anacrontab
+                    divisor = int(round(period / 30))
+                    self.schedule = '*-1/%s-1 %s:%s:0' % (divisor, hour, self.boot_delay)
+               else:
+                    self.schedule = '*-*-1/%s %s:%s:0' % (period, hour, self.boot_delay)
+            except ValueError:
+               log(3, 'unknown schedule in %s: %s' % (self.filename, self.line))
+               self.schedule = self.period
+
+    def generate_schedule_from_timespec(self) -> None:
+        if self.timespec_dow == ['*']:
+            dows = ''
+        else:
+            dows_sorted = []
+            for day in DOWS_SET[int(self.sunday_is_seven):]:
+                if day in self.timespec_dow and not day in dows_sorted:
+                    dows_sorted.append(day)
+            dows = ','.join(dows_sorted) + ' '
+
+        if '0' in self.timespec_month: self.timespec_month.remove('0')
+        if '0' in self.timespec_dom: self.timespec_dom.remove('0')
+
+        # 2023: I have no clue what this is for
+        if (not len(self.timespec_month) or
+           not len(self.timespec_dom) or
+           not len(self.timespec_hour) or
+           not len(self.timespec_minute)):
+            log(3, 'unknown schedule in %s: %s' % (self.filename, self.line))
+            return None
+
+        self.schedule = '%s*-%s-%s %s:%s:00' % (
+                      dows,
+                      ','.join(map(str, self.timespec_month)),
+                      ','.join(map(str, self.timespec_dom)),
+                      ','.join(map(str, self.timespec_hour)),
+                      ','.join(map(str, self.timespec_minute))
+                   )
+
+
 
     def generate_scriptlet(self) -> Optional[str]:
         '''...only if needed'''
@@ -349,10 +434,10 @@ class Job:
         lines.append('')
 
         lines.append('[Timer]')
-        if self.schedule:
-            lines.append('OnCalendar=%s' % self.schedule)
-        else:
+        if self.schedule == 'reboot':
             lines.append('OnBootSec=%sm' % self.boot_delay)
+        else:
+            lines.append('OnCalendar=%s' % self.schedule)
         if self.random_delay > 1:
             if RANDOMIZED_DELAY:
                 lines.append('RandomizedDelaySec=%sm' % self.random_delay)
@@ -463,9 +548,6 @@ def parse_crontab(filename:str,
                      environment[envvar.group(1)] = value
                 continue
 
-            parts = line.split()
-            line = ' '.join(parts)
-
             j = Job(filename, line)
             j.boot_delay = boot_delay
             j.batch = batch
@@ -483,6 +565,7 @@ def parse_crontab(filename:str,
                 j.persistent = True if persistent == Persistent.yes else False
                 j.parse_crontab_timespec(withuser)
             j.decode()
+            j.generate_schedule()
             yield j
 
 
@@ -519,11 +602,16 @@ def parse_period(mapping=int, base=0):
     return parser
 
 def generate_timer_unit(job:Job, seq=None) -> Optional[str]:
-    daemon_reload = os.path.isfile(REBOOT_FILE)
+    if not job.schedule:
+        return None
 
     if job.testremoved and not os.path.isfile(job.testremoved):
         log(3, '%s is removed, skipping job' % job.testremoved)
         return None
+
+    if job.schedule == 'reboot' and os.path.isfile(REBOOT_FILE):
+        return None
+
 
     if (len(job.command) == 6 and
         job.command[0] == '[' and
@@ -539,82 +627,6 @@ def generate_timer_unit(job:Job, seq=None) -> Optional[str]:
         job.command[2] == '/run/systemd/system' and
         job.command[3] == '||'):
             return None
-
-    if job.period:
-        hour = job.start_hour
-
-        if job.period == 'reboot':
-            if daemon_reload:
-                return None
-            if job.boot_delay == 0:
-                job.boot_delay = 1
-            job.schedule = ''
-            job.persistent = False
-        elif job.period == 'minutely':
-            job.schedule = job.period
-            job.persistent = False
-        elif job.period == 'hourly' and job.boot_delay == 0:
-            job.schedule = 'hourly'
-        elif job.period == 'hourly':
-            job.schedule = '*-*-* *:%s:0' % job.boot_delay
-            job.boot_delay = 0
-        elif job.period == 'midnight' and job.boot_delay == 0:
-            job.schedule = 'daily'
-        elif job.period == 'midnight':
-            job.schedule = '*-*-* 0:%s:0' % job.boot_delay
-        elif job.period in TIME_UNITS_SET and hour == 0 and job.boot_delay == 0:
-            job.schedule = job.period
-        elif job.period == 'daily':
-            job.schedule = '*-*-* %s:%s:0' % (hour, job.boot_delay)
-        elif job.period == 'weekly':
-            job.schedule = 'Mon *-*-* %s:%s:0' % (hour, job.boot_delay)
-        elif job.period == 'monthly':
-            job.schedule = '*-*-1 %s:%s:0' % (hour, job.boot_delay)
-        elif job.period == 'quarterly':
-            job.schedule = '*-1,4,7,10-1 %s:%s:0' % (hour, job.boot_delay)
-        elif job.period == 'semi-annually':
-            job.schedule = '*-1,7-1 %s:%s:0' % (hour, job.boot_delay)
-        elif job.period == 'yearly':
-            job.schedule = '*-1-1 %s:%s:0' % (hour, job.boot_delay)
-        else:
-            try:
-               if int(job.period) > 31:
-                    # workaround for anacrontab
-                    job.schedule = '*-1/%s-1 %s:%s:0' % (int(round(int(job.period) / 30)), hour, job.boot_delay)
-               else:
-                    job.schedule = '*-*-1/%s %s:%s:0' % (int(job.period), hour, job.boot_delay)
-            except ValueError:
-                    log(3, 'unknown schedule in %s: %s' % (job.filename, job.line))
-                    job.schedule = job.period
-
-    else:
-        if job.timespec_dow == ['*']:
-            dows = ''
-        else:
-            dows_sorted = []
-            for day in DOWS_SET[int(job.sunday_is_seven):]:
-                if day in job.timespec_dow and not day in dows_sorted:
-                    dows_sorted.append(day)
-            dows = ','.join(dows_sorted) + ' '
-
-        if '0' in job.timespec_month: job.timespec_month.remove('0')
-        if '0' in job.timespec_dom: job.timespec_dom.remove('0')
-
-        # 2023: I have no clue what this is for
-        if (not len(job.timespec_month) or
-           not len(job.timespec_dom) or
-           not len(job.timespec_hour) or
-           not len(job.timespec_minute)):
-            log(3, 'unknown schedule in %s: %s' % (job.filename, job.line))
-            return None
-
-        job.schedule = '%s*-%s-%s %s:%s:00' % (
-                      dows,
-                      ','.join(map(str, job.timespec_month)),
-                      ','.join(map(str, job.timespec_dom)),
-                      ','.join(map(str, job.timespec_hour)),
-                      ','.join(map(str, job.timespec_minute))
-                   )
 
     if not job.unit_name:
         if not job.persistent:
@@ -744,6 +756,7 @@ def main() -> None:
                 basename = os.path.basename(filename)
                 job.jobid = period + '-' + basename
                 job.decode() # ensure clean jobid
+                job.generate_schedule()
                 if fallback_mailto and 'MAILTO' not in job.environment:
                     job.environment['MAILTO'] = fallback_mailto
                 basename_distro = PART2TIMER.get(basename, basename)
