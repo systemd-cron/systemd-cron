@@ -21,7 +21,6 @@ TIME_UNITS_SET = ['daily', 'weekly', 'monthly', 'quarterly', 'semi-annually', 'y
 
 KSH_SHELLS = ['/bin/sh', '/bin/dash', '/bin/ksh', '/bin/bash', '/usr/bin/zsh']
 REBOOT_FILE = '/run/crond.reboot'
-RUN_PARTS_FLAG = '/run/systemd/use_run_parts'
 
 USE_LOGLEVELMAX = "@use_loglevelmax@"
 RANDOMIZED_DELAY = "@randomized_delay@" == "True"
@@ -53,20 +52,6 @@ for pgm in ('/usr/sbin/sendmail', '/usr/lib/sendmail'):
 else:
     HAS_SENDMAIL = False
 
-class Persistent:
-    yes, no, auto = range(3)
-
-    @classmethod
-    def parse(cls, value):
-        value = value.strip().lower()
-        if value in ['yes', 'true', '1']:
-            return cls.yes
-        elif value in ['auto', '']:
-            return cls.auto
-        else:
-            return cls.no
-
-
 class Job:
     '''Job definition'''
     filename:str
@@ -97,7 +82,6 @@ class Job:
     execstart:str
     scriptlet:str
     valid:bool
-    run_parts:bool
     standardoutput:Optional[str]
     testremoved:Optional[str]
 
@@ -116,7 +100,6 @@ class Job:
         self.home = None
         self.command = []
         self.valid = False
-        self.run_parts = False
         self.batch = False
         self.standardoutput = None
         self.testremoved = None
@@ -128,6 +111,48 @@ class Job:
         self.timespec_month = []
         self.sunday_is_seven = False
         self.schedule = ''
+
+    def log(self, priority:int, message:str) -> None:
+        log(4, '%s in %s:%s' % message, self.filename, self.line)
+
+    def decode_environment(self, default_persistent:bool) -> None:
+        '''decode some environment variables that influence
+           the behaviour of systemd-cron itself'''
+
+        if 'PERSISTENT' in self.environment:
+            self.persistent = self.environment['PERSISTENT'].lower() in ['yes', 'true', '1']
+            del self.environment['PERSISTENT']
+        else:
+            self.persistent = default_persistent
+
+        if 'MAILTO' in self.environment and self.environment['MAILTO']:
+            if not HAS_SENDMAIL:
+               self.log(4, 'a MTA is not installed, but MAILTO is set')
+
+        if 'RANDOM_DELAY' in self.environment:
+            try:
+                self.random_delay = int(self.environment['RANDOM_DELAY'])
+                del self.environment['RANDOM_DELAY']
+            except ValueError:
+                self.log(4, 'invalid RANDOM_DELAY')
+
+        if 'START_HOURS_RANGE' in self.environment:
+            try:
+                self.start_hour = int(self.environment['STARTS_HOURS_RANGE'])
+                del self.environment['STARTS_HOURS_RANGE']
+            except ValueError:
+                self.log(4, 'invalid START_HOURS_RANGE')
+
+        if 'DELAY' in self.environment:
+            try:
+                self.boot_delay = int(self.environment['DELAY'])
+                del self.environment['DELAY']
+            except ValueError:
+                self.log(4, 'invalid DELAY')
+
+        if 'BATCH' in self.environment:
+            self.batch = self.environement['BATCH'].lower() in ['yes','true','1']
+            del self.environment['BATCH']
 
     def parse_anacrontab(self) -> None:
         if len(self.parts) < 4:
@@ -257,8 +282,17 @@ class Job:
             self.home = pwd.getpwnam(self.user).pw_dir
         except KeyError:
             pass
-        if self.home and self.command[0].startswith('~/'):
-            self.command[0] = self.home + self.command[0][2:]
+        if self.home:
+            if self.command[0].startswith('~/'):
+                self.command[0] = self.home + self.command[0][2:]
+
+            if 'PATH' in self.environment:
+                parts = self.environment['PATH'].split(':')
+                for i, part in enumerate(parts):
+                    if part.startswith('~/'):
+                        parts[i] = self.home + part[1:]
+                self.environment['PATH'] = ':'.join(parts)
+
 
         if (len(self.command) >= 3 and
             self.command[-2] == '>' and
@@ -473,18 +507,6 @@ def files(dirname:str) -> List[str]:
     except OSError:
         return []
 
-def expand_home_path(path:str, user:str) -> str:
-    try:
-        home = pwd.getpwnam(user).pw_dir
-    except KeyError:
-        return path
-
-    parts = path.split(':')
-    for i, part in enumerate(parts):
-        if part.startswith('~/'):
-            parts[i] = home + part[1:]
-    return ':'.join(parts)
-
 def environment_string(env:Dict[str, str]) -> str:
     line = []
     for k, v in env.items():
@@ -500,12 +522,6 @@ def parse_crontab(filename:str,
     '''parser shared with /usr/bin/crontab'''
 
     environment:Dict[str,str] = dict()
-    random_delay:int = 1
-    start_hour:int = 6
-    boot_delay:int = 0
-    persistent:int = Persistent.yes if monotonic else Persistent.auto
-    batch:bool = False
-    run_parts:bool = USE_RUNPARTS
     with open(filename, 'rb') as f:
         for rawline in f.readlines():
             rawline = rawline.strip()
@@ -526,55 +542,22 @@ def parse_crontab(filename:str,
 
             envvar = envvar_re.match(line)
             if envvar:
+                key = envvar.group(1)
                 value = envvar.group(2)
-                value = value.strip("'").strip('"')
-                if envvar.group(1) == 'RANDOM_DELAY':
-                     try:
-                         random_delay = int(value)
-                     except ValueError:
-                         log(4, 'invalid RANDOM_DELAY in %s: %s' % (filename, line))
-                elif envvar.group(1) == 'START_HOURS_RANGE':
-                     try:
-                         start_hour = int(value.split('-')[0])
-                     except ValueError:
-                         log(4, 'invalid START_HOURS_RANGE in %s: %s' % (filename, line))
-                elif envvar.group(1) == 'DELAY':
-                     try:
-                         boot_delay = int(value)
-                     except ValueError:
-                         log(4, 'invalid DELAY in %s: %s' % (filename, line))
-                elif envvar.group(1) == 'PERSISTENT':
-                     persistent = Persistent.parse(value)
-                elif not withuser and envvar.group(1) == 'PATH':
-                     basename:str = os.path.basename(filename)
-                     environment['PATH'] = expand_home_path(value, basename)
-                elif envvar.group(1) == 'BATCH':
-                     batch = (value.strip().lower() in ['yes','true','1'])
-                elif envvar.group(1) == 'RUN_PARTS':
-                     run_parts = (value.strip().lower() in ['yes','true','1'])
-                elif envvar.group(1) == 'MAILTO':
-                     environment[envvar.group(1)] = value
-                     if value and not HAS_SENDMAIL:
-                         log(4, 'a MTA is not installed, but MAILTO is set in %s' % filename)
-                else:
-                     environment[envvar.group(1)] = value
+                value = value.strip("'").strip('"').strip(' ')
+                environment[key] = value
                 continue
 
             j = Job(filename, line)
-            j.boot_delay = boot_delay
-            j.batch = batch
-            j.run_parts = run_parts
-            j.random_delay = random_delay
             j.environment = environment
-            j.start_hour = start_hour
             if monotonic:
-                j.persistent = False if persistent == Persistent.no else True
+                j.decode_environment(default_peristent=True)
                 j.parse_anacrontab()
             elif line.startswith('@'):
-                j.persistent = False if persistent == Persistent.no else True
+                j.decode_environment(default_peristent=True)
                 j.parse_crontab_at(withuser)
             else:
-                j.persistent = True if persistent == Persistent.yes else False
+                j.decode_environment(default_peristent=False)
                 j.parse_crontab_timespec(withuser)
             j.decode()
             j.generate_schedule()
@@ -693,16 +676,15 @@ def main() -> None:
         if e.errno != errno.EEXIST:
             raise
 
-    run_parts = USE_RUNPARTS
     fallback_mailto = None
 
     if os.path.isfile('/etc/crontab'):
         for job in parse_crontab('/etc/crontab', withuser=True):
-            run_parts = job.run_parts
             fallback_mailto = job.environment.get('MAILTO')
             if not job.valid:
                  log(3, 'truncated line in /etc/crontab: %s' % job.line)
                  continue
+            # legacy boilerplate
             if '/etc/cron.hourly'  in job.line: continue
             if '/etc/cron.daily'   in job.line: continue
             if '/etc/cron.weekly'  in job.line: continue
@@ -746,12 +728,7 @@ def main() -> None:
                 job.environment['MAILTO'] = fallback_mailto
             generate_timer_unit(job, seq=seqs.setdefault(job.jobid+job.user, count()))
 
-    if run_parts:
-        open(RUN_PARTS_FLAG, 'a').close()
-    else:
-        if os.path.exists(RUN_PARTS_FLAG):
-            os.unlink(RUN_PARTS_FLAG)
-        # https://github.com/systemd-cron/systemd-cron/issues/47
+    if not USE_RUNPARTS:
         i = 0
         for period in ['hourly', 'daily', 'weekly', 'monthly', 'yearly']:
             i = i + 1
