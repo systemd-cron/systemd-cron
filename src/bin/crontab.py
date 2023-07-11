@@ -50,6 +50,33 @@ def confirm(message:str) -> bool:
 
         return answer == 'y'
 
+def translate(line:str, args) -> None:
+    loader = importlib.machinery.SourceFileLoader('name',
+                os.path.join(GENERATOR_DIR, 'systemd-crontab-generator'))
+    parser = loader.load_module()
+    line = args.file
+    print(line)
+
+    job = parser.Job('-', line)
+    job.jobid = '-'
+    ### TO MOVE INSIDE OBJECT ###
+    job.period = 'daily'
+    job.schedule = 'daily'
+    job.command = ['sleep', '10']
+    job.execstart = 'sleep 10'
+    #############################
+    job.decode()
+
+    if sys.stdin.isatty():
+        BLUE = '\033[1;34m'
+        BLACK = '\033[0m'
+    else:
+        BLUE = ''
+        BLACK = ''
+    print(BLUE + '# /run/systemd/generator/<unit>.timer' + BLACK)
+    print(job.generate_timer())
+    print(BLUE + '# /run/systemd/generator/<unit>.service' + BLACK)
+    print(job.generate_service())
 
 def check(cron_file:str) -> bool:
     good = True
@@ -314,6 +341,9 @@ def main() -> None:
             help='''This option modifies the -r option to prompt the user for a
      'y/Y' response before actually removing the crontab.''')
 
+    group.add_argument('-t', '--translate', dest='action', action='store_const', const='translate',
+            help='''Translate one crontab line and print the result.''')
+
     # try to fixup CRONTAB_DIR if it has not been handled in package script
     try:
         if not os.path.exists(CRONTAB_DIR):
@@ -344,6 +374,7 @@ def main() -> None:
             'edit': edit,
             'remove': remove,
             'show': show,
+            'translate': translate,
             }.get(args.action, replace)
 
     action(cron_file, args)

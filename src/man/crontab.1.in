@@ -7,6 +7,8 @@ crontab - maintain crontab files for individual users
 crontab [\-u user] file
 .br
 crontab [\-u user] [\-l | \-r | \-e | \-s] [\-i]
+.br
+crontab \-t CRONTAB
 
 .TP
 .B (blank)
@@ -29,6 +31,9 @@ show all user who have a crontab
 .TP
 .B -i, --ask
 prompt before deleting user's crontab
+.TP
+.B -t, --translate CRONTAB
+translate one cron recor and print the result to STDOUT
 
 .SH DESCRIPTION
 Crontab is the program used to let users install, deinstall or list
