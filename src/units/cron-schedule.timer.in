@@ -2,7 +2,6 @@
 Description=systemd-cron @schedule@ timer
 Documentation=man:systemd.cron(7)
 PartOf=cron.target
-ConditionPathExists=/run/systemd/use_run_parts
 
 [Timer]
 Persistent=true
