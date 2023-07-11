@@ -487,6 +487,30 @@ class Job:
 
         return '\n'.join(lines)
 
+    def output(self) -> None:
+        '''write the result in TARGET_DIR'''
+        assert self.unit_name
+
+        code = self.generate_scriptlet() # as a side-effect also changes self.execstart
+        if code:
+            with open(self.scriptlet, 'w', encoding='utf8') as f:
+                f.write(code + '\n')
+
+        timer = os.path.join(TARGET_DIR, '%s.timer' % self.unit_name)
+        with open(timer, 'w', encoding='utf8') as f:
+            f.write(self.generate_timer() + '\n')
+
+        try:
+            os.symlink(timer, os.path.join(TIMERS_DIR, '%s.timer' % self.unit_name))
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+               raise
+
+        service = os.path.join(TARGET_DIR, '%s.service' % self.unit_name)
+        with open(service, 'w', encoding='utf8') as f:
+            f.write(self.generate_service() + '\n')
+
+
 
 def which(exe):
     '''TODO: we could use the PATH= variable from the crontab'''
@@ -607,7 +631,6 @@ def generate_timer_unit(job:Job, seq=None) -> Optional[str]:
     if job.schedule == 'reboot' and os.path.isfile(REBOOT_FILE):
         return None
 
-
     if (len(job.command) == 6 and
         job.command[0] == '[' and
         job.command[1] in ['-d','-e'] and
@@ -632,28 +655,8 @@ def generate_timer_unit(job:Job, seq=None) -> Optional[str]:
             unit_id = unit_id.hexdigest()
         job.unit_name = "cron-%s-%s-%s" % (job.jobid, job.user, unit_id)
 
-
-    code = job.generate_scriptlet()
-    if code:
-        with open(job.scriptlet, 'w', encoding='utf8') as f:
-            f.write(code + '\n')
-
-
-    timer = os.path.join(TARGET_DIR, '%s.timer' % job.unit_name)
-    with open(timer, 'w', encoding='utf8') as f:
-        f.write(job.generate_timer() + '\n')
-
-    try:
-        os.symlink(timer, os.path.join(TIMERS_DIR, '%s.timer' % job.unit_name))
-    except OSError as e:
-        if e.errno != errno.EEXIST:
-            raise
-
-    service = os.path.join(TARGET_DIR, '%s.service' % job.unit_name)
-    with open(service, 'w', encoding='utf8') as f:
-        f.write(job.generate_service() + '\n')
-
-    return timer
+    job.output()
+    return job.unit_name # not used
 
 def log(level:int, message:str) -> None:
     if len(sys.argv) == 4:
@@ -820,9 +823,6 @@ if __name__ == '__main__':
 
     TARGET_DIR = sys.argv[1]
     TIMERS_DIR = os.path.join(TARGET_DIR, 'cron.target.wants')
-
-    if not os.path.isdir(TARGET_DIR):
-        os.makedirs(TARGET_DIR)
 
     try:
         main()
