@@ -159,7 +159,8 @@ class Job:
         if len(self.parts) < 4:
             return
 
-        self.period, delay, self.jobid = self.parts[0:3]
+        self.period, delay, jobid = self.parts[0:3]
+        self.jobid = 'anacron-' + jobid
         try:
             self.boot_delay = int(delay)
         except ValueError:
@@ -192,7 +193,6 @@ class Job:
 
     def parse_crontab_at(self, withuser:bool) -> None:
         '''@daily (user) do something'''
-        self.jobid = self.basename
         if len(self.parts) < (2 + int(withuser)):
             return
 
@@ -203,10 +203,10 @@ class Job:
         else:
             self.user = self.basename
             self.command = self.parts[1:]
+        self.jobid = self.basename + '-' + self.user
 
     def parse_crontab_timespec(self, withuser:bool) -> None:
         '''6 2 * * * (user) do something'''
-        self.jobid = self.basename
         if len(self.parts) < (6 + int(withuser)):
             return
 
@@ -224,6 +224,7 @@ class Job:
         else:
             self.user = self.basename
             self.command = self.parts[5:]
+        self.jobid = self.basename + '-' + self.user
 
     def parse_time_unit(self, value:str, values, mapping=int) -> list[str]:
         result:list[str]
@@ -653,7 +654,7 @@ def generate_timer_unit(job:Job, seq=None) -> Optional[str]:
             unit_id = hashlib.md5()
             unit_id.update(bytes('\0'.join([job.schedule, ' '.join(job.command)]), 'utf-8'))
             unit_id = unit_id.hexdigest()
-        job.unit_name = "cron-%s-%s-%s" % (job.jobid, job.user, unit_id)
+        job.unit_name = "cron-%s-%s" % (job.jobid, unit_id)
 
     job.output()
     return job.unit_name # not used
@@ -748,10 +749,7 @@ def main() -> None:
             if '/etc/cron.daily'   in job.line: continue
             if '/etc/cron.weekly'  in job.line: continue
             if '/etc/cron.monthly' in job.line: continue
-            generate_timer_unit(job,
-                                seq=seqs.setdefault(
-                                    job.jobid+job.user, count()
-                                ))
+            generate_timer_unit(job, seq=seqs.setdefault(job.jobid, count()))
 
     CRONTAB_FILES = files('/etc/cron.d')
     for filename in CRONTAB_FILES:
@@ -767,7 +765,7 @@ def main() -> None:
                 continue
             if fallback_mailto and 'MAILTO' not in job.environment:
                 job.environment['MAILTO'] = fallback_mailto
-            generate_timer_unit(job, seq=seqs.setdefault(job.jobid+job.user, count()))
+            generate_timer_unit(job, seq=seqs.setdefault(job.jobid, count()))
 
     if not USE_RUNPARTS:
         i = 0
@@ -803,7 +801,7 @@ def main() -> None:
             if not job.valid:
                  log(3, 'truncated line in /etc/anacrontab: %s' % job.line)
                  continue
-            generate_timer_unit(job, seq=seqs.setdefault(job.jobid+job.user, count()))
+            generate_timer_unit(job, seq=seqs.setdefault(job.jobid, count()))
 
     if os.path.isdir(STATEDIR):
         # /var is avaible
@@ -813,7 +811,7 @@ def main() -> None:
             if '.' in basename:
                 continue
             for job in parse_crontab(filename, withuser=False):
-                generate_timer_unit(job, seq=seqs.setdefault(job.jobid+job.user, count()))
+                generate_timer_unit(job, seq=seqs.setdefault(job.jobid, count()))
         try:
             open(REBOOT_FILE,'a').close()
         except:
