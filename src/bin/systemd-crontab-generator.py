@@ -672,6 +672,32 @@ def count():
         yield n
         n += 1
 
+def workaround_var_not_mounted():
+    '''schedule rerun of generators after /var is mounted'''
+    with open('%s/cron-after-var.service' % TARGET_DIR, 'w') as f:
+        f.write('[Unit]\n')
+        f.write('Description=Rerun systemd-crontab-generator because /var is a separate mount\n')
+        f.write('Documentation=man:systemd.cron(7)\n')
+        f.write('After=cron.target\n')
+        f.write('ConditionDirectoryNotEmpty=%s\n' % STATEDIR)
+        f.write('\n[Service]\n')
+        f.write('Type=oneshot\n')
+        f.write('ExecStart=/bin/sh -c "systemctl daemon-reload ; systemctl try-restart cron.target"\n')
+
+    MULTIUSER_DIR = os.path.join(TARGET_DIR, 'multi-user.target.wants')
+
+    try:
+       os.makedirs(MULTIUSER_DIR)
+    except OSError as e:
+       if e.errno != errno.EEXIST:
+           raise
+
+    try:
+        os.symlink('%s/cron-after-var.service' % TARGET_DIR, '%s/cron-after-var.service' % MULTIUSER_DIR)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise
+
 def main() -> None:
     try:
         os.makedirs(TIMERS_DIR)
@@ -773,7 +799,6 @@ def main() -> None:
                  continue
             generate_timer_unit(job, seq=seqs.setdefault(job.jobid+job.user, count()))
 
-
     if os.path.isdir(STATEDIR):
         # /var is avaible
         USERCRONTAB_FILES = files(STATEDIR)
@@ -789,31 +814,7 @@ def main() -> None:
         except:
             pass
     else:
-        # schedule rerun
-        with open('%s/cron-after-var.service' % TARGET_DIR, 'w') as f:
-            f.write('[Unit]\n')
-            f.write('Description=Rerun systemd-crontab-generator because /var is a separate mount\n')
-            f.write('Documentation=man:systemd.cron(7)\n')
-            f.write('After=cron.target\n')
-            f.write('ConditionDirectoryNotEmpty=%s\n' % STATEDIR)
-
-            f.write('\n[Service]\n')
-            f.write('Type=oneshot\n')
-            f.write('ExecStart=/bin/sh -c "systemctl daemon-reload ; systemctl try-restart cron.target"\n')
-
-        MULTIUSER_DIR = os.path.join(TARGET_DIR, 'multi-user.target.wants')
-
-        try:
-           os.makedirs(MULTIUSER_DIR)
-        except OSError as e:
-           if e.errno != errno.EEXIST:
-               raise
-
-        try:
-            os.symlink('%s/cron-after-var.service' % TARGET_DIR, '%s/cron-after-var.service' % MULTIUSER_DIR)
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                raise
+        workaround_var_not_mounted()
 
 
 if __name__ == '__main__':
