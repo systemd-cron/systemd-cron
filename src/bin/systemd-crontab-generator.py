@@ -9,7 +9,6 @@ import string
 import sys
 from functools import reduce
 from typing import Dict, List, Optional
-from typing import Any #XXX
 
 envvar_re = re.compile(r'^([A-Za-z_0-9]+)\s*=\s*(.*)$')
 
@@ -77,9 +76,15 @@ class Job:
     environment:Dict[str, str]
     shell:str
     random_delay:int
-    #period:Union[str:Dict[str, int]]
-    period:Any #XXX
-    schedule:Optional[str]
+    # either period or timespec
+    period:Optional[str]
+    timespec_minute:List[str] # 0-60
+    timespec_hour:List[str] # 0-24
+    timespec_dom:List[str] # 0-31
+    timespec_dow:List[str] # 0-7
+    timespec_month:List[str] # 0-12
+    sunday_is_seven:bool
+    schedule:str
     boot_delay:int
     start_hour:int
     persistent:bool
@@ -90,7 +95,7 @@ class Job:
     home:Optional[str]
     command:List[str]
     execstart:str
-    scriptlet:Optional[str]
+    scriptlet:str
     valid:bool
     run_parts:bool
     standardoutput:Optional[str]
@@ -114,29 +119,21 @@ class Job:
         self.batch = False
         self.standardoutput = None
         self.testremoved = None
-
+        self.period = None
+        self.timespec_minute = []
+        self.timespec_hour = []
+        self.timespec_dow = []
+        self.timespec_dom = []
+        self.timespec_month = []
+        self.sunday_is_seven = False
 
     def parse_anacrontab(self) -> None:
         if len(self.parts) < 4:
             return
 
-        period, delay, self.jobid = self.parts[0:3]
-        period = period.lower()
-        self.period = {
-             '1': 'daily',
-             '7': 'weekly',
-             '30': 'monthly',
-             '31': 'monthly',
-             '@biannually': 'semi-annually',
-             '@bi-annually': 'semi-annually',
-             '@semiannually': 'semi-annually',
-             '@anually': 'yearly',
-             '@annually': 'yearly',
-        }.get(period, '') or period.lstrip('@')
+        self.period, delay, self.jobid = self.parts[0:3]
         try:
-            boot_delay = int(delay)
-            if boot_delay > 0:
-                self.boot_delay = boot_delay
+            self.boot_delay = int(delay)
         except ValueError:
             log(4, 'invalid DELAY in %s: %s' % (self.filename, self.line))
         self.command = self.parts[3:]
@@ -167,14 +164,7 @@ class Job:
         if len(self.parts) < (2 + int(withuser)):
             return
 
-        period = self.parts[0].lower()
-        self.period = {
-            '@biannually': 'semi-annually',
-            '@bi-annually': 'semi-annually',
-            '@semiannually': 'semi-annually',
-            '@anually': 'yearly',
-            '@annually': 'yearly',
-        }.get(period, '') or period.lstrip('@')
+        self.period = self.parts[0]
         if withuser:
             self.user = self.parts[1]
             self.command = self.parts[2:]
@@ -189,14 +179,13 @@ class Job:
             return
 
         minutes, hours, days, months, dows = self.parts[0:5]
-        self.period = {
-             'm': self.parse_time_unit(minutes, MINUTES_SET),
-             'h': self.parse_time_unit(hours, HOURS_SET),
-             'd': self.parse_time_unit(days, DAYS_SET),
-             'w': self.parse_time_unit(dows, DOWS_SET, dow_map),
-             'W': dows.endswith('7') or dows.title().endswith('Sun'),
-             'M': self.parse_time_unit(months, MONTHS_SET, month_map),
-        }
+        self.timespec_minute = self.parse_time_unit(minutes, MINUTES_SET)
+        self.timespec_hour = self.parse_time_unit(hours, HOURS_SET)
+        self.timespec_dom = self.parse_time_unit(days, DAYS_SET)
+        self.timespec_dow = self.parse_time_unit(dows, DOWS_SET, dow_map)
+        self.sunday_is_seven = dows.endswith('7') or dows.title().endswith('Sun')
+        self.timespec_month = self.parse_time_unit(months, MONTHS_SET, month_map)
+
         if withuser:
             self.user = self.parts[5]
             self.command = self.parts[6:]
@@ -234,8 +223,8 @@ class Job:
 
         self.decode_command()
 
-
-        if type(self.period) is str:
+        if self.period:
+            self.period = self.period.lower().lstrip('@')
             self.period = {
                 '1': 'daily',
                 '7': 'weekly',
@@ -551,7 +540,7 @@ def generate_timer_unit(job:Job, seq=None) -> Optional[str]:
         job.command[3] == '||'):
             return None
 
-    if type(job.period) is str:
+    if job.period:
         hour = job.start_hour
 
         if job.period == 'reboot':
@@ -559,7 +548,7 @@ def generate_timer_unit(job:Job, seq=None) -> Optional[str]:
                 return None
             if job.boot_delay == 0:
                 job.boot_delay = 1
-            job.schedule = None
+            job.schedule = ''
             job.persistent = False
         elif job.period == 'minutely':
             job.schedule = job.period
@@ -599,31 +588,32 @@ def generate_timer_unit(job:Job, seq=None) -> Optional[str]:
                     job.schedule = job.period
 
     else:
-        if job.period['w'] == ['*']:
+        if job.timespec_dow == ['*']:
             dows = ''
         else:
             dows_sorted = []
-            for day in DOWS_SET[int(job.period['W']):]:
-                if day in job.period['w'] and not day in dows_sorted:
+            for day in DOWS_SET[int(job.sunday_is_seven):]:
+                if day in job.timespec_dow and not day in dows_sorted:
                     dows_sorted.append(day)
             dows = ','.join(dows_sorted) + ' '
 
-        if 0 in job.period['M']: job.period['M'].remove(0)
-        if 0 in job.period['d']: job.period['d'].remove(0)
+        if '0' in job.timespec_month: job.timespec_month.remove('0')
+        if '0' in job.timespec_dom: job.timespec_dom.remove('0')
 
         # 2023: I have no clue what this is for
-        if (not len(job.period['M']) or
-           not len(job.period['d']) or
-           not len(job.period['h']) or
-           not len(job.period['m'])):
+        if (not len(job.timespec_month) or
+           not len(job.timespec_dom) or
+           not len(job.timespec_hour) or
+           not len(job.timespec_minute)):
+            log(3, 'unknown schedule in %s: %s' % (job.filename, job.line))
             return None
 
         job.schedule = '%s*-%s-%s %s:%s:00' % (
                       dows,
-                      ','.join(map(str, job.period['M'])),
-                      ','.join(map(str, job.period['d'])),
-                      ','.join(map(str, job.period['h'])),
-                      ','.join(map(str, job.period['m']))
+                      ','.join(map(str, job.timespec_month)),
+                      ','.join(map(str, job.timespec_dom)),
+                      ','.join(map(str, job.timespec_hour)),
+                      ','.join(map(str, job.timespec_minute))
                    )
 
     if not job.unit_name:
