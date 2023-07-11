@@ -507,7 +507,14 @@ def parse_crontab(filename:str,
             if not rawline or rawline.startswith(b'#'):
                 continue
 
-            line = rawline.decode('utf8')
+            try:
+                line = rawline.decode('utf8')
+            except UnicodeDecodeError:
+                # let's hope it's in a trailing comment
+                try:
+                    line = rawline.split(b'#')[0].decode('utf8')
+                except UnicodeDecodeError:
+                    line = rawline.decode('ascii', 'replace')
 
             while '  ' in line:
                 line = line.replace('  ', ' ')
