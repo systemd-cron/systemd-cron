@@ -113,6 +113,7 @@ class Job:
         self.random_delay = 0
         self.persistent = False
         self.user = 'root'
+        self.home = None
         self.command = []
         self.valid = False
         self.run_parts = False
@@ -155,6 +156,8 @@ class Job:
                     self.command = self.command[1:]
                 except:
                     self.user = os.getlogin()
+            else:
+                self.user = os.getlogin()
 
             pgm = which(self.command[0])
             if pgm:
