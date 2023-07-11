@@ -147,13 +147,15 @@ class Job:
             self.parse_crontab_timespec(False)
 
         if self.command:
-            maybe_user = self.command[0]
-            try:
-                pwd.getpwnam(maybe_user)
-                self.user = maybe_user
-                self.command = self.command[1:]
-            except:
-                self.user = os.getlogin()
+            if len(self.command) > 1:
+                maybe_user = self.command[0]
+                try:
+                    pwd.getpwnam(maybe_user)
+                    self.user = maybe_user
+                    self.command = self.command[1:]
+                except:
+                    self.user = os.getlogin()
+
             pgm = which(self.command[0])
             if pgm:
                 self.command[0] = pgm
