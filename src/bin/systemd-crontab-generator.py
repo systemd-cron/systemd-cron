@@ -698,6 +698,27 @@ def workaround_var_not_mounted():
         if e.errno != errno.EEXIST:
             raise
 
+def is_masked(name:str, distro_mapping:dict[str,str]) -> bool:
+    '''check if distribution also provide a native .timer'''
+    for unit_file in ('/lib/systemd/system/%s.timer' % name,
+                      '/etc/systemd/system/%s.timer' % name,
+                      '/run/systemd/system/%s.timer' % name):
+        if os.path.exists(unit_file):
+            if os.path.realpath(unit_file) == '/dev/null':
+                # TODO: check 0-byte file
+                reason = 'it is masked'
+            else:
+                reason = 'native timer is present'
+            log(5, 'ignoring %s because %s' % (name, reason))
+            return True
+
+    name_distro = '%s.timer' % distro_mapping.get(name, name)
+    if os.path.exists('/lib/systemd/system/%s' % name_distro):
+        log(5, 'ignoring %s because there is %s' % (name, name_distro))
+        return True
+
+    return False
+
 def main() -> None:
     try:
         os.makedirs(TIMERS_DIR)
@@ -726,20 +747,7 @@ def main() -> None:
     CRONTAB_FILES = files('/etc/cron.d')
     for filename in CRONTAB_FILES:
         basename = os.path.basename(filename)
-        basename_distro = CROND2TIMER.get(basename, basename)
-        masked = False
-        for unit_file in ('/lib/systemd/system/%s.timer' % basename,
-                          '/lib/systemd/system/%s.timer' % basename_distro,
-                          '/etc/systemd/system/%s.timer' % basename,
-                          '/run/systemd/system/%s.timer' % basename):
-            if os.path.exists(unit_file):
-                masked = True
-                if os.path.realpath(unit_file) == '/dev/null':
-                    log(5, 'ignoring %s because it is masked' % filename)
-                else:
-                    log(5, 'ignoring %s because native timer is present' % filename)
-                break
-        if masked:
+        if is_masked(basename, CROND2TIMER):
             continue
         if basename.startswith('.'):
             continue
@@ -777,11 +785,7 @@ def main() -> None:
                 job.generate_schedule()
                 if fallback_mailto and 'MAILTO' not in job.environment:
                     job.environment['MAILTO'] = fallback_mailto
-                basename_distro = PART2TIMER.get(basename, basename)
-                if (os.path.exists('/lib/systemd/system/%s.timer' % basename)
-                 or os.path.exists('/lib/systemd/system/%s.timer' % basename_distro)
-                 or os.path.exists('/etc/systemd/system/%s.timer' % basename)):
-                    log(5, 'ignoring %s because native timer is present' % filename)
+                if is_masked(basename, PART2TIMER):
                     continue
                 elif basename.startswith('.'):
                     continue
