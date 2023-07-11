@@ -143,7 +143,7 @@ Copyright
 
 [1]: http://www.freedesktop.org/wiki/Software/systemd/ "systemd"
 [2]: http://en.wikipedia.org/wiki/Cron "cron"
-[3]: http://packages.qa.debian.org/d/debianutils.html "debianutils"
+[3]: https://tracker.debian.org/pkg/debianutils "debianutils"
 [4]: https://www.gnu.org/prep/standards/html_node/Directory-Variables.html "Directory Variables"
 [5]: http://www.freedesktop.org/software/systemd/man/systemd.timer.html#Persistent= "systemd.timer"
 [6]: https://github.com/kstep/systemd-crontab-generator "crontab generator"
