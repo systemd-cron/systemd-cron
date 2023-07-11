@@ -719,6 +719,15 @@ def is_masked(name:str, distro_mapping:dict[str,str]) -> bool:
 
     return False
 
+def is_backup(name:str) -> bool:
+    if '.dpkg-' in name:
+        return True
+    if '~' in basename:
+        return True
+    if name.startswith('.'):
+        return True
+    return False
+
 def main() -> None:
     try:
         os.makedirs(TIMERS_DIR)
@@ -749,13 +758,8 @@ def main() -> None:
         basename = os.path.basename(filename)
         if is_masked(basename, CROND2TIMER):
             continue
-        if basename.startswith('.'):
-            continue
-        if '.dpkg-' in basename:
-            log(5, 'ignoring %s' % filename)
-            continue
-        if '~' in basename:
-            log(5, 'ignoring %s' % filename)
+        if is_backup(basename):
+            log(5, 'ignoring %s' % name)
             continue
         for job in parse_crontab(filename, withuser=True):
             if not job.valid:
@@ -774,27 +778,25 @@ def main() -> None:
                 continue
             CRONTAB_FILES = files('/etc/cron.' + period)
             for filename in CRONTAB_FILES:
+                basename = os.path.basename(filename)
+                if is_masked(basename, PART2TIMER):
+                    continue
+                if is_backup(basename):
+                    log(5, 'ignoring %s' % filename)
+                    continue
+
                 job = Job(filename, filename)
                 job.persistent = PERSISTENT
                 job.period = period
                 job.boot_delay = i * 5
                 job.command = [filename]
-                basename = os.path.basename(filename)
                 job.jobid = period + '-' + basename
                 job.decode() # ensure clean jobid
                 job.generate_schedule()
                 if fallback_mailto and 'MAILTO' not in job.environment:
                     job.environment['MAILTO'] = fallback_mailto
-                if is_masked(basename, PART2TIMER):
-                    continue
-                elif basename.startswith('.'):
-                    continue
-                elif '.dpkg-' in basename:
-                    log(5, 'ignoring %s' % filename)
-                    continue
-                else:
-                    job.unit_name = 'cron-' + job.jobid
-                    generate_timer_unit(job)
+                job.unit_name = 'cron-' + job.jobid
+                generate_timer_unit(job)
 
     if os.path.isfile('/etc/anacrontab'):
         for job in parse_crontab('/etc/anacrontab', monotonic=True):
@@ -810,9 +812,8 @@ def main() -> None:
             basename = os.path.basename(filename)
             if '.' in basename:
                 continue
-            else:
-                for job in parse_crontab(filename, withuser=False):
-                    generate_timer_unit(job, seq=seqs.setdefault(job.jobid+job.user, count()))
+            for job in parse_crontab(filename, withuser=False):
+                generate_timer_unit(job, seq=seqs.setdefault(job.jobid+job.user, count()))
         try:
             open(REBOOT_FILE,'a').close()
         except:
