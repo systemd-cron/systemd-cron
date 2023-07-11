@@ -14,6 +14,9 @@ import tempfile
 from subprocess import Popen, PIPE
 from typing import Optional
 
+BLUE = '\033[1;34m'
+BLACK = '\033[0m'
+
 for pgm in ('/usr/bin/editor', '/usr/bin/vim', '/usr/bin/nano', '/usr/bin/mcedit'):
     if os.path.isfile(pgm) and os.access(pgm, os.X_OK):
         editor = pgm
@@ -50,6 +53,14 @@ def confirm(message:str) -> bool:
 
         return answer == 'y'
 
+
+def blue(line:str) -> None:
+    if sys.stdin.isatty():
+        print('%s%s%s' % (BLUE, line, BLACK))
+    else:
+        print(line)
+
+
 def translate(line:str, args) -> None:
     loader = importlib.machinery.SourceFileLoader('name',
                 os.path.join(GENERATOR_DIR, 'systemd-crontab-generator'))
@@ -67,16 +78,11 @@ def translate(line:str, args) -> None:
     #############################
     job.decode()
 
-    if sys.stdin.isatty():
-        BLUE = '\033[1;34m'
-        BLACK = '\033[0m'
-    else:
-        BLUE = ''
-        BLACK = ''
-    print(BLUE + '# /run/systemd/generator/<unit>.timer' + BLACK)
+    blue('# /run/systemd/generator/<unit>.timer')
     print(job.generate_timer())
-    print(BLUE + '# /run/systemd/generator/<unit>.service' + BLACK)
+    blue('# /run/systemd/generator/<unit>.service')
     print(job.generate_service())
+
 
 def check(cron_file:str) -> bool:
     good = True
