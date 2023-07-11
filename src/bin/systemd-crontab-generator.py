@@ -163,7 +163,7 @@ class Job:
         try:
             self.boot_delay = int(delay)
         except ValueError:
-            log(4, 'invalid DELAY in %s: %s' % (self.filename, self.line))
+            self.log(4, 'invalid DELAY')
         self.command = self.parts[3:]
 
     def parse_crontab_auto(self) -> None:
@@ -239,7 +239,7 @@ class Job:
         except ValueError:
             result = []
         if not len(result):
-            log(3, 'garbled time in %s [%s]: %s' % (self.filename, self.line, value))
+            self.log(3, 'garbled time %s')
         return result
 
     def decode(self) -> bool:
@@ -371,7 +371,7 @@ class Job:
                else:
                     self.schedule = '*-*-1/%s %s:%s:0' % (self.period, hour, self.boot_delay)
             except ValueError:
-               log(3, 'unknown schedule in %s: %s' % (self.filename, self.line))
+               self.log(3, 'unknown schedule')
                self.schedule = self.period
 
     def generate_schedule_from_timespec(self) -> None:
@@ -392,7 +392,7 @@ class Job:
            not len(self.timespec_dom) or
            not len(self.timespec_hour) or
            not len(self.timespec_minute)):
-            log(3, 'unknown schedule in %s: %s' % (self.filename, self.line))
+            self.log(3, 'unknown schedule')
             return None
 
         self.schedule = '%s*-%s-%s %s:%s:00' % (
