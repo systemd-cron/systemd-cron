@@ -22,7 +22,7 @@ The scripts should now be automatically run by systemd. See man:systemd.cron(7) 
 Dependencies
 ----------------
 * systemd ≥ 236
-* python 3
+* python ≥ 3.9
 * [run-parts][3] (optional)
 * /usr/sbin/sendmail (optional, evaluated at runtime)
 * gcc or clang (needed to build `crontab_setgid.c`; this helper is optional and evaluated at runtime)

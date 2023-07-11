@@ -9,7 +9,7 @@ import stat
 import string
 import sys
 from functools import reduce
-from typing import Dict, List, Optional
+from typing import Iterator, Optional
 
 envvar_re = re.compile(r'^([A-Za-z_0-9]+)\s*=\s*(.*)$')
 
@@ -58,17 +58,17 @@ class Job:
     filename:str
     basename:str
     line:str
-    parts:List[str]
-    environment:Dict[str, str]
+    parts:list[str]
+    environment:dict[str, str]
     shell:str
     random_delay:int
     # either period or timespec
-    period:Optional[str]
-    timespec_minute:List[str] # 0-60
-    timespec_hour:List[str] # 0-24
-    timespec_dom:List[str] # 0-31
-    timespec_dow:List[str] # 0-7
-    timespec_month:List[str] # 0-12
+    period:str
+    timespec_minute:list[str] # 0-60
+    timespec_hour:list[str] # 0-24
+    timespec_dom:list[str] # 0-31
+    timespec_dow:list[str] # 0-7
+    timespec_month:list[str] # 0-12
     sunday_is_seven:bool
     schedule:str
     boot_delay:int
@@ -79,7 +79,7 @@ class Job:
     unit_name:Optional[str]
     user:str
     home:Optional[str]
-    command:List[str]
+    command:list[str]
     execstart:str
     scriptlet:str
     valid:bool
@@ -104,7 +104,7 @@ class Job:
         self.batch = False
         self.standardoutput = None
         self.testremoved = None
-        self.period = None
+        self.period = ''
         self.timespec_minute = []
         self.timespec_hour = []
         self.timespec_dow = []
@@ -225,8 +225,8 @@ class Job:
             self.user = self.basename
             self.command = self.parts[5:]
 
-    def parse_time_unit(self, value:str, values, mapping=int) -> List[str]:
-        result:List[str]
+    def parse_time_unit(self, value:str, values, mapping=int) -> list[str]:
+        result:list[str]
         if value == '*':
             return ['*']
         try:
@@ -364,9 +364,11 @@ class Job:
             self.schedule = '*-1-1 %s:%s:0' % (hour, self.boot_delay)
         else:
             try:
-               if int(self.period) > 31:
+               period = int(self.period)
+               assert type(period) is int
+               if period > 31:
                     # workaround for anacrontab
-                    divisor = int(round(int(self.period) / 30))
+                    divisor = int(round(period / 30))
                     self.schedule = '*-1/%s-1 %s:%s:0' % (divisor, hour, self.boot_delay)
                else:
                     self.schedule = '*-*-1/%s %s:%s:0' % (self.period, hour, self.boot_delay)
@@ -499,13 +501,13 @@ def which(exe):
 
     return None
 
-def files(dirname:str) -> List[str]:
+def files(dirname:str) -> list[str]:
     try:
         return list(filter(os.path.isfile, [os.path.join(dirname, f) for f in os.listdir(dirname)]))
     except OSError:
         return []
 
-def environment_string(env:Dict[str, str]) -> str:
+def environment_string(env:dict[str, str]) -> str:
     line = []
     for k, v in env.items():
         if ' ' in v:
@@ -516,10 +518,10 @@ def environment_string(env:Dict[str, str]) -> str:
 
 def parse_crontab(filename:str,
                   withuser:bool=True,
-                  monotonic:bool=False):
+                  monotonic:bool=False) -> Iterator[Job]:
     '''parser shared with /usr/bin/crontab'''
 
-    environment:Dict[str,str] = dict()
+    environment:dict[str,str] = dict()
     with open(filename, 'rb') as f:
         for rawline in f.readlines():
             rawline = rawline.strip()
@@ -660,7 +662,7 @@ def log(level:int, message:str) -> None:
     else:
         sys.stderr.write('%s: %s\n' % (SELF, message))
 
-seqs:Dict[str, int] = {}
+seqs:dict[str, int] = {}
 def count():
     n = 0
     while True:
