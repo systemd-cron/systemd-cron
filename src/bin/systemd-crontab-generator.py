@@ -723,7 +723,7 @@ def is_masked(name:str, distro_mapping:dict[str,str]) -> bool:
 def is_backup(name:str) -> bool:
     if '.dpkg-' in name:
         return True
-    if '~' in basename:
+    if '~' in name:
         return True
     if name.startswith('.'):
         return True
@@ -757,7 +757,7 @@ def main() -> None:
         if is_masked(basename, CROND2TIMER):
             continue
         if is_backup(basename):
-            log(5, 'ignoring %s' % name)
+            log(5, 'ignoring %s' % basename)
             continue
         for job in parse_crontab(filename, withuser=True):
             if not job.valid:
