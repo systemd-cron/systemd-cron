@@ -10,6 +10,7 @@ import string
 import sys
 from functools import reduce
 from typing import Iterator, Optional
+from enum import IntEnum
 
 envvar_re = re.compile(r'^([A-Za-z_0-9]+)\s*=\s*(.*)$')
 
@@ -52,6 +53,16 @@ for pgm in ('/usr/sbin/sendmail', '/usr/lib/sendmail'):
         break
 else:
     HAS_SENDMAIL = False
+
+class Log(IntEnum):
+    EMERG = 0
+    ALERT = 1
+    CRIT = 2
+    ERR = 3
+    WARNING = 4
+    NOTICE = 5
+    INFO = 6
+    DEBUG = 7
 
 class Job:
     '''Job definition'''
@@ -114,7 +125,7 @@ class Job:
         self.schedule = ''
 
     def log(self, priority:int, message:str) -> None:
-        log(4, '%s in %s:%s' % (message, self.filename, self.line))
+        log(priority, '%s in %s:%s' % (message, self.filename, self.line))
 
     def decode_environment(self, default_persistent:bool) -> None:
         '''decode some environment variables that influence
@@ -128,28 +139,28 @@ class Job:
 
         if 'MAILTO' in self.environment and self.environment['MAILTO']:
             if not HAS_SENDMAIL:
-               self.log(4, 'a MTA is not installed, but MAILTO is set')
+               self.log(Log.WARNING, 'a MTA is not installed, but MAILTO is set')
 
         if 'RANDOM_DELAY' in self.environment:
             try:
                 self.random_delay = int(self.environment['RANDOM_DELAY'])
                 del self.environment['RANDOM_DELAY']
             except ValueError:
-                self.log(4, 'invalid RANDOM_DELAY')
+                self.log(Log.WARNING, 'invalid RANDOM_DELAY')
 
         if 'START_HOURS_RANGE' in self.environment:
             try:
                 self.start_hour = int(self.environment['STARTS_HOURS_RANGE'])
                 del self.environment['STARTS_HOURS_RANGE']
             except ValueError:
-                self.log(4, 'invalid START_HOURS_RANGE')
+                self.log(Log.WARNING, 'invalid START_HOURS_RANGE')
 
         if 'DELAY' in self.environment:
             try:
                 self.boot_delay = int(self.environment['DELAY'])
                 del self.environment['DELAY']
             except ValueError:
-                self.log(4, 'invalid DELAY')
+                self.log(Log.WARNING, 'invalid DELAY')
 
         if 'BATCH' in self.environment:
             self.batch = self.environment['BATCH'].lower() in ['yes','true','1']
@@ -164,7 +175,7 @@ class Job:
         try:
             self.boot_delay = int(delay)
         except ValueError:
-            self.log(4, 'invalid DELAY')
+            self.log(Log.WARNING, 'invalid DELAY')
         self.command = self.parts[3:]
 
     def parse_crontab_auto(self) -> None:
@@ -215,7 +226,7 @@ class Job:
         self.timespec_hour = self.parse_time_unit(hours, HOURS_SET)
         self.timespec_dom = self.parse_time_unit(days, DAYS_SET)
         self.timespec_dow = self.parse_time_unit(dows, DOWS_SET, dow_map)
-        self.sunday_is_seven = dows.endswith('7') or dows.title().endswith('Sun')
+        self.sunday_is_seven = dows.endswith('7') or dows.lower().endswith('sun')
         self.timespec_month = self.parse_time_unit(months, MONTHS_SET, month_map)
 
         if withuser:
@@ -240,7 +251,7 @@ class Job:
         except ValueError:
             result = []
         if not len(result):
-            self.log(3, 'garbled time %s')
+            self.log(Log.ERR, 'garbled time')
         return result
 
     def decode(self) -> bool:
@@ -374,7 +385,7 @@ class Job:
                else:
                     self.schedule = '*-*-1/%s %s:%s:0' % (self.period, hour, self.boot_delay)
             except ValueError:
-               self.log(3, 'unknown schedule')
+               self.log(Log.ERR, 'unknown schedule')
                self.schedule = self.period
 
     def generate_schedule_from_timespec(self) -> None:
@@ -395,7 +406,7 @@ class Job:
            not len(self.timespec_dom) or
            not len(self.timespec_hour) or
            not len(self.timespec_minute)):
-            self.log(3, 'unknown schedule')
+            self.log(Log.ERR, 'unknown schedule')
             return None
 
         self.schedule = '%s*-%s-%s %s:%s:00' % (
@@ -626,7 +637,7 @@ def generate_timer_unit(job:Job, seq=None) -> Optional[str]:
         return None
 
     if job.testremoved and not os.path.isfile(job.testremoved):
-        log(3, '%s is removed, skipping job' % job.testremoved)
+        log(Log.NOTICE, '%s is removed, skipping job' % job.testremoved)
         return None
 
     if job.schedule == 'reboot' and os.path.isfile(REBOOT_FILE):
@@ -710,12 +721,12 @@ def is_masked(name:str, distro_mapping:dict[str,str]) -> bool:
                 reason = 'it is masked'
             else:
                 reason = 'native timer is present'
-            log(5, 'ignoring %s because %s' % (name, reason))
+            log(Log.NOTICE, 'ignoring %s because %s' % (name, reason))
             return True
 
     name_distro = '%s.timer' % distro_mapping.get(name, name)
     if os.path.exists('/lib/systemd/system/%s' % name_distro):
-        log(5, 'ignoring %s because there is %s' % (name, name_distro))
+        log(Log.NOTICE, 'ignoring %s because there is %s' % (name, name_distro))
         return True
 
     return False
@@ -742,7 +753,7 @@ def main() -> None:
         for job in parse_crontab('/etc/crontab', withuser=True):
             fallback_mailto = job.environment.get('MAILTO')
             if not job.valid:
-                 log(3, 'truncated line in /etc/crontab: %s' % job.line)
+                 log(Log.ERR, 'truncated line in /etc/crontab: %s' % job.line)
                  continue
             # legacy boilerplate
             if '/etc/cron.hourly'  in job.line: continue
@@ -757,11 +768,11 @@ def main() -> None:
         if is_masked(basename, CROND2TIMER):
             continue
         if is_backup(basename):
-            log(5, 'ignoring %s' % basename)
+            log(Log.DEBUG, 'ignoring backup %s' % basename)
             continue
         for job in parse_crontab(filename, withuser=True):
             if not job.valid:
-                log(3, 'truncated line in %s: %s' % (filename, job.line))
+                log(Log.ERR, 'truncated line in %s: %s' % (filename, job.line))
                 continue
             if fallback_mailto and 'MAILTO' not in job.environment:
                 job.environment['MAILTO'] = fallback_mailto
@@ -780,7 +791,7 @@ def main() -> None:
                 if is_masked(basename, PART2TIMER):
                     continue
                 if is_backup(basename):
-                    log(5, 'ignoring %s' % filename)
+                    log(Log.DEBUG, 'ignoring %s' % filename)
                     continue
 
                 job = Job(filename, filename)
@@ -799,7 +810,7 @@ def main() -> None:
     if os.path.isfile('/etc/anacrontab'):
         for job in parse_crontab('/etc/anacrontab', monotonic=True):
             if not job.valid:
-                 log(3, 'truncated line in /etc/anacrontab: %s' % job.line)
+                 log(Log.ERR, 'truncated line in /etc/anacrontab: %s' % job.line)
                  continue
             generate_timer_unit(job, seq=seqs.setdefault(job.jobid, count()))
 
@@ -832,7 +843,8 @@ if __name__ == '__main__':
         main()
     except Exception as e:
         if len(sys.argv) == 4:
-            open('/dev/kmsg', 'w').write('<2> %s[%s]: global exception: %s\n' % (SELF, os.getpid(), e))
+            with open('/dev/kmsg', 'w') as fd:
+                fd.write('<%s> %s[%s]: global exception: %s\n' % (Log.CRIT, SELF, os.getpid(), e))
             exit(1)
         else:
             raise
