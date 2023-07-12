@@ -604,7 +604,9 @@ def month_map(month:str) -> int:
     try:
         return int(month)
     except ValueError:
-        return ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'nov', 'dec'].index(month.lower()[0:3]) + 1
+        return ['jan', 'feb', 'mar', 'apr',
+                'may', 'jun', 'jul', 'aug',
+                'sep', 'oct', 'nov', 'dec'].index(month.lower()[0:3]) + 1
 
 def dow_map(dow:str) -> int:
     try:
