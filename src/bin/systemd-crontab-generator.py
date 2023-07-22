@@ -19,7 +19,6 @@ HOURS_SET = list(range(0, 24))
 DAYS_SET = list(range(1, 32))
 DOWS_SET = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 MONTHS_SET = list(range(1, 13))
-TIME_UNITS_SET = ['daily', 'weekly', 'monthly', 'quarterly', 'semi-annually', 'yearly']
 
 KSH_SHELLS = ['/bin/sh', '/bin/dash', '/bin/ksh', '/bin/bash', '/usr/bin/zsh']
 REBOOT_FILE = '/run/crond.reboot'
@@ -267,22 +266,6 @@ class Job:
 
         self.decode_command()
 
-        if self.period:
-            self.period = self.period.lower().lstrip('@')
-            self.period = {
-                'boot': 'reboot',
-                '1': 'daily',
-                '7': 'weekly',
-                '30': 'monthly',
-                '31': 'monthly',
-                'biannually': 'semi-annually',
-                'bi-annually': 'semi-annually',
-                'semiannually': 'semi-annually',
-                'anually': 'yearly',
-                'annually': 'yearly',
-                '365': 'yearly',
-            }.get(self.period, self.period)
-
         self.valid = True
         return True
 
@@ -342,7 +325,24 @@ class Job:
              self.generate_schedule_from_timespec()
 
     def generate_schedule_from_period(self) -> None:
+        TIME_UNITS_SET = ['daily', 'weekly', 'monthly',
+                          'quarterly', 'semi-annually', 'yearly']
         hour = self.start_hour
+
+        self.period = self.period.lower().lstrip('@')
+        self.period = {
+                'boot': 'reboot',
+                '1': 'daily',
+                '7': 'weekly',
+                '30': 'monthly',
+                '31': 'monthly',
+                'biannually': 'semi-annually',
+                'bi-annually': 'semi-annually',
+                'semiannually': 'semi-annually',
+                'anually': 'yearly',
+                'annually': 'yearly',
+                '365': 'yearly',
+        }.get(self.period, self.period)
 
         if self.period == 'reboot':
             self.boot_delay = max(self.boot_delay, 1)

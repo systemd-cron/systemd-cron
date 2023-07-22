@@ -99,14 +99,14 @@ def check(cron_file:str) -> bool:
                                 'annually', 'yearly']:
                 good = False
                 sys.stderr.write("%s: unknown schedule in %s: %s\n" % (SELF, cron_file, job.line))
-        elif 0 in job.period['M'] or 0 in job.period['d']:
+        elif '0' in job.timespec_month or '0' in job.timespec_day:
                 good = False
                 sys.stderr.write("%s: month and day can't be 0 in %s: %s\n" % (SELF, cron_file, job.line))
         else:
-            if (not len(job.period['M'])
-                or not len(job.period['d'])
-                or not len(job.period['h'])
-                or not len(job.period['m'])):
+            if (not len(job.timespec_month)
+                or not len(job.timespec_day)
+                or not len(job.timespec_hour)
+                or not len(job.timespec_minute):
                 good = False
     return good
 
