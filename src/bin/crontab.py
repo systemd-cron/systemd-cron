@@ -102,12 +102,6 @@ def check(cron_file:str) -> bool:
         elif '0' in job.timespec_month or '0' in job.timespec_day:
                 good = False
                 sys.stderr.write("%s: month and day can't be 0 in %s: %s\n" % (SELF, cron_file, job.line))
-        else:
-            if (not len(job.timespec_month)
-                or not len(job.timespec_day)
-                or not len(job.timespec_hour)
-                or not len(job.timespec_minute)):
-                good = False
     return good
 
 

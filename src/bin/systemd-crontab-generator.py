@@ -257,6 +257,7 @@ class Job:
             result = []
         if not len(result):
             self.log(Log.ERR, 'garbled time')
+            self.valid = False
         return result
 
     def decode(self):
@@ -418,14 +419,16 @@ class Job:
                     dows_sorted.append(day)
             dows = ','.join(dows_sorted) + ' '
 
-        if '0' in self.timespec_month: self.timespec_month.remove('0')
-        if '0' in self.timespec_dom: self.timespec_dom.remove('0')
+        if '0' in self.timespec_month:
+            self.timespec_month.remove('0')
+        if '0' in self.timespec_dom:
+            self.timespec_dom.remove('0')
 
-        # 2023: I have no clue what this is for
         if (not len(self.timespec_month) or
            not len(self.timespec_dom) or
            not len(self.timespec_hour) or
            not len(self.timespec_minute)):
+            self.valid = False
             self.log(Log.ERR, 'unknown schedule')
             return None
 
@@ -666,7 +669,7 @@ def parse_period(mapping=int, base=0):
     return parser
 
 def generate_timer_unit(job:Job, seq=None):
-    if job.schedule and job.is_active():
+    if job.valid and job.is_active():
         job.generate_unit_name(seq)
         job.output()
 
