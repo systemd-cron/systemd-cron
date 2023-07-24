@@ -668,9 +668,16 @@ def parse_period(mapping=int, base=0):
 
     return parser
 
-def generate_timer_unit(job:Job, seq=None):
+seqs:dict[str, int] = {}
+def count():
+    n = 0
+    while True:
+        yield n
+        n += 1
+
+def generate_timer_unit(job:Job):
     if job.valid and job.is_active():
-        job.generate_unit_name(seq)
+        job.generate_unit_name(seqs.setdefault(job.jobid, count()))
         job.output()
 
 def log(level:int, message:str) -> None:
@@ -679,13 +686,6 @@ def log(level:int, message:str) -> None:
             kmsg.write('<%s>%s[%s]: %s\n' % (level, SELF, os.getpid(), message))
     else:
         sys.stderr.write('%s: %s\n' % (SELF, message))
-
-seqs:dict[str, int] = {}
-def count():
-    n = 0
-    while True:
-        yield n
-        n += 1
 
 def workaround_var_not_mounted():
     '''schedule rerun of generators after /var is mounted'''
@@ -763,17 +763,15 @@ def main() -> None:
             if '/etc/cron.daily'   in job.line: continue
             if '/etc/cron.weekly'  in job.line: continue
             if '/etc/cron.monthly' in job.line: continue
-            generate_timer_unit(job, seq=seqs.setdefault(job.jobid, count()))
+            generate_timer_unit(job)
 
     CRONTAB_FILES = files('/etc/cron.d')
     for filename in CRONTAB_FILES:
         basename = os.path.basename(filename)
         if is_masked(basename, CROND2TIMER):
             continue
-        if basename == '.placeholder':
-            continue
         if is_backup(basename):
-            log(Log.DEBUG, 'ignoring backup %s' % basename)
+            log(Log.DEBUG, 'ignoring %s' % basename)
             continue
         for job in parse_crontab(filename, withuser=True):
             if not job.valid:
@@ -781,7 +779,7 @@ def main() -> None:
                 continue
             if fallback_mailto and 'MAILTO' not in job.environment:
                 job.environment['MAILTO'] = fallback_mailto
-            generate_timer_unit(job, seq=seqs.setdefault(job.jobid, count()))
+            generate_timer_unit(job)
 
     if not USE_RUNPARTS:
         i = 0
@@ -817,7 +815,7 @@ def main() -> None:
             if not job.valid:
                  log(Log.ERR, 'truncated line in /etc/anacrontab: %s' % job.line)
                  continue
-            generate_timer_unit(job, seq=seqs.setdefault(job.jobid, count()))
+            generate_timer_unit(job)
 
     if os.path.isdir(STATEDIR):
         # /var is avaible
@@ -827,7 +825,7 @@ def main() -> None:
             if '.' in basename:
                 continue
             for job in parse_crontab(filename, withuser=False):
-                generate_timer_unit(job, seq=seqs.setdefault(job.jobid, count()))
+                generate_timer_unit(job)
         try:
             open(REBOOT_FILE,'a').close()
         except:
