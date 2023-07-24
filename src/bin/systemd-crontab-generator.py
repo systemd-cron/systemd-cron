@@ -130,6 +130,9 @@ class Job:
         '''decode some environment variables that influence
            the behaviour of systemd-cron itself'''
 
+        if 'SHELL' in self.environment:
+            self.shell = self.environment['SHELL']
+
         if 'PERSISTENT' in self.environment:
             self.persistent = self.environment['PERSISTENT'].lower() in ['yes', 'true', '1']
             del self.environment['PERSISTENT']
@@ -258,9 +261,6 @@ class Job:
         if not self.command:
             return False
         self.jobid = ''.join(c for c in self.jobid if c in VALID_CHARS)
-
-        if 'SHELL' in self.environment:
-            self.shell = self.environment['SHELL']
 
         self.decode_command()
 
