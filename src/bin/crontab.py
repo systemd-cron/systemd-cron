@@ -106,7 +106,7 @@ def check(cron_file:str) -> bool:
             if (not len(job.timespec_month)
                 or not len(job.timespec_day)
                 or not len(job.timespec_hour)
-                or not len(job.timespec_minute):
+                or not len(job.timespec_minute)):
                 good = False
     return good
 
