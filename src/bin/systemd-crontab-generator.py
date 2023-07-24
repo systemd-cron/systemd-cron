@@ -255,11 +255,11 @@ class Job:
 
     def decode(self) -> bool:
         '''decode & validate'''
-        self.jobid = ''.join(c for c in self.jobid if c in VALID_CHARS)
         self.unit_name = None
 
         if not self.command:
             return False
+        self.jobid = ''.join(c for c in self.jobid if c in VALID_CHARS)
 
         if 'SHELL' in self.environment:
             self.shell = self.environment['SHELL']
