@@ -86,7 +86,7 @@ class Job:
     persistent:bool
     batch:bool
     jobid:str
-    unit_name:Optional[str]
+    unit_name:str
     user:str
     home:Optional[str]
     command:list[str]
@@ -255,8 +255,6 @@ class Job:
 
     def decode(self) -> bool:
         '''decode & validate'''
-        self.unit_name = None
-
         if not self.command:
             return False
         self.jobid = ''.join(c for c in self.jobid if c in VALID_CHARS)
@@ -419,6 +417,7 @@ class Job:
 
     def generate_scriptlet(self) -> Optional[str]:
         '''...only if needed'''
+        assert self.unit_name
         if len(self.command) == 1:
             if os.path.isfile(self.command[0]):
                 self.execstart = self.command[0]
@@ -498,6 +497,16 @@ class Job:
             lines.append('Persistent=true')
 
         return '\n'.join(lines)
+
+    def generate_unit_name(self, seq) -> None:
+        assert self.jobid
+        if not self.persistent:
+            unit_id = next(seq)
+        else:
+            unit_id = hashlib.md5()
+            unit_id.update(bytes('\0'.join([self.schedule] + self.command), 'utf-8'))
+            unit_id = unit_id.hexdigest()
+        self.unit_name = "cron-%s-%s" % (self.jobid, unit_id)
 
     def output(self) -> None:
         '''write the result in TARGET_DIR'''
@@ -634,7 +643,7 @@ def parse_period(mapping=int, base=0):
 
     return parser
 
-def generate_timer_unit(job:Job, seq=None) -> Optional[str]:
+def generate_timer_unit(job:Job, seq=None):
     if not job.schedule:
         return None
 
@@ -660,17 +669,8 @@ def generate_timer_unit(job:Job, seq=None) -> Optional[str]:
         job.command[3] == '||'):
             return None
 
-    if not job.unit_name:
-        if not job.persistent:
-            unit_id = next(seq)
-        else:
-            unit_id = hashlib.md5()
-            unit_id.update(bytes('\0'.join([job.schedule, ' '.join(job.command)]), 'utf-8'))
-            unit_id = unit_id.hexdigest()
-        job.unit_name = "cron-%s-%s" % (job.jobid, unit_id)
-
+    job.generate_unit_name(seq)
     job.output()
-    return job.unit_name # not used
 
 def log(level:int, message:str) -> None:
     if len(sys.argv) == 4:
@@ -768,6 +768,8 @@ def main() -> None:
     for filename in CRONTAB_FILES:
         basename = os.path.basename(filename)
         if is_masked(basename, CROND2TIMER):
+            continue
+        if basename == '.placeholder':
             continue
         if is_backup(basename):
             log(Log.DEBUG, 'ignoring backup %s' % basename)
