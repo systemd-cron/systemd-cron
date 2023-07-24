@@ -316,6 +316,31 @@ class Job:
                 self.testremoved = self.command[2]
                 self.command = self.command[4:]
 
+    def is_active(self) -> bool:
+        if self.testremoved and not os.path.isfile(self.testremoved):
+            log(Log.NOTICE, '%s is removed, skipping job' % self.testremoved)
+            return False
+
+        if self.schedule == 'reboot' and os.path.isfile(REBOOT_FILE):
+            return False
+
+        if (len(self.command) == 6 and
+            self.command[0] == '[' and
+            self.command[1] in ['-d','-e'] and
+            self.command[2].startswith('/run/systemd') and
+            self.command[3] == ']' and
+            self.command[4] == '||'):
+            return False
+
+        if (len(self.command) == 5 and
+            self.command[0] == 'test' and
+            self.command[1] in ['-d','-e'] and
+            self.command[2].startswith('/run/systemd') and
+            self.command[3] == '||'):
+            return False
+
+        return True
+
     def generate_schedule(self) -> None:
         if self.period:
              self.generate_schedule_from_period()
@@ -644,33 +669,9 @@ def parse_period(mapping=int, base=0):
     return parser
 
 def generate_timer_unit(job:Job, seq=None):
-    if not job.schedule:
-        return None
-
-    if job.testremoved and not os.path.isfile(job.testremoved):
-        log(Log.NOTICE, '%s is removed, skipping job' % job.testremoved)
-        return None
-
-    if job.schedule == 'reboot' and os.path.isfile(REBOOT_FILE):
-        return None
-
-    if (len(job.command) == 6 and
-        job.command[0] == '[' and
-        job.command[1] in ['-d','-e'] and
-        job.command[2] == '/run/systemd/system' and
-        job.command[3] == ']' and
-        job.command[4] == '||'):
-            return None
-
-    if (len(job.command) == 5 and
-        job.command[0] == 'test' and
-        job.command[1] in ['-d','-e'] and
-        job.command[2] == '/run/systemd/system' and
-        job.command[3] == '||'):
-            return None
-
-    job.generate_unit_name(seq)
-    job.output()
+    if job.schedule and job.is_active():
+        job.generate_unit_name(seq)
+        job.output()
 
 def log(level:int, message:str) -> None:
     if len(sys.argv) == 4:
