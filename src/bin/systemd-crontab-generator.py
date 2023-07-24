@@ -810,7 +810,7 @@ def main() -> None:
                 if fallback_mailto and 'MAILTO' not in job.environment:
                     job.environment['MAILTO'] = fallback_mailto
                 job.unit_name = 'cron-' + job.jobid
-                generate_timer_unit(job)
+                job.output()
 
     if os.path.isfile('/etc/anacrontab'):
         for job in parse_crontab('/etc/anacrontab', monotonic=True):
