@@ -110,7 +110,7 @@ class Job:
         self.user = 'root'
         self.home = None
         self.command = []
-        self.valid = False
+        self.valid = True
         self.batch = False
         self.standardoutput = None
         self.testremoved = None
@@ -170,6 +170,7 @@ class Job:
 
     def parse_anacrontab(self) -> None:
         if len(self.parts) < 4:
+            self.valid = False
             return
 
         self.period, delay, jobid = self.parts[0:3]
@@ -207,6 +208,7 @@ class Job:
     def parse_crontab_at(self, withuser:bool) -> None:
         '''@daily (user) do something'''
         if len(self.parts) < (2 + int(withuser)):
+            self.valid = False
             return
 
         self.period = self.parts[0]
@@ -221,6 +223,7 @@ class Job:
     def parse_crontab_timespec(self, withuser:bool) -> None:
         '''6 2 * * * (user) do something'''
         if len(self.parts) < (6 + int(withuser)):
+            self.valid = False
             return
 
         minutes, hours, days, months, dows = self.parts[0:5]
@@ -256,16 +259,10 @@ class Job:
             self.log(Log.ERR, 'garbled time')
         return result
 
-    def decode(self) -> bool:
+    def decode(self):
         '''decode & validate'''
-        if not self.command:
-            return False
         self.jobid = ''.join(c for c in self.jobid if c in VALID_CHARS)
-
         self.decode_command()
-
-        self.valid = True
-        return True
 
     def decode_command(self) -> None:
         '''perform smart substitutions for known shells'''
