@@ -276,7 +276,7 @@ class Job:
             pass
         if self.home:
             if self.command[0].startswith('~/'):
-                self.command[0] = self.home + self.command[0][2:]
+                self.command[0] = self.home + self.command[0][1:]
 
             if 'PATH' in self.environment:
                 parts = self.environment['PATH'].split(':')
