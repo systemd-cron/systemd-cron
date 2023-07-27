@@ -1,3 +1,8 @@
+v1.16.2 : 2023-07-27
+
+     * fix other regressions brought by the rewrite:
+       * fix expansion of commands starting with '~/' [Ben Hutchings]
+
 v1.16.1 : 2023-07-24
 
      * fix a syntax error in the crontab utility
