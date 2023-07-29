@@ -1,3 +1,10 @@
+v1.16.3 : 2023-07-29
+
+     * ignore /etc/cron.{hourly|daily|weekly|monthly}/0anacron.
+       These files are present when anacron has not been fully removed,
+       and do absolutely nothing (status "removed & non-purged" on Debian).
+       /etc/cron.d/anacron would already be masked by empty anacron.service
+
 v1.16.2 : 2023-07-27
 
      * Python 3.12+ compatibility: "load_module()" was deprecated
