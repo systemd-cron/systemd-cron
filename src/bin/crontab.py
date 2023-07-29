@@ -92,14 +92,14 @@ def check(cron_file:str) -> bool:
         if not job.valid:
             good = False
             sys.stderr.write('%s: truncated line in %s: %s\n' % (SELF, cron_file, job.line))
-        elif type(job.period) is str:
+        elif job.period:
             if job.period not in ['reboot', 'minutely', 'hourly', 'daily', 'midnight', 'weekly',
                                 'monthly', 'quarterly',
                                 'semi-annually', 'semiannually', 'bi-annually', 'biannually',
                                 'annually', 'yearly']:
                 good = False
                 sys.stderr.write("%s: unknown schedule in %s: %s\n" % (SELF, cron_file, job.line))
-        elif '0' in job.timespec_month or '0' in job.timespec_day:
+        elif '0' in job.timespec_month or '0' in job.timespec_dom:
                 good = False
                 sys.stderr.write("%s: month and day can't be 0 in %s: %s\n" % (SELF, cron_file, job.line))
     return good
