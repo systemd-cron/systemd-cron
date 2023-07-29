@@ -1,5 +1,7 @@
 CFLAGS ?= -O2
 CFLAGS += -Wall
+PYFLAKES ?= pyflakes3
+CRONTAB ?= crontab
 
 version		:= $(shell cat VERSION)
 
@@ -96,10 +98,11 @@ test: all
 	$(foreach manpage,$(out_manuals),\
 		man --warnings --encoding=utf8 --local-file $(manpage) 2>&1 > /dev/null${\n})
 	$(foreach program,$(out_programs),\
-		pyflakes3 $(program) ${\n})
+		$(PYFLAKES) $(program) ${\n})
+	test/test.py
 
 install: all
-	install -m755 -D $(builddir)/bin/crontab $(DESTDIR)$(bindir)/crontab
+	install -m755 -D $(builddir)/bin/crontab $(DESTDIR)$(bindir)/$(CRONTAB)
 	install -m755 -D $(builddir)/bin/systemd-crontab-generator $(DESTDIR)$(generatordir)/systemd-crontab-generator
 	install -m755 -D $(builddir)/bin/remove_stale_stamps $(DESTDIR)$(libdir)/systemd-cron/remove_stale_stamps
 	install -m755 -D $(builddir)/bin/mail_on_failure $(DESTDIR)$(libdir)/systemd-cron/mail_on_failure
@@ -114,8 +117,8 @@ ifneq ($(enable_setgid),no)
 endif
 
 	install -m644 -D $(builddir)/man/systemd.cron.7 $(DESTDIR)$(mandir)/man7/systemd.cron.7
-	install -m644 -D $(builddir)/man/crontab.1 $(DESTDIR)$(mandir)/man1/crontab.1
-	install -m644 -D $(builddir)/man/crontab.5 $(DESTDIR)$(mandir)/man5/crontab.5
+	install -m644 -D $(builddir)/man/crontab.1 $(DESTDIR)$(mandir)/man1/$(CRONTAB).1
+	install -m644 -D $(builddir)/man/crontab.5 $(DESTDIR)$(mandir)/man5/$(CRONTAB).5
 	install -m644 -D $(builddir)/man/anacrontab.5 $(DESTDIR)$(mandir)/man5/anacrontab.5
 	install -m644 -D $(builddir)/man/systemd-crontab-generator.8 $(DESTDIR)$(mandir)/man8/systemd-crontab-generator.8
 
