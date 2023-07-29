@@ -291,6 +291,10 @@ class Job:
         if self.shell not in KSH_SHELLS:
             return
 
+        pgm = which(self.command[0])
+        if pgm and pgm != self.command[0]:
+            self.command[0] = pgm
+
         if (len(self.command) >= 3 and
             self.command[-2] == '>' and
             self.command[-1] == '/dev/null'):
@@ -452,11 +456,6 @@ class Job:
             if os.path.isfile(self.command[0]):
                 self.execstart = self.command[0]
                 return None
-            else:
-                pgm = which(self.command[0])
-                if pgm:
-                    self.execstart = pgm
-                    return None
 
         self.scriptlet = os.path.join(TARGET_DIR, '%s.sh' % self.unit_name)
         self.execstart = self.shell + ' ' + self.scriptlet
@@ -563,7 +562,7 @@ class Job:
 
 
 
-def which(exe):
+def which(exe:str) -> Optional[str]:
     '''TODO: we could use the PATH= variable from the crontab'''
     for path in os.environ.get('PATH', '/usr/bin:/bin').split(os.pathsep):
         try:
