@@ -797,7 +797,7 @@ def main() -> None:
                 basename = os.path.basename(filename)
                 if is_masked(basename, PART2TIMER):
                     continue
-                if is_backup(basename):
+                if is_backup(basename) or basename == '0anacron':
                     log(Log.DEBUG, 'ignoring %s' % filename)
                     continue
 
