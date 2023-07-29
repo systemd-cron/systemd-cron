@@ -18,6 +18,14 @@ class TestStringMethods(unittest.TestCase):
         j.generate_scriptlet()
         self.assertEqual(j.execstart, '/usr/bin/true')
 
+    def test_userpath_expansion(self):
+        j = m().Job('-', '@daily dummy ~/fake')
+        j.parse_crontab_at(withuser=True)
+        j.home = '/home/dummy'
+        j.decode_command()
+        j.generate_unit_name(iter((1,)))
+        self.assertEqual(j.generate_scriptlet(), '/home/dummy/fake')
+
     def test_period_basic(self):
         j = m().Job('-', '@daily dummy true')
         j.parse_crontab_at(withuser=True)

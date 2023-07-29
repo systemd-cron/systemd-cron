@@ -46,6 +46,8 @@ CROND2TIMER = {
     'sysstat': 'sysstat-collect',
 }
 
+TARGET_DIR = '/tmp'
+
 for pgm in ('/usr/sbin/sendmail', '/usr/lib/sendmail'):
     if os.path.exists(pgm):
         HAS_SENDMAIL = True
@@ -267,13 +269,14 @@ class Job:
 
     def decode_command(self) -> None:
         '''perform smart substitutions for known shells'''
-        if self.shell not in KSH_SHELLS:
-            return
+        if not self.home:
+            # home can be set by tests to avoid
+            # to read the real /etc/passwd
+            try:
+                self.home = pwd.getpwnam(self.user).pw_dir
+            except KeyError:
+                pass
 
-        try:
-            self.home = pwd.getpwnam(self.user).pw_dir
-        except KeyError:
-            pass
         if self.home:
             if self.command[0].startswith('~/'):
                 self.command[0] = self.home + self.command[0][1:]
@@ -285,6 +288,8 @@ class Job:
                         parts[i] = self.home + part[1:]
                 self.environment['PATH'] = ':'.join(parts)
 
+        if self.shell not in KSH_SHELLS:
+            return
 
         if (len(self.command) >= 3 and
             self.command[-2] == '>' and
