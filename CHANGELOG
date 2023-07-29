@@ -1,5 +1,6 @@
 v1.16.2 : 2023-07-27
 
+     * Python 3.12+ compatibility: "load_module()" was deprecated
      * fix other regressions brought by the rewrite:
        * fix expansion of commands starting with '~/' [Ben Hutchings]
        * regression in crontab that rejected valid timespecs

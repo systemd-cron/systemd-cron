@@ -2,12 +2,13 @@
 import importlib
 import unittest
 
-# https://github.com/wntrblm/nox/pull/498
-
 def m():
-    loader = importlib.machinery.SourceFileLoader('name',
+    spec = importlib.util.spec_from_file_location('name',
                 'src/bin/systemd-crontab-generator.py')
-    return loader.load_module()
+    module = importlib.util.module_from_spec(spec)
+    loader = spec.loader
+    loader.exec_module(module)
+    return module
 
 class TestStringMethods(unittest.TestCase):
 

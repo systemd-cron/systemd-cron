@@ -4,7 +4,7 @@ import argparse
 import errno
 import getpass
 import glob
-import importlib.machinery
+import importlib
 import os
 import pwd
 import stat
@@ -61,10 +61,19 @@ def blue(line:str) -> None:
         print(line)
 
 
+def get_parser():
+    # https://stackoverflow.com/a/43602645
+    path = importlib.machinery.SourceFileLoader('name',
+             os.path.join(GENERATOR_DIR, 'systemd-crontab-generator'))
+    spec = importlib.util.spec_from_loader('name', path)
+    module = importlib.util.module_from_spec(spec)
+    loader = spec.loader
+    loader.exec_module(module)
+    return module
+
+
 def translate(line:str, args) -> None:
-    loader = importlib.machinery.SourceFileLoader('name',
-                os.path.join(GENERATOR_DIR, 'systemd-crontab-generator'))
-    parser = loader.load_module()
+    parser = get_parser()
     line = args.file
     print(line)
 
@@ -85,9 +94,7 @@ def translate(line:str, args) -> None:
 
 def check(cron_file:str) -> bool:
     good = True
-    loader = importlib.machinery.SourceFileLoader('name',
-                os.path.join(GENERATOR_DIR, 'systemd-crontab-generator'))
-    parser = loader.load_module()
+    parser = get_parser()
     for job in parser.parse_crontab(cron_file, withuser=False):
         if not job.valid:
             good = False
