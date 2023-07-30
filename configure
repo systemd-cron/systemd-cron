@@ -2,7 +2,7 @@
 
 prefix='/usr/local'
 bindir='$(prefix)/bin'
-confdir='$(prefix)/etc'
+confdir='/etc'
 datadir='$(prefix)/share'
 libdir='$(prefix)/lib'
 libexecdir='$(prefix)/libexec'
