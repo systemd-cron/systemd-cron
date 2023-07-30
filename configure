@@ -5,6 +5,7 @@ bindir='$(prefix)/bin'
 confdir='$(prefix)/etc'
 datadir='$(prefix)/share'
 libdir='$(prefix)/lib'
+libexecdir='$(prefix)/libexec'
 statedir='/var/spool/cron'
 mandir='$(datadir)/man'
 docdir='$(datadir)/doc/$(package)'
@@ -44,6 +45,7 @@ bindir:,
 confdir:,
 datadir:,
 libdir:,
+libexecdir:,
 statedir:,
 mandir:,
 docdir:,
@@ -103,6 +105,10 @@ do
 
         '--libdir')
             libdir="${2}"
+            shift 2;;
+
+        '--libexecdir')
+            libexecdir="${2}"
             shift 2;;
 
         '--statedir')
@@ -256,6 +262,7 @@ s|@bindir@|${bindir}|g
 s|@confdir@|${confdir}|g
 s|@datadir@|${datadir}|g
 s|@libdir@|${libdir}|g
+s|@libexecdir@|${libexecdir}|g
 s|@statedir@|${statedir}|g
 s|@mandir@|${mandir}|g
 s|@docdir@|${docdir}|g

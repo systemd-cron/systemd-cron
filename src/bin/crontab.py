@@ -32,7 +32,7 @@ SELF = os.path.basename(sys.argv[0])
 
 CRONTAB_DIR = '@statedir@'
 GENERATOR_DIR= '@generatordir@'
-SETGID_HELPER = '@libdir@/systemd-cron/crontab_setgid'
+SETGID_HELPER = '@libexecdir@/systemd-cron/crontab_setgid'
 
 HAS_SETGID =     os.geteuid() != 0 \
              and os.path.isfile(SETGID_HELPER) \
