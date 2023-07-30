@@ -9,6 +9,5 @@ ConditionFileIsExecutable=|/usr/lib/sendmail
 [Service]
 Type=oneshot
 ExecStart=@libexecdir@/systemd-cron/mail_on_failure %i
-DynamicUser=no
 User=_cron-failure
 Group=systemd-journal
