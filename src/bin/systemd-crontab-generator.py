@@ -48,12 +48,21 @@ CROND2TIMER = {
 
 TARGET_DIR = '/tmp'
 
-for pgm in ('/usr/sbin/sendmail', '/usr/lib/sendmail'):
-    if os.path.exists(pgm):
-        HAS_SENDMAIL = True
-        break
-else:
-    HAS_SENDMAIL = False
+def which(exe:str, paths:Optional[str]=None) -> Optional[str]:
+    if paths is None:
+        paths = os.environ.get('PATH', '/usr/bin:/bin')
+    for path in paths.split(os.pathsep):
+        try:
+            abspath = os.path.join(path, exe)
+            statbuf = os.stat(abspath)
+        except:
+            continue
+        if stat.S_IMODE(statbuf.st_mode) & 0o111:
+            return abspath
+
+    return None
+
+HAS_SENDMAIL = bool(which('sendmail'))
 
 class Log(IntEnum):
     EMERG = 0
@@ -127,6 +136,9 @@ class Job:
 
     def log(self, priority:int, message:str) -> None:
         log(priority, '%s in %s:%s' % (message, self.filename, self.line))
+
+    def which(self, pgm) -> Optional[str]:
+        return which(pgm, self.environment.get('PATH'))
 
     def decode_environment(self, default_persistent:bool) -> None:
         '''decode some environment variables that influence
@@ -202,7 +214,7 @@ class Job:
             else:
                 self.user = os.getlogin()
 
-            pgm = which(self.command[0])
+            pgm = self.which(self.command[0])
             if pgm:
                 self.command[0] = pgm
             self.execstart = ' '.join(self.command)
@@ -291,7 +303,7 @@ class Job:
         if self.shell not in KSH_SHELLS:
             return
 
-        pgm = which(self.command[0])
+        pgm = self.which(self.command[0])
         if pgm and pgm != self.command[0]:
             self.command[0] = pgm
 
@@ -560,20 +572,6 @@ class Job:
         with open(service, 'w', encoding='utf8') as f:
             f.write(self.generate_service() + '\n')
 
-
-
-def which(exe:str) -> Optional[str]:
-    '''TODO: we could use the PATH= variable from the crontab'''
-    for path in os.environ.get('PATH', '/usr/bin:/bin').split(os.pathsep):
-        try:
-            abspath = os.path.join(path, exe)
-            statbuf = os.stat(abspath)
-        except:
-            continue
-        if stat.S_IMODE(statbuf.st_mode) & 0o111:
-            return abspath
-
-    return None
 
 def files(dirname:str) -> list[str]:
     try:
