@@ -1,6 +1,6 @@
 #!/bin/sh
 
-prefix='/usr/local'
+prefix='/usr'
 bindir='$(prefix)/bin'
 datadir='$(prefix)/share'
 libdir='$(prefix)/lib'
