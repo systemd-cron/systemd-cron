@@ -24,8 +24,6 @@ docdir		:= @docdir@
 unitdir		:= @unitdir@
 generatordir	:= @generatordir@
 
-runparts	:= @runparts@
-
 srcdir		:= $(CURDIR)/src
 outdir		:= $(CURDIR)/out
 builddir	:= $(outdir)/build
@@ -68,7 +66,6 @@ define in2out
 		-e "s|\@libexecdir\@|$(libexecdir)|g" \
 		-e "s|\@unitdir\@|$(unitdir)|g" \
 		-e "s|\@generatordir\@|$(generatordir)|g" \
-		-e "s|\@runparts\@|$(runparts)|g" \
 		-e "s|\@use_runparts\@|$(use_runparts)|g" \
 		-e "s|\@version\@|$(version)|g" \
 		-e "s|\@persistent\@|$(persistent)|g" \

@@ -10,7 +10,6 @@ mandir='$(datadir)/man'
 docdir='$(datadir)/doc/$(package)'
 unitdir='$(libdir)/systemd/system'
 generatordir='$(libdir)/systemd/system-generators'
-runparts='/usr/bin/run-parts'
 enable_runparts=yes
 enable_setgid=no
 
@@ -50,7 +49,6 @@ mandir:,
 docdir:,
 unitdir:,
 generatordir:,
-runparts:,
 enable-boot::,
 enable-minutely::,
 enable-hourly::,
@@ -128,10 +126,6 @@ do
 
         '--generatordir')
             generatordir="${2}"
-            shift 2;;
-
-        '--runparts')
-            runparts="${2}"
             shift 2;;
 
         '--enable-boot')
@@ -266,7 +260,6 @@ s|@mandir@|${mandir}|g
 s|@docdir@|${docdir}|g
 s|@unitdir@|${unitdir}|g
 s|@generatordir@|${generatordir}|g
-s|@runparts@|${runparts}|g
 s|@use_loglevelmax@|${use_loglevelmax}|g
 " Makefile.in >> Makefile
 

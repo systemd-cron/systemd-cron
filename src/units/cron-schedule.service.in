@@ -9,4 +9,4 @@ OnFailure=cron-failure@%i.service
 Type=oneshot
 IgnoreSIGPIPE=false
 LogLevelMax=@use_loglevelmax@
-ExecStart=@runparts@ /etc/cron.@schedule@
+ExecStart=/usr/bin/run-parts /etc/cron.@schedule@

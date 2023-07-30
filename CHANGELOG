@@ -7,6 +7,7 @@ v1.16.3 : 2023-07-29
      * make the build respect `libexecdir` variable
        https://www.gnu.org/prep/standards/html_node/Directory-Variables.html
        https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch04s07.html
+     * UsrMerge: drop `runparts`, run-parts is now always /usr/bin/run-parts
 
 v1.16.2 : 2023-07-27
 

@@ -23,6 +23,7 @@ Dependencies
 ----------------
 * systemd ≥ 236
 * python ≥ 3.9
+* UsrMerged system
 * [run-parts][3] (optional)
 * /usr/sbin/sendmail (optional, evaluated at runtime)
 * gcc or clang (needed to build `crontab_setgid.c`; this helper is optional and evaluated at runtime)
@@ -79,8 +80,6 @@ Other options include:
 
 * `--unitdir=<path>` Path to systemd unit files.
   Default: `<libdir>/systemd/system`.
-* `--runparts=<path>` The path installations should use for the `run-parts` executable.
-  Default: `<prefix>/bin/run-parts`.
 * `--enable-boot[=yes|no]` Include support for the boot timer.
   Default: `yes`.
 * `--enable-minutely[=yes|no]` Include support for the minutely timer. Requires systemd ≥ 217.
