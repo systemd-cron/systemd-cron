@@ -583,7 +583,7 @@ def files(dirname:str) -> list[str]:
 
 def environment_string(env:dict[str, str]) -> str:
     line = []
-    for k, v in env.items():
+    for k, v in sorted(env.items()):
         if ' ' in v:
             line.append('"%s=%s"' % (k, v))
         else:
