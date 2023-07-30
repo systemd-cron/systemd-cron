@@ -62,7 +62,7 @@ def which(exe:str, paths:Optional[str]=None) -> Optional[str]:
 
     return None
 
-HAS_SENDMAIL = bool(which('sendmail'))
+HAS_SENDMAIL = bool(which('sendmail', '/usr/sbin:/usr/lib'))
 
 class Log(IntEnum):
     EMERG = 0
