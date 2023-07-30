@@ -135,6 +135,12 @@ endif
 
 $(builddir)/units/cron-update.path: $(srcdir)/units/cron-update.path.in
 	$(call in2out,$<,$@)
+ifeq ($(enable_runparts),no)
+	echo 'PathChanged=/etc/cron.hourly' >> $@
+	echo 'PathChanged=/etc/cron.daily' >> $@
+	echo 'PathChanged=/etc/cron.weekly' >> $@
+	echo 'PathChanged=/etc/cron.monthly' >> $@
+endif
 
 $(builddir)/units/cron-update.service: $(srcdir)/units/cron-update.service.in
 	$(call in2out,$<,$@)

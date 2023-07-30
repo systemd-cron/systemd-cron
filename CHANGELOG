@@ -4,6 +4,8 @@ v1.16.3 : 2023-07-29
        These files are present when anacron has not been fully removed,
        and do absolutely nothing (status "removed & non-purged" on Debian).
        /etc/cron.d/anacron would already be masked by empty anacron.service
+     * monitor the contents of /etc/cron.{hourly|daily|weekly|monthly}/
+       in run-parts-less mode.
      * make the build respect `libexecdir` variable
        https://www.gnu.org/prep/standards/html_node/Directory-Variables.html
        https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch04s07.html
