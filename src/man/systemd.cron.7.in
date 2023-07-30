@@ -63,7 +63,7 @@ Directory for scripts to be executed every year.
 Directory for \fBcrontabs\fR to be executed on a custom schedule.
 The files in this folder must follow the \fBcrontab\fR(5) layout.
 .br
-If there exists a timer of the same name + '.timer' in @unitdir@ or /etc/systemd/system,
+If there exists a timer of the same name + '.timer' in /usr/lib/systemd/system or /etc/systemd/system,
 this crontab will be ignored to enable a smooth migration to native timers.
 .br
 You can also use this to mask an unneeded crontab provide by a package:
