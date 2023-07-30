@@ -15,7 +15,6 @@ use_loglevelmax		:= @use_loglevelmax@
 
 prefix		:= @prefix@
 bindir		:= @bindir@
-confdir		:= @confdir@
 datadir		:= @datadir@
 libdir		:= @libdir@
 libexecdir	:= @libexecdir@
@@ -63,7 +62,6 @@ randomized_delay = $(if $(filter $(enable_randomized_delay),yes),True,False)
 define in2out
 
 	sed \
-		-e "s|\@confdir\@|$(confdir)|g" \
 		-e "s|\@statedir\@|$(statedir)|g" \
 		-e "s|\@bindir\@|$(bindir)|g" \
 		-e "s|\@libdir\@|$(libdir)|g" \

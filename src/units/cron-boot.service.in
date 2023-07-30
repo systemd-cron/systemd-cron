@@ -2,12 +2,12 @@
 Description=systemd-cron @schedule@ script service
 Documentation=man:systemd.cron(7)
 PartOf=cron-@schedule@.target
-ConditionDirectoryNotEmpty=@confdir@/cron.@schedule@
+ConditionDirectoryNotEmpty=/etc/cron.@schedule@
 ConditionPathExists=!/run/crond.bootdir
 OnFailure=cron-failure@%i.service
 
 [Service]
 Type=oneshot
 IgnoreSIGPIPE=false
-ExecStart=@runparts@ @confdir@/cron.@schedule@
+ExecStart=@runparts@ /etc/cron.@schedule@
 ExecStartPost=/usr/bin/touch /run/crond.bootdir

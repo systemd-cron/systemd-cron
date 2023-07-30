@@ -69,7 +69,6 @@ follow the standard GNU [installation directories][4]:
 
 * `--prefix=<path>`
 * `--bindir=<path>`
-* `--confdir=<path>`
 * `--datadir=<path>`
 * `--libdir=<path>`
 * `--statedir=<path>`
@@ -109,11 +108,11 @@ Other options include:
 
 A typical configuration for the latest systemd would be:
 
-    $ ./configure --prefix=/usr --confdir=/etc --enable-yearly --enable-persistent
+    $ ./configure --prefix=/usr --enable-yearly --enable-persistent
 
 If you only want the generator (you'll have to provide your own `/etc/crontab` to drive /etc/cron.daily/ etc...):
 
-    $ ./configure --enable-boot=no --enable-hourly=no --enable-daily=no --enable-weekly=no --enable-month=no --enable-persistent --prefix=/usr --confdir=/etc
+    $ ./configure --enable-boot=no --enable-hourly=no --enable-daily=no --enable-weekly=no --enable-month=no --enable-persistent --prefix=/usr
 
 ### Caveat
 

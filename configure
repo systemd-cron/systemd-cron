@@ -2,7 +2,6 @@
 
 prefix='/usr/local'
 bindir='$(prefix)/bin'
-confdir='/etc'
 datadir='$(prefix)/share'
 libdir='$(prefix)/lib'
 libexecdir='$(prefix)/libexec'
@@ -96,7 +95,7 @@ do
             shift 2;;
 
         '--confdir')
-            confdir="${2}"
+            print "--confdir ${2} is ignored"
             shift 2;;
 
         '--datadir')
@@ -259,7 +258,6 @@ s|@enable_randomized_delay@|${enable_randomized_delay}|g
 s|@enable_setgid@|${enable_setgid}|g
 s|@prefix@|${prefix}|g
 s|@bindir@|${bindir}|g
-s|@confdir@|${confdir}|g
 s|@datadir@|${datadir}|g
 s|@libdir@|${libdir}|g
 s|@libexecdir@|${libexecdir}|g

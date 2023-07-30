@@ -2,11 +2,11 @@
 Description=systemd-cron @schedule@ script service
 Documentation=man:systemd.cron(7)
 PartOf=cron-@schedule@.target
-ConditionDirectoryNotEmpty=@confdir@/cron.@schedule@
+ConditionDirectoryNotEmpty=/etc/cron.@schedule@
 OnFailure=cron-failure@%i.service
 
 [Service]
 Type=oneshot
 IgnoreSIGPIPE=false
 LogLevelMax=@use_loglevelmax@
-ExecStart=@runparts@ @confdir@/cron.@schedule@
+ExecStart=@runparts@ /etc/cron.@schedule@

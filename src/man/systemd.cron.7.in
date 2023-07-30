@@ -23,43 +23,43 @@ The crontabs are monitored by cron-update.path and are automatically translated 
 
 .SH FILES
 .TP
-.I @confdir@/cron.boot
+.I /etc/cron.boot
 Directory for scripts to be executed on boot.
 
 .TP
-.I @confdir@/cron.minutely
+.I /etc/cron.minutely
 Directory for scripts to be executed every minute.
 
 .TP
-.I @confdir@/cron.hourly
+.I /etc/cron.hourly
 Directory for scripts to be executed every hour.
 
 .TP
-.I @confdir@/cron.daily
+.I /etc/cron.daily
 Directory for scripts to be executed every day.
 
 .TP
-.I @confdir@/cron.weekly
+.I /etc/cron.weekly
 Directory for scripts to be executed every week.
 
 .TP
-.I @confdir@/cron.monthly
+.I /etc/cron.monthly
 Directory for scripts to be executed every month.
 
 .TP
-.I @confdir@/cron.quarterly
+.I /etc/cron.quarterly
 Directory for scripts to be executed every 3 months.
 
 .TP
-.I @confdir@/cron.semi-annually
+.I /etc/cron.semi-annually
 Directory for scripts to be executed every 6 months.
 
 .TP
-.I @confdir@/cron.yearly
+.I /etc/cron.yearly
 Directory for scripts to be executed every year.
 
 .TP
-.I @confdir@/cron.d
+.I /etc/cron.d
 Directory for \fBcrontabs\fR to be executed on a custom schedule.
 The files in this folder must follow the \fBcrontab\fR(5) layout.
 .br
