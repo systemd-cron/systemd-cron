@@ -70,7 +70,7 @@ Directory where systemd store time stamps needed for the
 feature.
 
 .SH DIAGNOSTICS
-With systemd >= 209, you can execute
+You can execute
 .B "systemctl list-timers"
 to have a overview of timers and know when they will elapse.
 .br
