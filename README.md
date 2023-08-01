@@ -72,6 +72,7 @@ follow the standard GNU [installation directories][4]:
 * `--bindir=<path>`
 * `--datadir=<path>`
 * `--libdir=<path>`
+* `--libexecdir=<path>`
 * `--statedir=<path>`
 * `--mandir=<path>`
 * `--docdir=<path>`

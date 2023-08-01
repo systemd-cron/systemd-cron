@@ -68,7 +68,6 @@ define in2out
 
 	sed \
 		-e "s|\@statedir\@|$(statedir)|g" \
-		-e "s|\@bindir\@|$(bindir)|g" \
 		-e "s|\@libdir\@|$(libdir)|g" \
 		-e "s|\@libexecdir\@|$(libexecdir)|g" \
 		-e "s|\@unitdir\@|$(unitdir)|g" \
