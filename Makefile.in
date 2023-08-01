@@ -31,9 +31,15 @@ distname	:= systemd-cron-$(version)
 distdir		:= $(outdir)/dist/$(distname)
 tarball		:= $(outdir)/dist/$(distname).tar.xz
 
+ifneq ($(enable_runparts),no)
 out_services	:= $(foreach schedule,$(schedules),$(builddir)/units/cron-$(schedule).service)
 out_timers		:= $(foreach schedule,$(schedules),$(builddir)/units/cron-$(schedule).timer)
 out_targets		:= $(foreach schedule,$(schedules),$(builddir)/units/cron-$(schedule).target)
+else
+out_services	:=
+out_timers	:=
+out_targets	:=
+endif
 out_units		:= $(out_services) $(out_timers) $(out_targets) $(builddir)/units/cron.target \
                            $(builddir)/units/cron-update.path $(builddir)/units/cron-update.service \
                            $(builddir)/units/cron-failure@.service
@@ -178,8 +184,7 @@ $(builddir)/man/systemd.cron.7: $(srcdir)/man/systemd.cron.7.in
 	$(call in2out,$<,$@)
 	$(foreach schedule_not,$(schedules_not),\
 		sed -i $@ -e '/cron-$(schedule_not).timer/d' \
-	               -e '/cron\.$(schedule_not)/,+3d' \
-		       -e '/journalctl -u cron-$(schedule_not)/,+1d' ${\n})
+	               -e '/cron\.$(schedule_not)/,+3d' ${\n})
 
 $(builddir)/bin/systemd-crontab-generator: $(srcdir)/bin/systemd-crontab-generator.py
 	$(call in2out,$<,$@)

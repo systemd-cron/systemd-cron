@@ -114,24 +114,7 @@ flag, while a regular cron+anacron setup won't catch-up the missed executions of
 .SB # systemctl enable cron.target
 
 .IP "View script output"
-.SB # journalctl -u cron-boot
-.br
-.SB # journalctl -u cron-minutely
-.br
-.SB # journalctl -u cron-hourly
-.br
-.SB # journalctl -u cron-daily
-.br
-.SB # journalctl -u cron-weekly
-.br
-.SB # journalctl -u cron-monthly
-.br
-.SB # journalctl -u cron-quarterly
-.br
-.SB # journalctl -u cron-semi-annually
-.br
-.SB # journalctl -u cron-yearly
-.br
+.SB # journalctl -u cron-<schedule>
 
 .IP "Override some generated timer start time"
 .SB # systemctl edit cron-geoip-database-contrib-root-<...>.timer --full
