@@ -24,7 +24,6 @@ KSH_SHELLS = ['/bin/sh', '/bin/dash', '/bin/ksh', '/bin/bash', '/usr/bin/zsh']
 REBOOT_FILE = '/run/crond.reboot'
 
 USE_LOGLEVELMAX = "@use_loglevelmax@"
-RANDOMIZED_DELAY = "@randomized_delay@" == "True"
 USE_RUNPARTS = "@use_runparts@" == "True"
 PERSISTENT = "@persistent@" == "True"
 BOOT_DELAY = "@libexecdir@/systemd-cron/boot_delay"
@@ -531,10 +530,7 @@ class Job:
         else:
             lines.append('OnCalendar=%s' % self.schedule)
         if self.random_delay > 1:
-            if RANDOMIZED_DELAY:
-                lines.append('RandomizedDelaySec=%sm' % self.random_delay)
-            else:
-                lines.append('AccuracySec=%sm' % self.random_delay)
+            lines.append('RandomizedDelaySec=%sm' % self.random_delay)
         if self.persistent:
             lines.append('Persistent=true')
 

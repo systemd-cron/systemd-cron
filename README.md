@@ -83,7 +83,7 @@ Other options include:
   Default: `<libdir>/systemd/system`.
 * `--enable-boot[=yes|no]` Include support for the boot timer.
   Default: `yes`.
-* `--enable-minutely[=yes|no]` Include support for the minutely timer. Requires systemd ≥ 217.
+* `--enable-minutely[=yes|no]` Include support for the minutely timer.
   Default: `no`.
 * `--enable-hourly[=yes|no]` Include support for the hourly timer.
   Default: `yes`.
@@ -93,16 +93,14 @@ Other options include:
   Default: `yes`.
 * `--enable-monthly[=yes|no]` Include support for the monthly timer.
   Default: `yes`.
-* `--enable-quarterly[=yes|no]` Include support for the quarterly timer. Requires systemd ≥ 217.
+* `--enable-quarterly[=yes|no]` Include support for the quarterly timer.
   Default: `no`.
-* `--enable-semi_annually[=yes|no]` Include support for the semi-annually timer. Requires systemd ≥ 217.
+* `--enable-semi_annually[=yes|no]` Include support for the semi-annually timer.
   Default: `no`.
-* `--enable-yearly[=yes|no]` Include support for the yearly timer. Requires systemd ≥ 209.
+* `--enable-yearly[=yes|no]` Include support for the yearly timer.
   Default: `no`.
-* `--enable-persistent[=yes|no]` Make timers [persistent][5]. Requires systemd ≥ 212.
+* `--enable-persistent[=yes|no]` Make timers [persistent][5].
   Default: `no`.
-* `--enable-randomized-delay=[yes|no]` Use [`RandomizedDelaySec`] option for `RANDOM_DELAY` support. Requires systemd ≥ 229.
-  Default: `yes`.
 * `--enable-setgid[=yes|no]` Compile setgid C helper for crontab. Needs GCC or Clang.
   Default: `no`.
 
