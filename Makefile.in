@@ -7,6 +7,7 @@ version		:= $(shell cat VERSION)
 
 schedules			:= @schedules@
 schedules_not			:= @schedules_not@
+schedules_all			:= boot minutely hourly daily weekly monthly quarterly semi-annually yearly
 enable_runparts		:= @enable_runparts@
 enable_persistent	:= @enable_persistent@
 enable_randomized_delay	:= @enable_randomized_delay@
@@ -182,9 +183,18 @@ $(builddir)/man/%: $(srcdir)/man/%.in
 
 $(builddir)/man/systemd.cron.7: $(srcdir)/man/systemd.cron.7.in
 	$(call in2out,$<,$@)
+ifneq ($(enable_runparts),no)
 	$(foreach schedule_not,$(schedules_not),\
 		sed -i $@ -e '/cron-$(schedule_not).timer/d' \
 	               -e '/cron\.$(schedule_not)/,+3d' ${\n})
+else
+	sed -i $@ -e '/run-parts/d'
+	sed -i $@ -e '/cron-\\fIschedule\\fR\.timer/,+14d'
+	$(foreach schedule_not,$(schedules_not),\
+		sed -i $@ -e '/cron\.$(schedule_not)/,+3d' ${\n})
+	$(foreach schedule_not,$(schedules_all),\
+		sed -i $@ -e '/cron-$(schedule_not).timer/d' ${\n})
+endif
 
 $(builddir)/bin/systemd-crontab-generator: $(srcdir)/bin/systemd-crontab-generator.py
 	$(call in2out,$<,$@)

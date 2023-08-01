@@ -14,7 +14,8 @@ cron-monthly.timer, cron-monthly.target, cron-monthly.service,
 cron-quarterly.timer, cron-quarterly.target, cron-quarterly.service,
 cron-semi-annually.timer, cron-semi-annually.target, cron-semi-annually.service,
 cron-yearly.timer, cron-yearly.target, cron-yearly.service,
-cron-update.path, cron-update.service.
+cron-update.path, cron-update.service,
+cron-failure@.service.
 
 .SH DESCRIPTION
 These units provide cron daemon functionality by running scripts in cron directories.
@@ -74,10 +75,24 @@ You can also use this mechanism to mask an unneeded crontab provide by a package
 .br
 ln \-s /dev/null /etc/systemd/system/[package].timer
 
+.TP
+.I @statedir@
+User's crontabs, to be modifier using the \fBcrontab\fR(1) utility.
+
 .SH SYSTEM UNITS
 .TP
 cron.target
 The target unit which starts the others. This should be enabled and started to use cron functionality.
+
+.TP
+cron-update.path
+This monitor alteration of the
+.B FILES
+listed hereupper and will call cron-update.service
+
+.TP
+cron-update.service
+This trigger a 'systemctl daemon-reload', the only way to ask systemd to rerun the generator.
 
 .TP
 cron-\fIschedule\fR.timer
@@ -93,6 +108,10 @@ cron-\fIschedule\fR.service
 The service units which run scripts in the cron directories. Started and stopped by the cron-\fIschedule\fR.target
 units. You can use \fBjournalctl\fR(1) to view the output of scripts run
 from these units.
+
+.TP
+cron-failure@.service
+This service will send an email in case of failure.
 
 .SH LIMITATIONS
 This cron replacement only send mails on failure. The log of jobs is saved in systemd journal.
@@ -171,19 +190,19 @@ The exact times scripts are executed is determined by the values of the special 
 \fBrun-parts\fR(8) is used to run scripts. Scripts must be executable by \fIroot\fR to run.
 
 .SH DIAGNOSTICS
-With systemd >= 209, you can execute "systemctl list-timers" to have a overview of
+You can execute "systemctl list-timers" to have a overview of
 timers and know when they will elapse.
 
 .SH SEE ALSO
 .BR systemd (1),
 .BR systemd.unit (5),
 .BR systemd.service (5),
-.BR systemd.target (5),
 .BR systemd.timer (5),
 .BR systemd.time (7),
 .BR systemd-crontab-generator (8),
-.BR crontab (5),
-.BR run-parts (8)
+.BR run-parts (8),
+.BR crontab (1),
+.BR crontab (5)
 
 .SH AUTHOR
 Dwayne Bent
