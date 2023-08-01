@@ -62,11 +62,15 @@ Directory for scripts to be executed every year.
 .I /etc/cron.d
 Directory for \fBcrontabs\fR to be executed on a custom schedule.
 The files in this folder must follow the \fBcrontab\fR(5) layout.
+
+.TP
+.I /usr/lib/systemd/system/<schedule>.timer
+.TP
+.I /etc/systemd/system/<schedule>.timer
 .br
-If there exists a timer of the same name + '.timer' in /usr/lib/systemd/system or /etc/systemd/system,
-this crontab will be ignored to enable a smooth migration to native timers.
+These native systemd timers will overide the legacy cron jobs.
 .br
-You can also use this to mask an unneeded crontab provide by a package:
+You can also use this mechanism to mask an unneeded crontab provide by a package:
 .br
 ln \-s /dev/null /etc/systemd/system/[package].timer
 
