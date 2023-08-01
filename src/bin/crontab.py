@@ -31,7 +31,6 @@ EDITOR = (os.environ.get('EDITOR') or
 SELF = os.path.basename(sys.argv[0])
 
 CRONTAB_DIR = '@statedir@'
-GENERATOR_DIR= '@generatordir@'
 SETGID_HELPER = '@libexecdir@/systemd-cron/crontab_setgid'
 
 HAS_SETGID =     os.geteuid() != 0 \
@@ -64,7 +63,7 @@ def blue(line:str) -> None:
 def get_parser():
     # https://stackoverflow.com/a/43602645
     path = importlib.machinery.SourceFileLoader('name',
-             os.path.join(GENERATOR_DIR, 'systemd-crontab-generator'))
+             '/usr/lib/systemd/system-generators/systemd-crontab-generator')
     spec = importlib.util.spec_from_loader('name', path)
     module = importlib.util.module_from_spec(spec)
     loader = spec.loader
