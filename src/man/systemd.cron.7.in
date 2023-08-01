@@ -78,7 +78,7 @@ The target unit which starts the others. This should be enabled and started to u
 .TP
 cron-\fIschedule\fR.timer
 The timer units which pull the cron-\fIschedule\fR.target units at the appropriate time. Started and stopped by the
-cron.target unit. These units cannot be controlled manually.
+cron.target unit.
 
 .TP
 cron-\fIschedule\fR.target
@@ -87,7 +87,7 @@ The targets invoke all service units wanted by them, including cron-\fIschedule\
 .TP
 cron-\fIschedule\fR.service
 The service units which run scripts in the cron directories. Started and stopped by the cron-\fIschedule\fR.target
-units. These units cannot be controlled manually. You can use \fBjournalctl\fR(1) to view the output of scripts run
+units. You can use \fBjournalctl\fR(1) to view the output of scripts run
 from these units.
 
 .SH LIMITATIONS
