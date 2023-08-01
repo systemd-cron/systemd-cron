@@ -6,10 +6,11 @@ v1.16.3 : 2023-07-29
        /etc/cron.d/anacron would already be masked by empty anacron.service
      * monitor the contents of /etc/cron.{hourly|daily|weekly|monthly}/
        in run-parts-less mode.
-     * make the build respect `libexecdir` variable
+     * make the build respect `libexecdir` configure variable
        https://www.gnu.org/prep/standards/html_node/Directory-Variables.html
        https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch04s07.html
-     * UsrMerge: drop `runparts`, run-parts is now always /usr/bin/run-parts
+     * UsrMerge: drop `runparts` configure variable,
+                 run-parts is now always /usr/bin/run-parts
 
 v1.16.2 : 2023-07-27
 
