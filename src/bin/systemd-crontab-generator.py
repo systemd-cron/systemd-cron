@@ -64,6 +64,9 @@ def which(exe:str, paths:Optional[str]=None) -> Optional[str]:
 
 HAS_SENDMAIL = bool(which('sendmail', '/usr/sbin:/usr/lib'))
 
+def systemd_bool(string:str) -> bool:
+    return string.lower() in ['yes', 'true', '1']
+
 class Log(IntEnum):
     EMERG = 0
     ALERT = 1
@@ -148,7 +151,7 @@ class Job:
             self.shell = self.environment['SHELL']
 
         if 'PERSISTENT' in self.environment:
-            self.persistent = self.environment['PERSISTENT'].lower() in ['yes', 'true', '1']
+            self.persistent = systemd_bool(self.environment['PERSISTENT'])
             del self.environment['PERSISTENT']
         else:
             self.persistent = default_persistent
@@ -179,7 +182,7 @@ class Job:
                 self.log(Log.WARNING, 'invalid DELAY')
 
         if 'BATCH' in self.environment:
-            self.batch = self.environment['BATCH'].lower() in ['yes','true','1']
+            self.batch = systemd_bool(self.environment['BATCH'])
             del self.environment['BATCH']
 
     def parse_anacrontab(self) -> None:
