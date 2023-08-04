@@ -99,18 +99,16 @@ Other options include:
   Default: `no`.
 * `--enable-yearly[=yes|no]` Include support for the yearly timer.
   Default: `no`.
-* `--enable-persistent[=yes|no]` Make timers [persistent][5].
-  Default: `no`.
 * `--enable-setgid[=yes|no]` Compile setgid C helper for crontab. Needs GCC or Clang.
   Default: `no`.
 
 A typical configuration for the latest systemd would be:
 
-    $ ./configure --prefix=/usr --enable-yearly --enable-persistent
+    $ ./configure --enable-yearly
 
 If you only want the generator (you'll have to provide your own `/etc/crontab` to drive /etc/cron.daily/ etc...):
 
-    $ ./configure --enable-boot=no --enable-hourly=no --enable-daily=no --enable-weekly=no --enable-month=no --enable-persistent --prefix=/usr
+    $ ./configure --enable-boot=no --enable-hourly=no --enable-daily=no --enable-weekly=no --enable-monthly=no
 
 ### Caveat
 

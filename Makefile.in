@@ -9,7 +9,6 @@ schedules			:= @schedules@
 schedules_not			:= @schedules_not@
 schedules_all			:= boot minutely hourly daily weekly monthly quarterly semi-annually yearly
 enable_runparts		:= @enable_runparts@
-enable_persistent	:= @enable_persistent@
 enable_setgid		:= @enable_setgid@
 use_loglevelmax		:= @use_loglevelmax@
 
@@ -59,7 +58,6 @@ else
 requires = Requires=systemd-cron-cleaner.timer
 endif
 use_runparts = $(if $(filter $(enable_runparts),yes),True,False)
-persistent = $(if $(filter $(enable_persistent),yes),True,False)
 
 # $(call in2out,$input,$output,$schedule,$requires)
 define in2out
@@ -71,7 +69,6 @@ define in2out
 		-e "s|\@unitdir\@|$(unitdir)|g" \
 		-e "s|\@use_runparts\@|$(use_runparts)|g" \
 		-e "s|\@version\@|$(version)|g" \
-		-e "s|\@persistent\@|$(persistent)|g" \
 		-e "s|\@use_loglevelmax\@|$(use_loglevelmax)|g" \
 		-e "s|\@schedule\@|$3|g" \
 		-e "s|\@requires\@|$4|g" \
@@ -164,9 +161,6 @@ $(builddir)/units/cron-boot.service: $(srcdir)/units/cron-boot.service.in
 
 $(builddir)/units/cron-%.timer: $(srcdir)/units/cron-schedule.timer.in
 	$(call in2out,$<,$@,$*)
-ifneq ($(enable_persistent),yes)
-	sed -i -e '/^Persistent=/d' $@
-endif
 
 $(builddir)/units/cron-boot.timer: $(srcdir)/units/cron-boot.timer.in
 	$(call in2out,$<,$@,boot)

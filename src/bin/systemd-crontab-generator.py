@@ -25,7 +25,6 @@ REBOOT_FILE = '/run/crond.reboot'
 
 USE_LOGLEVELMAX = "@use_loglevelmax@"
 USE_RUNPARTS = "@use_runparts@" == "True"
-PERSISTENT = "@persistent@" == "True"
 BOOT_DELAY = "@libexecdir@/systemd-cron/boot_delay"
 STATEDIR = "@statedir@"
 
@@ -800,7 +799,7 @@ def main() -> None:
                     continue
 
                 job = Job(filename, filename)
-                job.persistent = PERSISTENT
+                job.persistent = True
                 job.period = period
                 job.boot_delay = i * 5
                 job.command = [filename]
