@@ -36,8 +36,8 @@ out_services	:= $(foreach schedule,$(schedules),$(builddir)/units/cron-$(schedul
 out_timers		:= $(foreach schedule,$(schedules),$(builddir)/units/cron-$(schedule).timer)
 out_targets		:= $(foreach schedule,$(schedules),$(builddir)/units/cron-$(schedule).target)
 else
-out_services	:=
-out_timers	:=
+out_services	:= $(builddir)/units/systemd-cron-cleaner.service
+out_timers	:= $(builddir)/units/systemd-cron-cleaner.timer
 out_targets	:=
 endif
 out_units		:= $(out_services) $(out_timers) $(out_targets) $(builddir)/units/cron.target \
@@ -133,6 +133,9 @@ ifneq ($(enable_runparts),no)
 		install -m644 $(builddir)/units/cron-$(schedule).target $(DESTDIR)$(unitdir)${\n})
 	$(foreach schedule,$(schedules),\
 		install -m644 $(builddir)/units/cron-$(schedule).service $(DESTDIR)$(unitdir)${\n})
+else
+	install -m644 $(builddir)/units/systemd-cron-cleaner.timer $(DESTDIR)$(unitdir)
+	install -m644 $(builddir)/units/systemd-cron-cleaner.service $(DESTDIR)$(unitdir)
 endif
 
 $(builddir)/units/cron-update.path: $(srcdir)/units/cron-update.path.in
@@ -173,6 +176,12 @@ $(builddir)/units/cron-%.target: $(srcdir)/units/cron-schedule.target.in
 
 $(builddir)/units/cron.target: $(srcdir)/units/cron.target.in
 	$(call in2out,$<,$@,,$(requires))
+
+$(builddir)/units/systemd-cron-cleaner.service: $(srcdir)/units/systemd-cron-cleaner.service.in
+	$(call in2out,$<,$@)
+
+$(builddir)/units/systemd-cron-cleaner.timer: $(srcdir)/units/systemd-cron-cleaner.timer.in
+	$(call in2out,$<,$@)
 
 $(builddir)/man/%: $(srcdir)/man/%.in
 	$(call in2out,$<,$@)

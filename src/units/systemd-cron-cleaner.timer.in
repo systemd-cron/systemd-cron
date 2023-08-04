@@ -1,0 +1,10 @@
+[Unit]
+Description=systemd-cron, clean loose timestamps
+Documentation=man:systemd-crontab-generator(8)
+
+[Timer]
+OnCalendar=Mon *-*-* 0:15:0
+Persistent=true
+
+[Install]
+WantedBy=timers.target
