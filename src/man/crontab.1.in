@@ -14,22 +14,22 @@ crontab \-t CRONTAB
 .B (blank)
 default operation is replace
 .TP
-.B -u, --user
+.BR -u ", " --user
 edit some other user's crontab
 .TP
-.B -l, --list
+.BR -l ", " --list
 list user's crontab
 .TP
-.B -r, --remove
+.BR -r ", " --remove
 delete user's crontab
 .TP
-.B -e, --edit
+.BR -e ", " --edit
 edit user's crontab
 .TP
-.B -s, --show
+.BR -s ", " --show
 show all user who have a crontab
 .TP
-.B -i, --ask
+.BR -i ", " --ask
 prompt before deleting user's crontab
 .TP
 .B -t, --translate CRONTAB

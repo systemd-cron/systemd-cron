@@ -25,13 +25,13 @@ The special
 (in hours) environment variable is translated to the
 .I 'hour'
 component of
-.B OnCalendar=.
+.BR OnCalendar= .
 anacron expect a range in the format ##-##, systemd-crontab-generator
-only use the starting hour of the range as reference.
+only uses the starting hour of the range as reference.
 
 The other lines are job-descriptions that follow this layout:
 .PP
-.B period  delay  job-identifier  command
+.B "period  delay  job-identifier  command"
 .PP
 .TP
 *
@@ -49,9 +49,9 @@ is a number of extra minutes to wait before starting job. It is translated in
 *
 .I job-identifier
 is a single word. systemd-crontab-generator uses it to construct the dynamic unit names:
-.I cron-<job-identifier>-root-0.timer
+.BI cron- job-identifier -root-0.timer
 and matching
-.I cron-<job-identifier>-root-0.service
+.BI cron- job-identifier -root-0.service
 .PP
 .TP
 *

@@ -20,7 +20,8 @@ cron-failure@.service.
 .SH DESCRIPTION
 These units provide cron daemon functionality by running scripts in cron directories.
 .br
-The crontabs are monitored by cron-update.path and are automatically translated by \fBsystemd-crontab-generator\fR(8) .
+The crontabs are monitored by cron-update.path and are automatically translated by
+.BR systemd-crontab-generator (8).
 
 .SH FILES
 .TP
@@ -119,9 +120,8 @@ Do \fInot\fR use with a cron daemon or anacron, otherwise scripts may be
 executed multiple times.
 .br
 All services are run with
-.B
-Type=oneshot
-, that means you can't use systemd-cron to launch long lived forking daemons.
+.BR Type=oneshot ,
+which means you can't use systemd-cron to launch long lived forking daemons.
 
 .SH EXTENSIONS
 The generator can optionally turn all crontabs in persistent timers with the
