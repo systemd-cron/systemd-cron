@@ -70,7 +70,7 @@ There will not be any substitution for the defined variables in the
 last value.
 .PP
 An alternative for setting up the commands path is using the fact that
-many shells will treat the tilde(~) as substitution of $HOME, so if you use
+many shells will treat the tilde (~) as substitution of $HOME, so if you use
 .I bash
 for your tasks you can use this:
 .PP
@@ -80,7 +80,7 @@ for your tasks you can use this:
 
 .I Special variables:
 .TP
-.B SHELL, PATH, USER, LOGNAME, HOME, LANG
+.BR SHELL ", " PATH ", " USER ", " LOGNAME ", " HOME ", " LANG
 Those are set up automatically by systemd itself, see
 .IR systemd.exec (5)
 SHELL defaults to /bin/sh.
@@ -104,12 +104,12 @@ The full output remains available in the journal.
 .TP
 .B RANDOM_DELAY
 (in minutes) environment variable is translated to
-.B AccuracySec=.
+.BR AccuracySec= .
 
 .TP
 .B DELAY
 (in minutes) environment variable is translated to
-.B OnBootSec=.
+.BR OnBootSec= .
 This works like the 'delay' field of anacrontab(5) and make systemd wait # minutes
 after boot before starting the unit. This value can also be used to spread out
 the start times of @daily/@weekly/@monthly... jobs on a 24/24 system.
@@ -119,7 +119,7 @@ the start times of @daily/@weekly/@monthly... jobs on a 24/24 system.
 (in hours) environment variable is translated to the
 .I 'hour'
 component of
-.B OnCalendar=.
+.BR OnCalendar= .
 This variable is inheritted from anacrontab(5), but also supported in crontab(5)
 by systemd-crontab-generator. Anacron expect a time range in the START-END format (eg: 6-9),
 systemd-crontab-generator will only use the starting hour of the range as reference.
@@ -131,13 +131,13 @@ the ours defined in the range, the (persitent) job will start at boot.
 .B PERSISTENT
 With this flag, you can override the generator default heuristic.
 .br
-.B 'yes':
+.BR 'yes' :
 force all further jobs to be persistent
 .br
-.B 'auto':
+.BR 'auto' :
 only recognize @ keywords to be persistent
 .br
-.B 'no':
+.BR 'no' :
 force all further jobs not to be persistent
 
 .TP
@@ -208,7 +208,7 @@ lists of names are not allowed.
 .PP
 The ``sixth'' field (the rest of the line) specifies the command to be
 run.
-The entire command portion of the line, up to a newline
+The entire command portion of the line, up to a newline\c
 .\" or % character
 , will be executed by /bin/sh or by the shell
 specified in the SHELL variable of the crontab file.
@@ -219,11 +219,15 @@ specified in the SHELL variable of the crontab file.
 .\"lines, like the shell's trailing "\\".
 .PP
 systemd-crontab-generator doesn't handle multi-line command split by
-the % character like vixie-cron.
+the
+.B %
+character like vixie-cron.
 .PP
 Note: The day of a command's execution can be specified by two
 fields \(em day of month, and day of week.  If both fields are
-restricted (i.e., aren't *), the command will be run when
+restricted (i.e., aren't
+.BR * ),
+the command will be run when
 .I either
 field matches the current time.  For example,
 .br

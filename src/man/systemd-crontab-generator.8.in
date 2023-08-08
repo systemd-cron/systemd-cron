@@ -28,8 +28,7 @@ after each manual updates to the cron files, (*)
 and when distribution packages add files in /etc/cron.d/. (*)
 .PP
 
-.B
-(*):
+.BR (*) :
 those are monitored by cron-update.path
 
 .PP
@@ -86,7 +85,7 @@ in the journal, you can manually run
 to get a more verbose error message.
 
 .SH SEE ALSO
-\fBsystemd.cron\fR(7),\fBcrontab\fR(5),\fBsystemd.unit\fR(5),\fBsystemd.timer\fR(5)
+\fBsystemd.cron\fR(7), \fBcrontab\fR(5), \fBsystemd.unit\fR(5), \fBsystemd.timer\fR(5)
 
 .SH "NOTES"
 .IP " 1." 4
