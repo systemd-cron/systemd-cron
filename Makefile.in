@@ -1,6 +1,7 @@
 CFLAGS ?= -O2
 CFLAGS += -Wall
 PYFLAKES ?= pyflakes3
+SHELLCHECK ?= shellcheck
 CRONTAB ?= crontab
 
 version		:= $(shell cat VERSION)
@@ -43,8 +44,9 @@ out_units		:= $(out_services) $(out_timers) $(out_targets) $(builddir)/units/cro
                            $(builddir)/units/cron-update.path $(builddir)/units/cron-update.service \
                            $(builddir)/units/cron-failure@.service
 out_manuals		:= $(patsubst $(srcdir)/man/%.in,$(builddir)/man/%,$(wildcard $(srcdir)/man/*))
-out_programs		:= $(patsubst $(srcdir)/bin/%.py,$(builddir)/bin/%,$(wildcard $(srcdir)/bin/*.py))
-outputs			:= $(out_units) $(out_manuals) $(out_programs) $(builddir)/bin/crontab_setgid
+out_programs_py		:= $(subst $(srcdir),$(builddir),$(patsubst %.py,%,$(wildcard $(srcdir)/bin/*.py)))
+out_programs_sh		:= $(subst $(srcdir),$(builddir),$(patsubst %.sh,%,$(wildcard $(srcdir)/bin/*.sh)))
+outputs			:= $(out_units) $(out_manuals) $(out_programs_py) $(out_programs_sh) $(builddir)/bin/crontab_setgid
 
 define \n
 
@@ -93,8 +95,9 @@ dist: $(tarball)
 test: all
 	$(foreach manpage,$(out_manuals),\
 		man --warnings --encoding=utf8 --local-file $(manpage) 2>&1 > /dev/null${\n})
-	$(foreach program,$(out_programs),\
+	$(foreach program,$(out_programs_py),\
 		$(PYFLAKES) $(program) ${\n})
+	$(SHELLCHECK) $(out_programs_sh)
 	test/test.py
 
 install: all
@@ -205,6 +208,10 @@ endif
 	chmod +x $@
 
 $(builddir)/bin/%: $(srcdir)/bin/%.py
+	$(call in2out,$<,$@)
+	chmod +x $@
+
+$(builddir)/bin/%: $(srcdir)/bin/%.sh
 	$(call in2out,$<,$@)
 	chmod +x $@
 
