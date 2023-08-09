@@ -45,8 +45,11 @@ There exists packages avaible for:
 * [Ubuntu][8]
 * [Arch][9]
 * [Gentoo][10]
+* [OpenMamba][11] (RPM based)
 
-There is also a .spec file for Fedora in [contrib/][11].
+There is also a old .spec file for Fedora in [contrib/][12].
+
+A complete list of all packages can be browsed at [Repology][13].
 
 You can also build it manually from source.
 
@@ -146,4 +149,6 @@ Copyright
 [8]: http://packages.ubuntu.com/search?suite=all&searchon=names&keywords=systemd-cron
 [9]: https://aur.archlinux.org/packages/systemd-cron
 [10]: https://packages.gentoo.org/package/sys-process/systemd-cron
-[11]: https://github.com/systemd-cron/systemd-cron/blob/master/contrib/systemd-cron.spec
+[11]: https://openmamba.org/en/packages/?tag=devel&pkg=systemd-cron.source
+[12]: https://github.com/systemd-cron/systemd-cron/blob/master/contrib/systemd-cron.spec
+[13]: https://repology.org/project/systemd-cron/packages
