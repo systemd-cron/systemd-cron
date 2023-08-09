@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-import importlib
+import importlib.util
 import unittest
 
 def m():
