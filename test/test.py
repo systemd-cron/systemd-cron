@@ -18,7 +18,7 @@ class TestStringMethods(unittest.TestCase):
         j.decode()
         j.generate_unit_name(iter((1,)))
         j.generate_scriptlet()
-        self.assertEqual(j.execstart, '/usr/bin/true')
+        self.assertIn(j.execstart, ['/bin/true', '/usr/bin/true'])
 
     def test_userpath_expansion(self):
         j = m().Job('-', '@daily dummy ~/fake')
