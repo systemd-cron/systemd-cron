@@ -102,7 +102,6 @@ install: all
 	install -m755 -D $(builddir)/bin/systemd-crontab-generator $(DESTDIR)$(generatordir)/systemd-crontab-generator
 	install -m755 -D $(builddir)/bin/remove_stale_stamps $(DESTDIR)$(libexecdir)/systemd-cron/remove_stale_stamps
 	install -m755 -D $(builddir)/bin/mail_on_failure $(DESTDIR)$(libexecdir)/systemd-cron/mail_on_failure
-	install -m755 -D $(builddir)/bin/boot_delay $(DESTDIR)$(libexecdir)/systemd-cron/boot_delay
 	install -m644 -D $(srcdir)/lib/sysusers.d/systemd-cron.conf $(DESTDIR)$(libdir)/sysusers.d/systemd-cron.conf
 ifneq ($(enable_setgid),no)
 	install -m755 -D $(builddir)/bin/crontab_setgid $(DESTDIR)$(libexecdir)/systemd-cron/crontab_setgid

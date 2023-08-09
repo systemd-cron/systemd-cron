@@ -25,7 +25,7 @@ REBOOT_FILE = '/run/crond.reboot'
 
 USE_LOGLEVELMAX = "@use_loglevelmax@"
 USE_RUNPARTS = "@use_runparts@" == "True"
-BOOT_DELAY = "@libexecdir@/systemd-cron/boot_delay"
+BOOT_DELAY = "/bin/sh -c 'IFS=\".$IFS\" read -r uptime _ < /proc/uptime; [ \"$uptime\" -ge \"$1\" ] || exec sleep $(( $1 - uptime ))' boot_delay"
 STATEDIR = "@statedir@"
 
 SELF = os.path.basename(sys.argv[0])
@@ -501,7 +501,7 @@ class Job:
         if USE_LOGLEVELMAX != 'no':
             lines.append('LogLevelMax=%s' % USE_LOGLEVELMAX)
         if self.schedule and self.boot_delay:
-            lines.append('ExecStartPre=-%s %s' % (BOOT_DELAY, self.boot_delay))
+            lines.append('ExecStartPre=-%s %s' % (BOOT_DELAY, self.boot_delay * 60))
         lines.append('ExecStart=%s' % self.execstart)
         if self.environment:
              lines.append('Environment=%s' % environment_string(self.environment))
