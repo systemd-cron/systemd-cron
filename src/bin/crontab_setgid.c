@@ -113,7 +113,8 @@ int main(int argc, char *argv[]) {
 				}
 			}
 			if (fclose(file)) {
-				perror("fclose"); return 1;
+				perror("fclose");
+				return 1;
 			}
 			if (rename(temp,crontab)) {
 				perror("rename");
