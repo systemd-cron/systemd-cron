@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # wait for local apt-cacher-ng proxy to come online
 # before starting unattended-upgrades
 # (that may well never happen before shutdown,
