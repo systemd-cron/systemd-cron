@@ -12,6 +12,12 @@ v1.16.3 : 2023-07-29
      * UsrMerge: drop `runparts` configure variable,
                  run-parts is now always /usr/bin/run-parts
 
+     [наб <nabijaczleweli@nabijaczleweli.xyz>]
+     * various improvements to the configure script & Makefile
+     * rewrite boot_delay as ashell script for faster execution
+     * review of the man pages
+     * better error handling in crontab setgid helper
+
 v1.16.2 : 2023-07-27
 
      * Python 3.12+ compatibility: "load_module()" was deprecated
