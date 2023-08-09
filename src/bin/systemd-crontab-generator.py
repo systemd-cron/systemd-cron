@@ -12,7 +12,7 @@ from functools import reduce
 from typing import Iterator, Optional
 from enum import IntEnum
 
-envvar_re = re.compile(r'^([A-Za-z_0-9]+)\s*=\s*(.*)$')
+ENVVAR_RE = re.compile(r'^([A-Za-z_0-9]+)\s*=\s*(.*)$')
 
 MINUTES_SET = list(range(0, 60))
 HOURS_SET = list(range(0, 24))
@@ -46,6 +46,8 @@ CROND2TIMER = {
 }
 
 TARGET_DIR = '/tmp'
+
+UPTIME = None
 
 def which(exe:str, paths:Optional[str]=None) -> Optional[str]:
     if paths is None:
@@ -501,16 +503,17 @@ class Job:
         if USE_LOGLEVELMAX != 'no':
             lines.append('LogLevelMax=%s' % USE_LOGLEVELMAX)
         if self.schedule and self.boot_delay:
-            lines.append('ExecStartPre=-%s %s' % (BOOT_DELAY, self.boot_delay))
+            if UPTIME is None or self.boot_delay > UPTIME:
+                lines.append('ExecStartPre=-%s %s' % (BOOT_DELAY, self.boot_delay))
         lines.append('ExecStart=%s' % self.execstart)
         if self.environment:
-             lines.append('Environment=%s' % environment_string(self.environment))
+            lines.append('Environment=%s' % environment_string(self.environment))
         lines.append('User=%s' % self.user)
         if self.standardoutput:
-             lines.append('StandardOutput=%s' % self.standardoutput)
+            lines.append('StandardOutput=%s' % self.standardoutput)
         if self.batch:
-             lines.append('CPUSchedulingPolicy=idle')
-             lines.append('IOSchedulingClass=idle')
+            lines.append('CPUSchedulingPolicy=idle')
+            lines.append('IOSchedulingClass=idle')
 
         return '\n'.join(lines)
 
@@ -611,7 +614,7 @@ def parse_crontab(filename:str,
             while '  ' in line:
                 line = line.replace('  ', ' ')
 
-            envvar = envvar_re.match(line)
+            envvar = ENVVAR_RE.match(line)
             if envvar:
                 key = envvar.group(1)
                 value = envvar.group(2)
@@ -843,10 +846,15 @@ if __name__ == '__main__':
     TARGET_DIR = sys.argv[1]
     TIMERS_DIR = os.path.join(TARGET_DIR, 'cron.target.wants')
 
+    run_by_systemd = len(sys.argv) == 4
+    if run_by_systemd:
+        with open('/proc/uptime', 'r') as f:
+            UPTIME = int(float(f.readline().split()[0])) / 60
+
     try:
         main()
     except Exception as e:
-        if len(sys.argv) == 4:
+        if run_by_systemd:
             with open('/dev/kmsg', 'w') as fd:
                 fd.write('<%s> %s[%s]: global exception: %s\n' % (Log.CRIT, SELF, os.getpid(), e))
             exit(1)
