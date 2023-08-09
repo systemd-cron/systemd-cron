@@ -1,0 +1,4 @@
+#!/bin/sh
+test -x /usr/bin/python3 || exit 0
+test -x /usr/libexec/systemd-cron/remove_stale_stamps || exit 0
+exec /usr/libexec/systemd-cron/remove_stale_stamps

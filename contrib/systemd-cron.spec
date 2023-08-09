@@ -60,12 +60,7 @@ sed -i '/Persistent=true/d' $RPM_BUILD_ROOT/usr/lib/systemd/system/cron-hourly.t
 mkdir -p $RPM_BUILD_ROOT/var/spool/cron
 mkdir -p $RPM_BUILD_ROOT/etc/cron.d/
 mkdir -p $RPM_BUILD_ROOT/etc/cron.weekly/
-cat << EOF > $RPM_BUILD_ROOT/etc/cron.weekly/systemd-cron
-#!/bin/sh
-test -x /usr/bin/python3 || exit 0
-test -x /usr/libexec/systemd-cron/remove_stale_stamps || exit 0
-exec /usr/libexec/systemd-cron/remove_stale_stamps
-EOF
+cp contrib/systemd-cron.cron.weekly $RPM_BUILD_ROOT/etc/cron.weekly/systemd-cron
 mkdir -p $RPM_BUILD_ROOT/usr/lib/systemd/system-preset/
 echo 'enable cron.target' > $RPM_BUILD_ROOT/usr/lib/systemd/system-preset/50-systemd-cron.preset
 
