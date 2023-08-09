@@ -4,11 +4,11 @@ PYFLAKES ?= pyflakes3
 SHELLCHECK ?= shellcheck
 CRONTAB ?= crontab
 
-version		:= $(shell cat VERSION)
+version		:= $(file < VERSION)
 
 schedules			:= @schedules@
 schedules_not			:= @schedules_not@
-schedules_all			:= boot minutely hourly daily weekly monthly quarterly semi-annually yearly
+schedules_all			:= $(schedules) $(schedules_not)
 enable_runparts		:= @enable_runparts@
 enable_setgid		:= @enable_setgid@
 use_loglevelmax		:= @use_loglevelmax@
@@ -77,7 +77,7 @@ define in2out
 		$1 > $2
 endef
 
-all: $(builddir) $(outputs)
+all: $(outputs)
 
 clean:
 	rm -rf $(outdir)
@@ -88,7 +88,7 @@ distprep: $(distdir)
 	cp -a LICENSE		$(distdir)
 	cp -a README.md		$(distdir)
 	cp -a VERSION		$(distdir)
-	cp -a src			$(distdir)
+	cp -a src		$(distdir)
 
 dist: $(tarball)
 
@@ -194,8 +194,8 @@ else
 	sed -i $@ -e '/cron-\\fIschedule\\fR\.timer/,+14d'
 	$(foreach schedule_not,$(schedules_not),\
 		sed -i $@ -e '/cron\.$(schedule_not)/,+3d' ${\n})
-	$(foreach schedule_not,$(schedules_all),\
-		sed -i $@ -e '/cron-$(schedule_not).timer/d' ${\n})
+	$(foreach schedule_all,$(schedules_all),\
+		sed -i $@ -e '/cron-$(schedule_all).timer/d' ${\n})
 endif
 
 $(builddir)/bin/systemd-crontab-generator: $(srcdir)/bin/systemd-crontab-generator.py
@@ -220,16 +220,13 @@ ifneq ($(enable_setgid),no)
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) $< -DCRONTAB_DIR='"$(statedir)"' -o $@
 endif
 
-$(outputs): | $(builddir)
+$(outputs): $(builddir)
 
 $(outdir):
 	mkdir -p $@
 
 $(builddir):
-	mkdir -p $@
-	mkdir -p $@/bin
-	mkdir -p $@/man
-	mkdir -p $@/units
+	mkdir -p $@/bin $@/man $@/units
 
 $(distdir):
 	mkdir -p $(distdir)
@@ -238,4 +235,3 @@ $(tarball): distprep
 	cd $(distdir)/..; tar -cJ --owner=root --group=root --file $(tarball) $(distname)
 
 .PHONY: all clean dist distprep install
-
