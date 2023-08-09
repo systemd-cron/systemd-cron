@@ -105,15 +105,21 @@ int main(int argc, char *argv[]) {
 					fclose(file);
 					unlink(temp);
 					return 1;
-				};
+				}
 				if (lines > MAX_LINES) {
 					fclose(file);
 					unlink(temp);
 					end("maximum lines reached");
 				}
 			}
-			if (fclose(file)) {perror("fclose"); return 1;}
-			if (rename(temp,crontab)) {perror("rename"); unlink(temp); return 1;}
+			if (fclose(file)) {
+				perror("fclose"); return 1;
+			}
+			if (rename(temp,crontab)) {
+				perror("rename");
+				unlink(temp);
+				return 1;
+			}
 			break;
 		case 'd':
 			if (unlink(crontab) == -1) {
@@ -123,7 +129,7 @@ int main(int argc, char *argv[]) {
 				}
 				perror("Cannot delete file");
 				return 1;
-			};
+			}
 			break;
 		default:
 			end("unknown action");
