@@ -108,7 +108,6 @@ class Job:
     execstart:str
     scriptlet:str
     valid:bool
-    standardoutput:Optional[str]
     testremoved:Optional[str]
 
     def __init__(self, filename:str, line:str) -> None:
@@ -127,7 +126,6 @@ class Job:
         self.command = []
         self.valid = True
         self.batch = False
-        self.standardoutput = None
         self.testremoved = None
         self.period = ''
         self.timespec_minute = []
@@ -315,12 +313,10 @@ class Job:
             self.command[-2] == '>' and
             self.command[-1] == '/dev/null'):
             self.command = self.command[0:-2]
-            self.standardoutput = '/dev/null'
 
         if (len(self.command) >= 2 and
             self.command[-1] == '>/dev/null'):
             self.command = self.command[0:-1]
-            self.standardoutput = '/dev/null'
 
         if (len(self.command) == 6 and
             self.command[0] == '[' and
@@ -509,8 +505,6 @@ class Job:
         if self.environment:
             lines.append('Environment=%s' % environment_string(self.environment))
         lines.append('User=%s' % self.user)
-        if self.standardoutput:
-            lines.append('StandardOutput=%s' % self.standardoutput)
         if self.batch:
             lines.append('CPUSchedulingPolicy=idle')
             lines.append('IOSchedulingClass=idle')
