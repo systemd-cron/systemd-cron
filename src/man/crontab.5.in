@@ -69,10 +69,8 @@ will not work as you might expect. And neither will this work
 There will not be any substitution for the defined variables in the
 last value.
 .PP
-An alternative for setting up the commands path is using the fact that
-many shells will treat the tilde (~) as substitution of $HOME, so if you use
-.I bash
-for your tasks you can use this:
+In PATH, tilde-expansion is performed on elements starting with "~/",
+so this works as expected:
 .PP
      SHELL=/bin/bash
      PATH=~/bin:/usr/bin/:/bin
