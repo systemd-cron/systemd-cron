@@ -1,174 +1,174 @@
 v1.16.3 : 2023-07-29
 
-     * ignore /etc/cron.{hourly|daily|weekly|monthly}/0anacron.
-       These files are present when anacron has not been fully removed,
-       and do absolutely nothing (status "removed & non-purged" on Debian).
-       /etc/cron.d/anacron would already be masked by empty anacron.service
-     * monitor the contents of /etc/cron.{hourly|daily|weekly|monthly}/
-       in run-parts-less mode.
-     * make the build respect `libexecdir` configure variable
-       https://www.gnu.org/prep/standards/html_node/Directory-Variables.html
-       https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch04s07.html
-     * UsrMerge: drop `runparts` configure variable,
-                 run-parts is now always /usr/bin/run-parts
+   * ignore /etc/cron.{hourly|daily|weekly|monthly}/0anacron.
+     These files are present when anacron has not been fully removed,
+     and do absolutely nothing (status "removed & non-purged" on Debian).
+     /etc/cron.d/anacron would already be masked by empty anacron.service
+   * monitor the contents of /etc/cron.{hourly|daily|weekly|monthly}/
+     in run-parts-less mode.
+   * make the build respect `libexecdir` configure variable
+     https://www.gnu.org/prep/standards/html_node/Directory-Variables.html
+     https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch04s07.html
+   * UsrMerge: drop `runparts` configure variable,
+               run-parts is now always /usr/bin/run-parts
 
-     [наб <nabijaczleweli@nabijaczleweli.xyz>]
-     * various improvements to the configure script & Makefile
-     * rewrite boot_delay as ashell script for faster execution
-     * review of the man pages
-     * better error handling in crontab setgid helper
+   [наб <nabijaczleweli@nabijaczleweli.xyz>]
+   * various improvements to the configure script & Makefile
+   * rewrite boot_delay as ashell script for faster execution
+   * review of the man pages
+   * better error handling in crontab setgid helper
 
 v1.16.2 : 2023-07-27
 
-     * Python 3.12+ compatibility: "load_module()" was deprecated
-     * fix other regressions brought by the rewrite:
-       * fix expansion of commands starting with '~/' [Ben Hutchings]
-       * regression in crontab that rejected valid timespecs
+   * Python 3.12+ compatibility: "load_module()" was deprecated
+   * fix other regressions brought by the rewrite:
+     * fix expansion of commands starting with '~/' [Ben Hutchings]
+     * regression in crontab that rejected valid timespecs
 
 v1.16.1 : 2023-07-24
 
-     * fix a syntax error in the crontab utility
+   * fix a syntax error in the crontab utility
 
 v1.16 : 2023-07-10
 
-     * major rewrite
-     * MAILTO= : /etc/cron.*/ will inherit this from
-                 /etc/crontab if they don't provide their own
-     * always explicitely set `User=root`, this way systemd will itself
-       provide fallback for HOME=, LOGNAME=, USER= & SHELL= env. variables.
-       (issue #65)
-     * accept a days-of-week range that ends with '...-7' (#57)
+   * major rewrite
+   * MAILTO= : /etc/cron.*/ will inherit this from
+               /etc/crontab if they don't provide their own
+   * always explicitely set `User=root`, this way systemd will itself
+     provide fallback for HOME=, LOGNAME=, USER= & SHELL= env. variables.
+     (issue #65)
+   * accept a days-of-week range that ends with '...-7' (#57)
 
 v1.15.22 : 2023-07-04
 
-     * improve runparts-less mode again
+   * improve runparts-less mode again
 
 v1.15.21 : 2023-06-23
 
-     * improve runparts-less mode
+   * improve runparts-less mode
 
 v1.15.20 : 2023-03-10
 
-     * fix sending of unicode emails, thanks to 0xE1E10
+   * fix sending of unicode emails, thanks to 0xE1E10
 
 v1.15.19 : 2022-07-16
 
-     * Allign with previous botched version jump (#82)
-     * crontab accepts $EDITOR with spaces (#83)
+   * Allign with previous botched version jump (#82)
+   * crontab accepts $EDITOR with spaces (#83)
 
 v1.5.18 : 2020-12-26
 
-     Various improvements to email on error:
-     * Revert "Use DynamicUser=yes for error email generator"
-     * Use sysusers.d snippet instead
-     * Support for MAILFROM variable [thanks MarcoCLA]
+   Various improvements to email on error:
+   * Revert "Use DynamicUser=yes for error email generator"
+   * Use sysusers.d snippet instead
+   * Support for MAILFROM variable [thanks MarcoCLA]
 
 v1.5.17 : 2020-01-26
 
-     * Use DynamicUser=yes for error email generator
+   * Use DynamicUser=yes for error email generator
 
 v1.5.16 : 2020-12-20
 
-     * ignore backup files in /etc/cron.d
-     * fix run-partscondition
+   * ignore backup files in /etc/cron.d
+   * fix run-partscondition
 
 v1.5.15 : 2020-10-17
 
-     * fix skipping OnFailure for empty MAILTO=, thanks to Richard Laager
-     * make run-parts uses optional
+   * fix skipping OnFailure for empty MAILTO=, thanks to Richard Laager
+   * make run-parts uses optional
 
 v1.5.14 : 2018-11-11
 
-     * Python 3.7 comptability, thanks to enrico.detoma
-     * Handle sending mail_on_error when the locale is not correctly set
-     * Use KillMode=process for generated units
+   * Python 3.7 comptability, thanks to enrico.detoma
+   * Handle sending mail_on_error when the locale is not correctly set
+   * Use KillMode=process for generated units
 
 v1.5.13 : 2018-03-28
 
-     * escape '%' in unit description (Thanks Mateusz Kowalewski)
+   * escape '%' in unit description (Thanks Mateusz Kowalewski)
 
 v1.5.12 : 2017-12-08
 
-     * fix typo in configure script introduced in 1.5.11
+   * fix typo in configure script introduced in 1.5.11
 
 v1.5.11 : 2017-12-08
 
-     * add distinct configure option for systemd generator dir (Thanks Mike Gilbert)
-     * add support for RandomizedDelaySec, this requires systemd ≥ 229
+   * add distinct configure option for systemd generator dir (Thanks Mike Gilbert)
+   * add support for RandomizedDelaySec, this requires systemd ≥ 229
 
 v1.5.10 : 2017-07-01
 
-     * fix regression in handling of masked/overriden timer units
+   * fix regression in handling of masked/overriden timer units
 
 v1.5.9 : 2017-06-18
 
-     * allow runtime masking of units
-     * log masked timers in a distinct way
-     * drop cargo-culted RefuseManual[Start|Stop]
-     * delay cron-boot.timer of 1 minute
+   * allow runtime masking of units
+   * log masked timers in a distinct way
+   * drop cargo-culted RefuseManual[Start|Stop]
+   * delay cron-boot.timer of 1 minute
 
 v1.5.8 : 2017-01-15
 
-     * handle weekly slices as expected
-     * document that someone can use 'systemctl edit' to override
-       (generated) units.
+   * handle weekly slices as expected
+   * document that someone can use 'systemctl edit' to override
+     (generated) units.
 
 v1.5.7 : 2017-01-11
 
-     * try to fix it again, hopefully finally,
-       making parse_time_unit() even harder to understand
+   * try to fix it again, hopefully finally,
+     making parse_time_unit() even harder to understand
 
 v1.5.6 : 2017-01-10
 
-     * fix last off-by-one error in processing of <n>-<m> ranges.
+   * fix last off-by-one error in processing of <n>-<m> ranges.
 
 v1.5.5 : 2017-01-10
 
-     * pass $(CPPFLAGS) to compilator for setgid helper
-     * almost always generate .sh scripts to avoid that systemd
-       complains with "Invalid escape sequences in line, correcting:"
-       when parsing some complex one-liners
-       https://github.com/systemd/systemd/blob/master/src/basic/extract-word.c#L204
-     * fix off-by-one error in processing of '*/<n>' for months & days. Issue #49
+   * pass $(CPPFLAGS) to compilator for setgid helper
+   * almost always generate .sh scripts to avoid that systemd
+     complains with "Invalid escape sequences in line, correcting:"
+     when parsing some complex one-liners
+     https://github.com/systemd/systemd/blob/master/src/basic/extract-word.c#L204
+   * fix off-by-one error in processing of '*/<n>' for months & days. Issue #49
 
 v1.5.4 : 2016-01-29
 
-     * generator: don't call OnFailure unit without a MTA avalaible.
-     * sync with systemd-cron-next: remove --stale-stamps configure option
-     * quote "Environment=" keypairs only when necessary
+   * generator: don't call OnFailure unit without a MTA avalaible.
+   * sync with systemd-cron-next: remove --stale-stamps configure option
+   * quote "Environment=" keypairs only when necessary
 
 v1.5.3 : 2015-02-16
 
    Minor bugfixes:
-     * add crontab --show option that lists crontabs
-     * crontab: try /usr/bin/editor, /usr/bin/vim, /usr/bin/nano,
-       /usr/bin/mcedit if VISUAL and EDITOR are not set
-     * avoid forgeting successful edits in /tmp/
+   * add crontab --show option that lists crontabs
+   * crontab: try /usr/bin/editor, /usr/bin/vim, /usr/bin/nano,
+     /usr/bin/mcedit if VISUAL and EDITOR are not set
+   * avoid forgeting successful edits in /tmp/
 
 v1.5.2 : 2014-12-21
 
    Bug-fix release:
-     * generator now process UTF-8 files correctly (generators are run
-       with LANG=C)
-     * global exception handler added to generator; now prints error in
-       journal
-     * make install : setgid helper will be chgrp cron / chmod 2755 if
-       group cron exists ; but won't create this group by itself
-     * now support BATCH=yes|no into crontabs; this is translasted into
-       CPUSchedulingPolicy=idle & IOSchedulingClass=idle
-     * the generator can now co-exist with a boilerplate /etc/crontab that
-       does includes include definitions for /etc/cron.daily etc... these
-       will only be processed if the matching native unit is not activated
-       during configure step
+   * generator now process UTF-8 files correctly (generators are run
+     with LANG=C)
+   * global exception handler added to generator; now prints error in
+     journal
+   * make install : setgid helper will be chgrp cron / chmod 2755 if
+     group cron exists ; but won't create this group by itself
+   * now support BATCH=yes|no into crontabs; this is translasted into
+     CPUSchedulingPolicy=idle & IOSchedulingClass=idle
+   * the generator can now co-exist with a boilerplate /etc/crontab that
+     does includes include definitions for /etc/cron.daily etc... these
+     will only be processed if the matching native unit is not activated
+     during configure step
 
 v1.5.1 : 2014-12-13
 
-     * make all writes in crontab (both Python & C parts) atomic
-     * keep rejected crontabs in /tmp/crontab* for review
-     * added support for /etc.cron.allow and /etc/cron.deny; without any
-       of those, only root can create crontabs
-     * turn the setuid/root helper into a setguid/crontab to let it run
-       with the least privieges
+  * make all writes in crontab (both Python & C parts) atomic
+  * keep rejected crontabs in /tmp/crontab* for review
+  * added support for /etc.cron.allow and /etc/cron.deny; without any
+    of those, only root can create crontabs
+  * turn the setuid/root helper into a setguid/crontab to let it run
+    with the least privieges
 
    If you enable this feature in your package, some additional setup is
    needed after it has been unpacked:
@@ -193,37 +193,37 @@ v1.5.1 : 2014-12-13
 
 v1.5.0 : 2014-12-11
 
-     * added an optional C setuid helper to let non-root users use crontab
+   * added an optional C setuid helper to let non-root users use crontab
 
 v1.4.2 : 2014-11-25
 
    Bug-Fix release
-     * build now honor bindir for systemctl location
-     * generator: better handling of quoted commands in crontabs
+   * build now honor bindir for systemctl location
+   * generator: better handling of quoted commands in crontabs
 
 v1.4.1 : 2014-11-11
 
-     * generator: will now log warnings & errors about bad crontabs in the
-       journal
-     * generator: try less aggressively to make jobs persistent: a job
-       like 0 19 * * * root poweroff on a school/office PC would had run
-       the next morning; which is not the expected behaviour; this can now
-       be overiden with the PERSISTENT=yes|auto|no variable
-     * new trivial internal utility boot_delay : this is needed
-       because combining OnCalendar= & OnBootSec= in timer units doesn't
-       have the needed behaviour (OR instead of AND). A boot delay is a
-       standard feature of anacrontab; but can now also be used in crontab
-       by specifying the DELAY= value.
+   * generator: will now log warnings & errors about bad crontabs in the
+     journal
+   * generator: try less aggressively to make jobs persistent: a job
+     like 0 19 * * * root poweroff on a school/office PC would had run
+     the next morning; which is not the expected behaviour; this can now
+     be overiden with the PERSISTENT=yes|auto|no variable
+   * new trivial internal utility boot_delay : this is needed
+     because combining OnCalendar= & OnBootSec= in timer units doesn't
+     have the needed behaviour (OR instead of AND). A boot delay is a
+     standard feature of anacrontab; but can now also be used in crontab
+     by specifying the DELAY= value.
 
    Thanks to @wavexx for the extensive review.
 
 v1.4.0 : 2014-11-04
 
-     * new utility mail_on_failure that is called by a new OnFailure=
-       hook, both for static & generated units
-     * add support for new time unit introduced in systemd 217: minutely,
-       quarterly, semi-annually
-     * review of man pages
+   * new utility mail_on_failure that is called by a new OnFailure=
+     hook, both for static & generated units
+   * add support for new time unit introduced in systemd 217: minutely,
+     quarterly, semi-annually
+   * review of man pages
 
 v1.3.3 : 2014-10-21
 
@@ -232,22 +232,22 @@ v1.3.3 : 2014-10-21
 
 v1.3.2 : 2014-10-20
 
-     * switch to Python3 for crontab & generator
-     * add a manpage for /etc/anacrontab
-     * add a new utility remove_stale_stamps than removes stales stamps
-       from long deleted crontabs ( It can be called from
-       /etc/cron.weekly/ )
-     * configure: statedir defaults now to '/var/spool/cron'
-     * crontab: improved error handling
-     * generator: add support for RANDOM_DELAY & START_HOURS_RANGE to
-       anacrontab. This works in crontabs too.
+   * switch to Python3 for crontab & generator
+   * add a manpage for /etc/anacrontab
+   * add a new utility remove_stale_stamps than removes stales stamps
+     from long deleted crontabs ( It can be called from
+     /etc/cron.weekly/ )
+   * configure: statedir defaults now to '/var/spool/cron'
+   * crontab: improved error handling
+   * generator: add support for RANDOM_DELAY & START_HOURS_RANGE to
+     anacrontab. This works in crontabs too.
 
 v1.3.1 : 2014-09-22
 
-     * turn Path watching unit in static unit
-     * make Persistent=true smarter
-     * make /var/spool configurable
-     * put man page in right section
+   * turn Path watching unit in static unit
+   * make Persistent=true smarter
+   * make /var/spool configurable
+   * put man page in right section
 
 v1.3.0 : 2014-09-04
 
@@ -256,43 +256,43 @@ v1.3.0 : 2014-09-04
 
 v1.2.1 : 2014-04-01
 
-     * FIX: Build should now be parallelizable with make -j<N>
+   * FIX: Build should now be parallelizable with make -j<N>
 
 v1.2.0 : 2014-03-31
 
-     * NEW: Yearly timers with system ≥ 209.
-     * NEW: Persistent timers with systemd ≥ 212.
+   * NEW: Yearly timers with system ≥ 209.
+   * NEW: Persistent timers with systemd ≥ 212.
 
 v1.1.2 : 2013-08-24
 
-     * FIX: Reconfigure units so that service units are automatically
-       started by targets without needing to have them separately enabled.
+   * FIX: Reconfigure units so that service units are automatically
+     started by targets without needing to have them separately enabled.
 
 v1.1.1 : 2013-07-31
 
-     * Only activate service units if corresponding cron directory is
+   * Only activate service units if corresponding cron directory is
        non-empty.
-     * Makefile does not automatically install cron directories.
+   * Makefile does not automatically install cron directories.
 
    Thanks @WithHat
 
 v1.1.0 : 2013-07-16
 
-     * Add target units which allow you to write custom cron jobs.
+   * Add target units which allow you to write custom cron jobs.
 
    Thanks @WithHat
 
 v1.0.1 : 2013-05-31
 
-     * Update build mechanism with configure script and templated
-       Makefile.
+   * Update build mechanism with configure script and templated
+     Makefile.
 
 v1.0.0 : 2013-05-30
 
-     * Support cron.boot for scripts to be executed at boot-up.
+   * Support cron.boot for scripts to be executed at boot-up.
 
 v0.1.0 : 2013-05-27
 
-     * Initial release supporting hourly, daily, weekly, and monthly
-       scripts.
+   * Initial release supporting hourly, daily, weekly, and monthly
+     scripts.
 
