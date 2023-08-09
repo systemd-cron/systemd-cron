@@ -717,8 +717,9 @@ def workaround_var_not_mounted():
         if e.errno != errno.EEXIST:
             raise
 
-def is_masked(name:str, distro_mapping:dict[str,str]) -> bool:
+def is_masked(path:str, name:str, distro_mapping:dict[str,str]) -> bool:
     '''check if distribution also provide a native .timer'''
+    fullname = os.path.join(path, name)
     for unit_file in ('/lib/systemd/system/%s.timer' % name,
                       '/etc/systemd/system/%s.timer' % name,
                       '/run/systemd/system/%s.timer' % name):
@@ -728,12 +729,12 @@ def is_masked(name:str, distro_mapping:dict[str,str]) -> bool:
                 reason = 'it is masked'
             else:
                 reason = 'native timer is present'
-            log(Log.NOTICE, 'ignoring %s because %s' % (name, reason))
+            log(Log.NOTICE, 'ignoring %s because %s' % (fullname, reason))
             return True
 
     name_distro = '%s.timer' % distro_mapping.get(name, name)
     if os.path.exists('/lib/systemd/system/%s' % name_distro):
-        log(Log.NOTICE, 'ignoring %s because there is %s' % (name, name_distro))
+        log(Log.NOTICE, 'ignoring %s because there is %s' % (fullname, name_distro))
         return True
 
     return False
@@ -772,10 +773,10 @@ def main() -> None:
     CRONTAB_FILES = files('/etc/cron.d')
     for filename in CRONTAB_FILES:
         basename = os.path.basename(filename)
-        if is_masked(basename, CROND2TIMER):
+        if is_masked('/etc/cron.d', basename, CROND2TIMER):
             continue
         if is_backup(basename):
-            log(Log.DEBUG, 'ignoring %s' % basename)
+            log(Log.DEBUG, 'ignoring %s' % filename)
             continue
         for job in parse_crontab(filename, withuser=True):
             if not job.valid:
@@ -795,7 +796,7 @@ def main() -> None:
             CRONTAB_FILES = files('/etc/cron.' + period)
             for filename in CRONTAB_FILES:
                 basename = os.path.basename(filename)
-                if is_masked(basename, PART2TIMER):
+                if is_masked(directory, basename, PART2TIMER):
                     continue
                 if is_backup(basename) or basename == '0anacron':
                     log(Log.DEBUG, 'ignoring %s' % filename)
