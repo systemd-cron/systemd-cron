@@ -35,7 +35,7 @@ Dependencies history
 * systemd ≥ 209, yearly timers
 * systemd ≥ 212, persistent timers
 * systemd ≥ 217, minutely, quarterly & semi-annually timers
-* systemd ≥ 229, real random delay support with `RandomizedDelaySec` option
+* systemd ≥ 229, real random delay support with `RandomizedDelaySec` option [(bug)][90]
 * systemd ≥ 236, `LogLevelMax` option
 
 Installation
@@ -152,3 +152,5 @@ Copyright
 [11]: https://openmamba.org/en/packages/?tag=devel&pkg=systemd-cron.source
 [12]: https://github.com/systemd-cron/systemd-cron/blob/master/contrib/systemd-cron.spec
 [13]: https://repology.org/project/systemd-cron/packages
+
+[90]: https://bugs.freedesktop.org/show_bug.cgi?id=82084
