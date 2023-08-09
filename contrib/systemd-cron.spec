@@ -6,8 +6,8 @@
 # they must be covered by the Fedora preset policy."
 
 Name:           systemd-cron
-Version:        1.5.3
-Release:        2
+Version:        1.16.3
+Release:        1
 License:        MIT
 Summary:        systemd units to provide cron daemon & anacron functionality
 Url:            https://github.com/systemd-cron/systemd-cron/
@@ -51,7 +51,7 @@ fi
 %setup -q
 
 %build
-./configure --enable-persistent=yes --prefix=/usr --confdir=/etc --enable-boot=no
+./configure --enable-boot=no
 make
 
 %install
@@ -63,8 +63,8 @@ mkdir -p $RPM_BUILD_ROOT/etc/cron.weekly/
 cat << EOF > $RPM_BUILD_ROOT/etc/cron.weekly/systemd-cron
 #!/bin/sh
 test -x /usr/bin/python3 || exit 0
-test -x /lib/systemd-cron/remove_stale_stamps || exit 0
-exec /lib/systemd-cron/remove_stale_stamps
+test -x /usr/libexec/systemd-cron/remove_stale_stamps || exit 0
+exec /usr/libexec/systemd-cron/remove_stale_stamps
 EOF
 mkdir -p $RPM_BUILD_ROOT/usr/lib/systemd/system-preset/
 echo 'enable cron.target' > $RPM_BUILD_ROOT/usr/lib/systemd/system-preset/50-systemd-cron.preset
@@ -75,9 +75,9 @@ echo 'enable cron.target' > $RPM_BUILD_ROOT/usr/lib/systemd/system-preset/50-sys
 %dir /etc/cron.d/
 /etc/cron.weekly/
 /usr/bin/crontab
-/usr/lib/systemd-cron/mail_on_failure
-/usr/lib/systemd-cron/boot_delay
-/usr/lib/systemd-cron/remove_stale_stamps
+/usr/libexec/systemd-cron/mail_on_failure
+/usr/libexec/systemd-cron/boot_delay
+/usr/libexec/systemd-cron/remove_stale_stamps
 /usr/lib/systemd/system-preset/50-systemd-cron.preset
 /usr/lib/systemd/system/cron.target
 /usr/lib/systemd/system/cron-weekly.service
