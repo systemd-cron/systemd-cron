@@ -18,7 +18,7 @@ keypairs.
 The special
 .B RANDOM_DELAY
 (in minutes) environment variable is translated to
-.B AccuracySec=.
+.B RandomizedDelaySec=.
 
 The special
 .B START_HOURS_RANGE

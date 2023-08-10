@@ -102,7 +102,7 @@ The full output remains available in the journal.
 .TP
 .B RANDOM_DELAY
 (in minutes) environment variable is translated to
-.BR AccuracySec= .
+.BR RandomizedDelaySec= .
 
 .TP
 .B DELAY
