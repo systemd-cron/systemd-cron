@@ -1,0 +1,22 @@
+# this is a corpus of crontabs thats tries
+# to test all most code paths
+
+
+#dow 0-6 0=Vasárnap 1=Hétfő 2=Kedd 3=Szerda 4=Csütörtök 5=Péntek 6=Szombat
+
+
+# Example of job definition:
+# .---------------- minute (0 - 59)
+# |  .------------- hour (0 - 23)
+# |  |  .---------- day of month (1 - 31)
+# |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...
+# |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
+# |  |  |  |  |
+
+# *  *  *  *  * user-name command to be executed
+21 5 * * *   root    test -x /etc/cron.daily/popularity-contest && /etc/cron.daily/popularity-contest --crond
+*/5 * * * * root true
+00  0 * * 1-5 root echo Monday to Friday, double space, leading zero
+00  0 * * 0-3 root echo test US mode
+0 0 * * 4-7 root echo test EU mode
+@daily root ls
