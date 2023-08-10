@@ -613,7 +613,10 @@ def parse_crontab(filename:str,
                 key = envvar.group(1)
                 value = envvar.group(2)
                 value = value.strip("'").strip('"').strip(' ')
-                environment[key] = value
+                if key == 'PERSISTENT' and value == 'auto':
+                    environmanet.pop(key, None)
+                else:
+                    environment[key] = value
                 continue
 
             j = Job(filename, line)
