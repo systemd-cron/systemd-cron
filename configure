@@ -12,24 +12,18 @@ unitdir='$(libdir)/systemd/system'
 generatordir='$(libdir)/systemd/system-generators'
 enable_runparts=yes
 enable_setgid=no
+use_loglevelmax=no
 
-# systemd ≥ 197
 enable_boot=yes
+enable_minutely=no
 enable_hourly=yes
 enable_daily=yes
 enable_weekly=yes
 enable_monthly=yes
-
-# systemd ≥ 209
-enable_yearly=no
-
-# systemd ≥ 217
-enable_minutely=no
 enable_quarterly=no
 enable_semi_annually=no
+enable_yearly=yes
 
-# systemd ≥ 236
-use_loglevelmax=no
 
 ARGS=$(getopt -n "$(basename "${0}")" -o '' -l '
 prefix:,

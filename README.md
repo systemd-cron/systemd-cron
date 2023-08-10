@@ -107,11 +107,13 @@ Other options include:
 
 A typical configuration for the latest systemd would be:
 
-    $ ./configure --enable-yearly
+    $ ./configure
+
+(the default settings are a common ground between what is seen on current Arch/Debian/Gentoo packaging)
 
 If you only want the generator (you'll have to provide your own `/etc/crontab` to drive /etc/cron.daily/ etc...):
 
-    $ ./configure --enable-boot=no --enable-hourly=no --enable-daily=no --enable-weekly=no --enable-monthly=no
+    $ ./configure --enable-boot=no --enable-hourly=no --enable-daily=no --enable-weekly=no --enable-monthly=no --enable-yearly=no
 
 ### Caveat
 
