@@ -753,6 +753,7 @@ def main() -> None:
             raise
 
     fallback_mailto = None
+    distro_start_hour:dict[str,str] = dict()
 
     if os.path.isfile('/etc/crontab'):
         for job in parse_crontab('/etc/crontab', withuser=True):
@@ -761,10 +762,12 @@ def main() -> None:
                  log(Log.ERR, 'truncated line in /etc/crontab: %s' % job.line)
                  continue
             # legacy boilerplate
-            if '/etc/cron.hourly'  in job.line: continue
-            if '/etc/cron.daily'   in job.line: continue
-            if '/etc/cron.weekly'  in job.line: continue
-            if '/etc/cron.monthly' in job.line: continue
+            if '/etc/cron.hourly'  in job.line:
+                continue
+            for schedule in ('daily', 'weekly', 'monthly'):
+                if '/etc/cron.%s' % schedule in job.line:
+                   distro_start_hour[schedule] = job.timespec_hour[0]
+                   continue
             generate_timer_unit(job)
 
     CRONTAB_FILES = files('/etc/cron.d')
@@ -802,6 +805,7 @@ def main() -> None:
                 job = Job(filename, filename)
                 job.persistent = True
                 job.period = period
+                job.start_hour = distro_start_hour.get(period, 0)
                 job.boot_delay = i * 5
                 job.command = [filename]
                 job.jobid = period + '-' + basename
