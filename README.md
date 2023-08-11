@@ -22,11 +22,11 @@ The scripts should now be automatically run by systemd. See man:systemd.cron(7) 
 Dependencies
 ----------------
 * systemd ≥ 236
-* python ≥ 3.9
 * UsrMerged system
 * [run-parts][3] (optional)
 * /usr/sbin/sendmail (optional, evaluated at runtime)
-* gcc or clang (needed to build `crontab_setgid.c`; this helper is optional and evaluated at runtime)
+* C and C++20 compilers
+* libssl (-lcrypto)
 * support for /usr/lib/sysusers.d/*.conf (optional)
 
 Dependencies history
@@ -102,8 +102,10 @@ Other options include:
   Default: `no`.
 * `--enable-yearly[=yes|no]` Include support for the yearly timer.
   Default: `no`.
-* `--enable-setgid[=yes|no]` Compile setgid C helper for crontab. Needs GCC or Clang.
+* `--enable-setgid[=yes|no]` Compile setgid C helper for crontab. Needs C compiler.
   Default: `no`.
+* `--libcrypto=<flags>` Compiler and linker flags required to build and link to libcrypto.
+  Default: `pkgconf --cflags --libs libcrypto` or `-lcrypto`.
 
 A typical configuration for the latest systemd would be:
 
