@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
 				return 1;
 			};
 			while(fgets(buffer, sizeof(buffer), file)) {
-				printf("%s", buffer);
+				fputs(buffer, stdout);
 			}
 			fclose(file);
 			break;
@@ -100,7 +100,7 @@ int main(int argc, char *argv[]) {
 			int lines=0;
 			while(fgets(buffer, sizeof(buffer), stdin)) {
 				lines++;
-				if (fprintf(file, "%s", buffer) < 0) {
+				if (fputs(buffer, file) < 0) {
 					perror("Cannot write to file");
 					fclose(file);
 					unlink(temp);
