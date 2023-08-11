@@ -114,6 +114,7 @@ int main(int argc, char *argv[]) {
 			}
 			if (fclose(file)) {
 				perror("fclose");
+				unlink(temp);
 				return 1;
 			}
 			if (rename(temp,crontab)) {
