@@ -96,7 +96,7 @@ test: all
 	$(foreach manpage,$(out_manuals),\
 		man --warnings --encoding=utf8 --local-file $(manpage) 2>&1 > /dev/null${\n})
 	$(SHELLCHECK) $(out_programs_sh)
-	test/test.py
+	unshare -rm test/test.sh
 
 install: all
 	install -m755 -D $(builddir)/bin/crontab $(DESTDIR)$(bindir)/$(CRONTAB)
