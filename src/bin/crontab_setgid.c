@@ -47,9 +47,13 @@ int main(int argc, char *argv[]) {
 		case 'r':
 			file = fopen(crontab, "r");
 			if (file == NULL) {
-				if(errno == ENOENT) return ENOENT;
-				perror("Cannot open input file");
-				return 1;
+				if(errno == ENOENT) {
+					fprintf(stderr, "no crontab for %s\n", pw->pw_name);
+					return ENOENT;
+				} else {
+					perror("Cannot open input file");
+					return 1;
+				}
 			};
 			while(fgets(buffer, sizeof(buffer), file)) {
 				fputs(buffer, stdout);
