@@ -101,6 +101,13 @@ static auto parse_period(const std::string_view & value, const V & values, std::
                          std::size_t base) -> bool;
 static auto environment_write(const std::map<std::string_view, std::string_view> & env, FILE * into) -> void;
 
+
+enum class withuser_t : std::uint8_t {
+	from_cmd0,      // system crontab
+	from_basename,  // users' crontabs
+	initial,        // --check/--translate
+};
+
 struct Job {
 	std::string filename;
 	std::string_view basename;
@@ -258,9 +265,9 @@ struct Job {
 	// crontab --translate <something>
 	auto parse_crontab_auto() -> void {
 		if(this->line[0] == '@')
-			this->parse_crontab_at(false);
+			this->parse_crontab_at(withuser_t::initial);
 		else
-			this->parse_crontab_timespec(false);
+			this->parse_crontab_timespec(withuser_t::initial);
 
 		if(this->command.size()) {
 			if(this->command.size() > 1 && getpwnam(MAYBE_DUPA(this->command[0]))) {
@@ -282,27 +289,32 @@ struct Job {
 	}
 
 	// @daily (user) do something
-	auto parse_crontab_at(bool withuser) -> void {
-		if(this->parts.size() < (2 + withuser)) {
+	auto parse_crontab_at(withuser_t withuser) -> void {
+		if(this->parts.size() < (2 + (withuser == withuser_t::from_cmd0))) {
 			this->valid = false;
 			return;
 		}
 
 		this->period = this->parts[0];
-		if(withuser) {
-			this->user              = this->parts[1];
-			this->command.command.b = &*(this->parts.begin() + 2);
-		} else {
-			this->user              = this->basename;
-			this->command.command.b = &*(this->parts.begin() + 1);
+		switch(withuser) {
+			case withuser_t::from_cmd0:
+				this->user              = this->parts[1];
+				this->command.command.b = &*(this->parts.begin() + 2);
+				break;
+			case withuser_t::from_basename:
+				this->user = this->basename;
+				[[fallthrough]];
+			case withuser_t::initial:
+				this->command.command.b = &*(this->parts.begin() + 1);
+				break;
 		}
 		this->command.command.e = &*(this->parts.end());
 		this->jobid             = (std::string{this->basename} += '-') += this->user;
 	}
 
 	// 6 2 * * * (user) do something
-	auto parse_crontab_timespec(bool withuser) -> void {
-		if(this->parts.size() < (6 + withuser)) {
+	auto parse_crontab_timespec(withuser_t withuser) -> void {
+		if(this->parts.size() < (6 + (withuser == withuser_t::from_cmd0))) {
 			this->valid = false;
 			return;
 		}
@@ -326,12 +338,17 @@ struct Job {
 			return std::string_view{buf, 3} == "sun"sv;
 		}();
 
-		if(withuser) {
-			this->user              = this->parts[5];
-			this->command.command.b = &*(this->parts.begin() + 6);
-		} else {
-			this->user              = this->basename;
-			this->command.command.b = &*(this->parts.begin() + 5);
+		switch(withuser) {
+			case withuser_t::from_cmd0:
+				this->user              = this->parts[5];
+				this->command.command.b = &*(this->parts.begin() + 6);
+				break;
+			case withuser_t::from_basename:
+				this->user = this->basename;
+				[[fallthrough]];
+			case withuser_t::initial:
+				this->command.command.b = &*(this->parts.begin() + 5);
+				break;
 		}
 		this->command.command.e = &*(this->parts.end());
 		this->jobid             = (std::string{this->basename} += '-') += this->user;
@@ -791,8 +808,9 @@ static auto environment_write(const std::map<std::string_view, std::string_view>
 	}
 }
 
+
 template <class F>
-static auto parse_crontab(std::string_view filename, bool withuser /*=true*/, bool monotonic /*=false*/, F && cbk) -> bool {
+static auto parse_crontab(std::string_view filename, withuser_t withuser, bool monotonic /*=false*/, F && cbk) -> bool {
 	vore::file::mapping map;
 	{
 		vore::file::fd<true> f{filename.data(), O_RDONLY | O_CLOEXEC};
@@ -1009,7 +1027,7 @@ static auto realmain() -> int {
 	std::optional<std::string> fallback_mailto;
 	std::map<std::string_view, std::uint8_t> distro_start_hour;
 
-	if(!parse_crontab("/etc/crontab", /*withuser=*/true, /*monotonic=*/false, [&](auto && job) {
+	if(!parse_crontab("/etc/crontab", withuser_t::from_cmd0, /*monotonic=*/false, [&](auto && job) {
 		   if(auto itr = job.environment.find("MAILTO"sv); itr != std::end(job.environment))
 			   fallback_mailto = itr->second;
 		   if(!job.valid) {
@@ -1042,7 +1060,7 @@ static auto realmain() -> int {
 			return;
 		}
 		auto filename = "/etc/cron.d/"s += basename;
-		if(!parse_crontab(filename, /*withuser=*/true, /*monotonic=*/false, [&](auto && job) {
+		if(!parse_crontab(filename, withuser_t::from_cmd0, /*monotonic=*/false, [&](auto && job) {
 			   if(!job.valid) {
 				   log(Log::ERR, "truncated line in %.*s: %.*s", FORMAT_SV(filename), FORMAT_SV(job.line));
 				   return;
@@ -1086,7 +1104,7 @@ static auto realmain() -> int {
 			});
 		}
 
-		if(!parse_crontab("/etc/anacrontab", /*withuser=*/false, /*monotonic=*/true, [&](auto && job) {
+		if(!parse_crontab("/etc/anacrontab", withuser_t::from_basename, /*monotonic=*/true, [&](auto && job) {
 			   if(!job.valid) {
 				   log(Log::ERR, "truncated line in /etc/anacrontab: %.*s", FORMAT_SV(job.line));
 				   return;
@@ -1102,7 +1120,7 @@ static auto realmain() -> int {
 					return;
 
 				auto filename = (std::string{STATEDIR} += '/') += basename;
-				if(!parse_crontab(filename, /*withuser=*/false, /*monotonic=*/false, [&](auto && job) { generate_timer_unit(job); }))
+				if(!parse_crontab(filename, withuser_t::from_basename, /*monotonic=*/false, [&](auto && job) { generate_timer_unit(job); }))
 					log(Log::ERR, "%s: %s", filename.c_str(), std::strerror(errno));
 			});
 			vore::file::fd<false>{REBOOT_FILE, O_WRONLY | O_CREAT | O_CLOEXEC, 0666};
@@ -1118,7 +1136,7 @@ static auto realmain() -> int {
 
 static auto check(const char * cron_file) -> int {
 	bool err{};
-	if(!parse_crontab(cron_file, /*withuser=*/false, /*monotonic=*/false, [&](auto && job) {
+	if(!parse_crontab(cron_file, withuser_t::initial, /*monotonic=*/false, [&](auto && job) {
 		   if(!job.valid) {
 			   err = true;
 			   job.log(Log::ERR, "truncated line");
