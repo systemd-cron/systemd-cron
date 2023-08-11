@@ -1,6 +1,5 @@
 CFLAGS ?= -O2
 CFLAGS += -Wall
-PYFLAKES ?= pyflakes3
 SHELLCHECK ?= shellcheck
 CRONTAB ?= crontab
 
@@ -44,11 +43,10 @@ out_units		:= $(out_services) $(out_timers) $(out_targets) $(builddir)/units/cro
                            $(builddir)/units/cron-update.path $(builddir)/units/cron-update.service \
                            $(builddir)/units/cron-failure@.service
 out_manuals		:= $(patsubst $(srcdir)/man/%.in,$(builddir)/man/%,$(wildcard $(srcdir)/man/*))
-out_programs_py		:= $(subst $(srcdir),$(builddir),$(patsubst %.py,%,$(wildcard $(srcdir)/bin/*.py)))
 out_programs_sh		:= $(subst $(srcdir),$(builddir),$(patsubst %.sh,%,$(wildcard $(srcdir)/bin/*.sh)))
 out_programs_cpp	:= $(subst $(srcdir),$(builddir),$(patsubst %.cpp,%,$(wildcard $(srcdir)/bin/*.cpp)))
 out_programs_c		:= $(subst $(srcdir),$(builddir),$(patsubst %.c,%,$(wildcard $(srcdir)/bin/*.c)))
-outputs			:= $(out_units) $(out_manuals) $(out_programs_py) $(out_programs_sh) $(out_programs_cpp) $(out_programs_c)
+outputs			:= $(out_units) $(out_manuals) $(out_programs_sh) $(out_programs_cpp) $(out_programs_c)
 
 define \n
 
@@ -97,8 +95,6 @@ dist: $(tarball)
 test: all
 	$(foreach manpage,$(out_manuals),\
 		man --warnings --encoding=utf8 --local-file $(manpage) 2>&1 > /dev/null${\n})
-	$(foreach program,$(out_programs_py),\
-		$(PYFLAKES) $(program) ${\n})
 	$(SHELLCHECK) $(out_programs_sh)
 	test/test.py
 
@@ -226,10 +222,6 @@ $(builddir)/bin/systemd-crontab-generator: $(srcdir)/bin/systemd-crontab-generat
 
 $(builddir)/bin/crontab: $(srcdir)/bin/crontab.cpp $(common_headers)
 	$(CXX) -Wall -Wextra -fno-exceptions $(CFLAGS) $(CPPFLAGS) -std=c++20 -I $(builddir)/include $(PCH_ARG) $< -o $@ $(LDFLAGS)
-
-$(builddir)/bin/%: $(srcdir)/bin/%.py
-	$(call in2out,$<,$@)
-	chmod +x $@
 
 $(builddir)/bin/%: $(srcdir)/bin/%.sh
 	$(call in2out,$<,$@)
