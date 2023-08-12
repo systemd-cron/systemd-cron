@@ -753,7 +753,7 @@ def main() -> None:
             raise
 
     fallback_mailto = None
-    distro_start_hour:dict[str,str] = dict()
+    distro_start_hour:dict[str,int] = dict()
 
     if os.path.isfile('/etc/crontab'):
         for job in parse_crontab('/etc/crontab', withuser=True):
@@ -766,7 +766,10 @@ def main() -> None:
                 continue
             for schedule in ('daily', 'weekly', 'monthly'):
                 if '/etc/cron.%s' % schedule in job.line:
-                   distro_start_hour[schedule] = job.timespec_hour[0]
+                   try:
+                       distro_start_hour[schedule] = int(job.timespec_hour[0])
+                   except ValueError:
+                       log(Log.ERR, 'invalid hour in /etc/crontab: %s' % job.line)
                    continue
             generate_timer_unit(job)
 
