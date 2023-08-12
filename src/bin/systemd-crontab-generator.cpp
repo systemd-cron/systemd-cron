@@ -172,7 +172,6 @@ struct Job {
 	} command;
 	std::string execstart;
 	bool valid;
-	std::optional<std::string_view> testremoved;  // view of line
 
 	Job(std::string_view filename, std::string_view line) {
 		this->filename = filename;
@@ -194,7 +193,7 @@ struct Job {
 		this->sunday_is_seven = false;
 	}
 
-	auto log(Log priority, const char * message) -> void { ::log(priority, "%s in %.*s:%.*s", message, FORMAT_SV(this->filename), FORMAT_SV(this->line)); }
+	auto log(Log priority, const char * message) -> void { ::log(priority, "%s in %.*s: %.*s", message, FORMAT_SV(this->filename), FORMAT_SV(this->line)); }
 
 	auto which(const std::string_view & pgm) -> std::optional<std::string> {
 		auto itr = this->environment.find("PATH"sv);
@@ -256,30 +255,31 @@ struct Job {
 		this->command.command.e = &*(this->parts.end());
 	}
 
-	/*def parse_crontab_auto() -> None:
-	    '''crontab --translate <something>'''
-	    if this->line.startswith('@'):
-	        this->parse_crontab_at(false)
-	    else:
-	        this->parse_crontab_timespec(false)
+	// crontab --translate <something>
+	auto parse_crontab_auto() -> void {
+		if(this->line[0] == '@')
+			this->parse_crontab_at(false);
+		else
+			this->parse_crontab_timespec(false);
 
-	    if (this->command.size()) {
-	        if (this->command.size() > 1) {
-	            auto maybe_user = this->command[0];
-	            try:
-	                pwd.getpwnam(maybe_user)
-	                this->user = maybe_user
-	                ++this->command.bZ
-	            except:
-	                this->user = os.getlogin()
-	        } else
-	            this->user = os.getlogin()
+		if(this->command.size()) {
+			if(this->command.size() > 1 && getpwnam(MAYBE_DUPA(this->command[0]))) {
+				this->user = this->command[0];
+				++this->command.command.b;
+			} else
+				this->user = getlogin();
 
-	        pgm = this->which(this->command[0])
-	        if (pgm)
-	            this->command[0] = pgm;
-	        this->execstart = ' '.join(this->command)
-	    }*/
+			this->decode_command();
+			auto first = true;
+			for(auto && hunk : this->command) {
+				if(hunk.empty())
+					continue;
+				if(!std::exchange(first, false))
+					this->execstart += ' ';
+				this->execstart += hunk;
+			}
+		}
+	}
 
 	// @daily (user) do something
 	auto parse_crontab_at(bool withuser) -> void {
@@ -373,6 +373,10 @@ struct Job {
 
 	// perform smart substitutions for known shells
 	auto decode_command() -> void {
+		if(!this->command.size())
+			return;
+
+
 		if(!this->home) {
 			static std::map<std::string, std::string, std::less<>> pwnam_cache;
 			auto itr = pwnam_cache.find(this->user);
@@ -419,27 +423,10 @@ struct Job {
 		  this->command = this->command [0:-2];
 
 		if(this->command.size() >= 2 && this->command[-1] == '>/dev/null')
-		  this->command = this->command [0:-1];
-
-		if(this->command.size() == 6 && this->command[0] == '[' && this->command[1] in['-x', '-f', '-e'] && this->command[2] == this->command[5] &&
-		   this->command[3] == ']' && this->command[4] == '&&') {
-		  this->testremoved = this->command[2];
-		  this->command     = this->command [5:];
-		}
-
-		if(this->command.size() == 5 && this->command[0] == 'test' && this->command[1] in['-x', '-f', '-e'] && this->command[2] == this->command[4] &&
-		   this->command[3] == '&&') {
-		  this->testremoved = this->command[2];
-		  this->command     = this->command [4:];
-		}*/
+		  this->command = this->command [0:-1];*/
 	}
 
 	auto is_active() -> bool {
-		if(this->testremoved && access(MAYBE_DUPA(*this->testremoved), F_OK)) {  // TODO: NOTE: isfile -> access: this also handles -e
-			::log(Log::NOTICE, "%.*s is removed, skipping job", FORMAT_SV(*this->testremoved));
-			return false;
-		}
-
 		if(this->schedule == "reboot"sv && !access(REBOOT_FILE, F_OK))
 			return false;
 
@@ -562,26 +549,25 @@ struct Job {
 		// %s*-%s-%s %s:%s:00
 		this->schedule = std::move(dows);
 		this->schedule += "*-"sv;
-		char buf[3 + 1];  // 255
-#define TIMESPEC_COMMA(field)                                                                                                \
-	{                                                                                                                          \
-		auto first = true;                                                                                                       \
-		for(auto f : this->field) {                                                                                              \
-			if(!std::exchange(first, false))                                                                                       \
-				this->schedule += ',';                                                                                               \
-			if(f == TIMESPEC_ASTERISK)                                                                                             \
-				this->schedule += '*';                                                                                               \
-			else                                                                                                                   \
-				this->schedule += std::string_view{buf, static_cast<std::size_t>(std::snprintf(buf, sizeof(buf), "%" PRIu8 "", f))}; \
-		}                                                                                                                        \
-	}
-		TIMESPEC_COMMA(timespec_month);
+		auto timespec_comma = [&](auto && field) {
+			char buf[3 + 1];  // 255
+			auto first = true;
+			for(auto f : field) {
+				if(!std::exchange(first, false))
+					this->schedule += ',';
+				if(f == TIMESPEC_ASTERISK)
+					this->schedule += '*';
+				else
+					this->schedule += std::string_view{buf, static_cast<std::size_t>(std::snprintf(buf, sizeof(buf), "%" PRIu8 "", f))};
+			}
+		};
+		timespec_comma(this->timespec_month);
 		this->schedule += '-';
-		TIMESPEC_COMMA(timespec_dom);
+		timespec_comma(this->timespec_dom);
 		this->schedule += ' ';
-		TIMESPEC_COMMA(timespec_hour);
+		timespec_comma(this->timespec_hour);
 		this->schedule += ':';
-		TIMESPEC_COMMA(timespec_minute);
+		timespec_comma(this->timespec_minute);
 		this->schedule += ":00"sv;
 	}
 
@@ -675,8 +661,6 @@ struct Job {
 	auto generate_timer(FILE * into) -> void {
 		this->generate_unit_header(into, "Timer", "PartOf=cron.target\n");
 		// std::fputs("PartOf=cron.target\n", into); TODO: see generate_unit_header
-		if(this->testremoved)
-			std::fprintf(into, "ConditionFileIsExecutable=%.*s\n", FORMAT_SV(*this->testremoved));
 		std::fputc('\n', into);
 
 		std::fputs("[Timer]\n", into);
@@ -710,6 +694,8 @@ struct Job {
 			TRY_CRYPTO(EVP_DigestInit_ex(evp, EVP_md5(), nullptr));
 			TRY_CRYPTO(EVP_DigestUpdate(evp, this->schedule.data(), this->schedule.size()));
 			for(auto && hunk : this->command) {
+				if(hunk.empty())
+					continue;
 				TRY_CRYPTO(EVP_DigestUpdate(evp, "", 1));  // NUL byte
 				TRY_CRYPTO(EVP_DigestUpdate(evp, hunk.data(), hunk.size()));
 			}
@@ -725,20 +711,18 @@ struct Job {
 	}
 
 	// write the result in TARGET_DIR
-	auto output() -> void {
-#define OUTPUT_ERR(f, op)                                                                    \
-	{                                                                                          \
-		char buf[512];                                                                           \
-		std::snprintf(buf, sizeof(buf), "%.*s: %s: %s", FORMAT_SV(f), op, std::strerror(errno)); \
-		this->log(Log::ERR, buf);                                                                \
-		return;                                                                                  \
-	}
+	auto output() -> bool {
+		auto output_err = [&](std::string_view f, const char * op) {
+			char buf[512];
+			std::snprintf(buf, sizeof(buf), "%.*s: %s: %s", FORMAT_SV(f), op, std::strerror(errno));
+			this->log(Log::ERR, buf);
+		};
 		assert(!this->unit_name.empty());
 
 		if(auto scriptlet = this->generate_scriptlet()) {  // as a side-effect also changes this->execstart
 			vore::file::FILE<false> f{scriptlet->c_str(), "we"};
 			if(!f)
-				OUTPUT_ERR(*scriptlet, "create");
+				return output_err(*scriptlet, "create"), false;
 			auto first = true;
 			for(auto && hunk : this->command) {
 				if(hunk.empty())
@@ -750,31 +734,32 @@ struct Job {
 			if(!first)
 				std::fputc('\n', f);
 			if(std::ferror(f) || std::fflush(f))
-				OUTPUT_ERR(*scriptlet, "write");
+				return output_err(*scriptlet, "write"), false;
 		}
 
 		auto timer = ((std::string{TARGET_DIR} += '/') += this->unit_name) += ".timer"sv;
 		{
 			vore::file::FILE<false> t{timer.c_str(), "we"};
 			if(!t)
-				OUTPUT_ERR(timer, "create");
+				return output_err(timer, "create"), false;
 			this->generate_timer(t);
 			if(std::ferror(t) || std::fflush(t))
-				OUTPUT_ERR(timer, "write");
+				return output_err(timer, "write"), false;
 		}
 
 		if(symlink(timer.c_str(), (((std::string{TIMERS_DIR} += '/') += this->unit_name) += ".timer"sv).c_str()) == -1 && errno != EEXIST)
-			OUTPUT_ERR(timer, "link");
+			return output_err(timer, "link"), false;
 
 		auto service = ((std::string{TARGET_DIR} += '/') += this->unit_name) += ".service"sv;
 		{
 			vore::file::FILE<false> s{service.c_str(), "we"};
 			if(!s)
-				OUTPUT_ERR(service, "create");
+				return output_err(service, "create"), false;
 			this->generate_service(s);
 			if(std::ferror(s) || std::fflush(s))
-				OUTPUT_ERR(service, "write");
+				return output_err(service, "write"), false;
 		}
+		return true;
 	}
 };
 
@@ -784,10 +769,9 @@ static auto for_each_file(const char * dirname, F && cbk) -> void {
 	if(vore::file::DIR dir{dirname}) {
 		auto fd = dirfd(dir);
 		struct stat sb;
-		for(auto && ent : dir) {
+		for(auto && ent : dir)
 			if(ent.d_type == DT_REG || (!fstatat(fd, ent.d_name, &sb, 0) && S_ISREG(sb.st_mode)))
 				cbk(ent.d_name);
-		}
 	}
 }
 
@@ -807,9 +791,8 @@ static auto environment_write(const std::map<std::string_view, std::string_view>
 	}
 }
 
-// parser shared with /usr/bin/crontab
 template <class F>
-static auto parse_crontab(std::string_view filename, bool withuser, bool monotonic, F && cbk) -> bool {
+static auto parse_crontab(std::string_view filename, bool withuser /*=true*/, bool monotonic /*=false*/, F && cbk) -> bool {
 	vore::file::mapping map;
 	{
 		vore::file::fd<true> f{filename.data(), O_RDONLY | O_CLOEXEC};
@@ -818,6 +801,8 @@ static auto parse_crontab(std::string_view filename, bool withuser, bool monoton
 
 		struct stat sb;
 		fstat(f, &sb);
+		if(!sb.st_size)
+			return true;
 
 		map = {nullptr, static_cast<std::size_t>(sb.st_size), PROT_READ, MAP_PRIVATE, f, 0};
 		if(!map)
@@ -1120,7 +1105,7 @@ static auto realmain() -> int {
 				if(!parse_crontab(filename, /*withuser=*/false, /*monotonic=*/false, [&](auto && job) { generate_timer_unit(job); }))
 					log(Log::ERR, "%s: %s", filename.c_str(), std::strerror(errno));
 			});
-			vore::file::fd<false>{REBOOT_FILE, O_WRONLY | O_CREAT | O_CLOEXEC};
+			vore::file::fd<false>{REBOOT_FILE, O_WRONLY | O_CREAT | O_CLOEXEC, 0666};
 		} else {
 			if(!workaround_var_not_mounted())
 				log(Log::WARNING, "%s: %s", "cron-after-var.service", std::strerror(errno));
@@ -1131,6 +1116,56 @@ static auto realmain() -> int {
 }
 
 
+static auto check(const char * cron_file) -> int {
+	bool err{};
+	if(!parse_crontab(cron_file, /*withuser=*/false, /*monotonic=*/false, [&](auto && job) {
+		   if(!job.valid) {
+			   err = true;
+			   job.log(Log::ERR, "truncated line");
+		   } else if(!job.period.empty()) {
+			   static const constexpr std::string_view valid_periods[] = {"annually"sv,      "bi-annually"sv,  "biannually"sv, "daily"sv,     "hourly"sv,
+			                                                              "midnight"sv,      "minutely"sv,     "monthly"sv,    "quarterly"sv, "reboot"sv,
+			                                                              "semi-annually"sv, "semiannually"sv, "weekly"sv,     "yearly"sv};  // keep sorted
+			   if(!std::binary_search(std::begin(valid_periods), std::end(valid_periods), job.period)) {
+				   err = true;
+				   job.log(Log::ERR, "unknown schedule");
+			   }
+		   } else if(job.timespec_month.contains(0) || job.timespec_dom.contains(0)) {
+			   err = true;
+			   job.log(Log::ERR, "month and day can't be 0");
+		   }
+	   }))
+		log(Log::ERR, "%s: %s", cron_file, std::strerror(errno));
+	return err;
+}
+
+
+static auto blue(const char * line) -> void {
+	if(isatty(0))
+		std::fprintf(stdout, "\033[1;34m%s\033[0m", line);
+	else
+		std::fputs(line, stdout);
+}
+static auto translate(const char * line) -> int {
+	std::puts(line);
+
+	Job job{"-"sv, line};
+	job.parse_crontab_auto();
+	job.decode();
+	job.decode_command();
+	job.generate_schedule();
+
+	blue("# /run/systemd/generator/<unit>.timer\n");
+	job.generate_timer(stdout);
+	std::fputs("#Persistent=true\n", stdout);
+	std::fputc('\n', stdout);
+
+	blue("# /run/systemd/generator/<unit>.service\n");
+	job.generate_service(stdout);
+	return !job.valid;
+}
+
+
 int main(int argc, const char * const * argv) {
 	std::setlocale(LC_ALL, "C.UTF-8");
 	if(argc == 1) {
@@ -1138,9 +1173,22 @@ int main(int argc, const char * const * argv) {
 		return 1;
 	}
 
+	const char * file{};
+	bool file_check;
+
 	SELF       = vore::basename(std::string_view{argv[0]}).data();
 	TARGET_DIR = argv[1];
-	TIMERS_DIR = std::string{argv[1]} += "/cron.target.wants"sv;
+	if(TARGET_DIR == "--check"sv || TARGET_DIR == "--translate"sv) {
+		file_check = TARGET_DIR == "--check"sv;
+		TARGET_DIR = "/ENOENT"sv;
+		file       = argv[2] ?: "-";
+	}
+	TIMERS_DIR = std::string{TARGET_DIR} += "/cron.target.wants"sv;
+
+
+	if(file)
+		return file_check ? check(file) : translate(file);
+
 
 	RUN_BY_SYSTEMD = argc == 4;
 	if(RUN_BY_SYSTEMD)
