@@ -168,8 +168,8 @@ class Job:
 
         if 'START_HOURS_RANGE' in self.environment:
             try:
-                self.start_hour = int(self.environment['STARTS_HOURS_RANGE'].split('-')[0])
-                del self.environment['STARTS_HOURS_RANGE']
+                self.start_hour = int(self.environment['START_HOURS_RANGE'].split('-')[0])
+                del self.environment['START_HOURS_RANGE']
             except ValueError:
                 self.log(Log.WARNING, 'invalid START_HOURS_RANGE')
 
