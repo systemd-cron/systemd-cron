@@ -32,7 +32,7 @@ show all user who have a crontab
 .BR -i ", " --ask
 prompt before deleting user's crontab
 .TP
-.BR -t ", " --translate \fICRONTAB\fP
+.BR -t ", " --translate\  \fICRONTAB\fP
 translate one cron record and print the result to STDOUT
 
 .SH DESCRIPTION
