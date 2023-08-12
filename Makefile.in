@@ -83,12 +83,7 @@ clean:
 	rm -rf $(outdir)
 
 distprep: $(distdir)
-	cp -a configure		$(distdir)
-	cp -a Makefile.in	$(distdir)
-	cp -a LICENSE		$(distdir)
-	cp -a README.md		$(distdir)
-	cp -a VERSION		$(distdir)
-	cp -a src		$(distdir)
+	cp -at $(distdir) configure Makefile.in LICENSE README.md VERSION src test
 
 dist: $(tarball)
 
