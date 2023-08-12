@@ -111,9 +111,10 @@ A typical configuration for the latest systemd would be:
 
 (the default settings are a common ground between what is seen on current Arch/Debian/Gentoo packaging)
 
-If you only want the generator (you'll have to provide your own `/etc/crontab` to drive /etc/cron.daily/ etc...):
+Alternatively you can also generate individual .timer/.service for all the jobs
+in /etc/cron.{hourly,daily,weekly,monthly,...}:
 
-    $ ./configure --enable-boot=no --enable-hourly=no --enable-daily=no --enable-weekly=no --enable-monthly=no --enable-yearly=no
+    $ ./configure --enable-runparts=no
 
 ### Caveat
 
