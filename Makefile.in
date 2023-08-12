@@ -66,10 +66,7 @@ define in2out
 
 	sed \
 		-e "s|\@statedir\@|$(statedir)|g" \
-		-e "s|\@libdir\@|$(libdir)|g" \
 		-e "s|\@libexecdir\@|$(libexecdir)|g" \
-		-e "s|\@unitdir\@|$(unitdir)|g" \
-		-e "s|\@use_runparts\@|$(use_runparts)|g" \
 		-e "s|\@version\@|$(version)|g" \
 		-e "s|\@use_loglevelmax\@|$(use_loglevelmax)|g" \
 		-e "s|\@schedule\@|$3|g" \
