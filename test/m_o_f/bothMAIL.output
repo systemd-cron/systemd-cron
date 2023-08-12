@@ -1,0 +1,12 @@
+-i -B8BITMIME żupan@henry.jpeg
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Date: Sat, 12 Aug 2023 17:49:04 -0000
+From: henry@zbysiopatia.jpeg (systemd-cron)
+To: =?utf-8?b?xbx1cGFuQGhlbnJ5LmpwZWc=?=
+Subject: [tarta] job bothMAIL.service failed
+Auto-Submitted: auto-generated
+
+User=
+Environment="PATH=żupan:/etc" MAILFROM=henry@zbysiopatia.jpeg TZ=UTC0 MAILTO=żupan@henry.jpeg

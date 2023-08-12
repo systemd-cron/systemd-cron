@@ -1,0 +1,4 @@
+#!/bin/sh
+echo "$@"
+cat
+#tee /dev/stderr | b2sum | sponge
