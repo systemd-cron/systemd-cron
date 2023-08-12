@@ -132,6 +132,7 @@ See Also
 License
 -----------
 The project is licensed under MIT.
+It vendors a derived work of voreutils, which is available under the 0BSD licence.
 
 
 Copyright

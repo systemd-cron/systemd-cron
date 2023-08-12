@@ -46,7 +46,9 @@ out_units		:= $(out_services) $(out_timers) $(out_targets) $(builddir)/units/cro
 out_manuals		:= $(patsubst $(srcdir)/man/%.in,$(builddir)/man/%,$(wildcard $(srcdir)/man/*))
 out_programs_py		:= $(subst $(srcdir),$(builddir),$(patsubst %.py,%,$(wildcard $(srcdir)/bin/*.py)))
 out_programs_sh		:= $(subst $(srcdir),$(builddir),$(patsubst %.sh,%,$(wildcard $(srcdir)/bin/*.sh)))
-outputs			:= $(out_units) $(out_manuals) $(out_programs_py) $(out_programs_sh) $(builddir)/bin/crontab_setgid
+out_programs_cpp	:= $(subst $(srcdir),$(builddir),$(patsubst %.cpp,%,$(wildcard $(srcdir)/bin/*.cpp)))
+out_programs_c		:= $(subst $(srcdir),$(builddir),$(patsubst %.c,%,$(wildcard $(srcdir)/bin/*.c)))
+outputs			:= $(out_units) $(out_manuals) $(out_programs_py) $(out_programs_sh) $(out_programs_cpp) $(out_programs_c)
 
 define \n
 
@@ -59,7 +61,7 @@ requires = $(subst ${null} ${null},\n,$(foreach schedule,$(schedules),Requires=c
 else
 requires = Requires=systemd-cron-cleaner.timer
 endif
-use_runparts = $(if $(filter $(enable_runparts),yes),True,False)
+use_runparts = $(if $(filter $(enable_runparts),yes),true,false)
 
 # $(call in2out,$input,$output,$schedule,$requires)
 define in2out
@@ -198,6 +200,30 @@ else
 		sed -i $@ -e '/cron-$(schedule_all).timer/d' ${\n})
 endif
 
+$(builddir)/include/configuration.hpp : $(srcdir)/include/configuration.hpp.in Makefile
+	sed -e 's:\@use_loglevelmax\@:$(use_loglevelmax):' \
+	    -e 's:\@use_runparts\@:$(use_runparts):' \
+	    -e 's:\@libexecdir\@:$(libexecdir):' \
+	    -e 's:\@statedir\@:$(statedir):' $< > $@
+
+$(builddir)/include/%.hpp: $(srcdir)/include/%.hpp
+	cp $< $@
+
+CXXVER := $(shell $(CXX) --version | { read -r l; echo "$$l"; })
+ifneq "$(findstring clang,$(CXXVER))" ""
+	# clang doesn't use PCHs automatically
+	PCH_ARG := -include-pch $(builddir)/include/libvoreutils.hpp.gch
+else
+	PCH_ARG :=
+endif
+
+common_headers := $(builddir)/include/configuration.hpp $(builddir)/include/libvoreutils.hpp.gch $(builddir)/include/util.hpp
+$(builddir)/include/libvoreutils.hpp.gch : $(builddir)/include/libvoreutils.hpp
+	$(CXX) -Wall -Wextra -fno-exceptions $(CFLAGS) $(CPPFLAGS) -std=c++20 -I $(builddir)/include            $< -o $@
+
+$(builddir)/bin/systemd-crontab-generator: $(srcdir)/bin/systemd-crontab-generator.cpp $(common_headers)
+	$(CXX) -Wall -Wextra -fno-exceptions $(CFLAGS) $(CPPFLAGS) -std=c++20 -I $(builddir)/include $(PCH_ARG) $< -o $@ $(LDFLAGS) @libcrypto@
+
 $(builddir)/bin/%: $(srcdir)/bin/%.py
 	$(call in2out,$<,$@)
 	chmod +x $@
@@ -208,7 +234,7 @@ $(builddir)/bin/%: $(srcdir)/bin/%.sh
 
 $(builddir)/bin/crontab_setgid: $(srcdir)/bin/crontab_setgid.c
 ifneq ($(enable_setgid),no)
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) $< -DCRONTAB_DIR='"$(statedir)"' -o $@
+	$(CC) $(CFLAGS) $(CPPFLAGS) $< -DCRONTAB_DIR='"$(statedir)"' -o $@ $(LDFLAGS)
 endif
 
 $(outputs): $(builddir)
@@ -217,7 +243,7 @@ $(outdir):
 	mkdir -p $@
 
 $(builddir):
-	mkdir -p $@/bin $@/man $@/units
+	mkdir -p $@/bin $@/man $@/units $@/include
 
 $(distdir):
 	mkdir -p $(distdir)

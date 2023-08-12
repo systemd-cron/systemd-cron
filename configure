@@ -10,6 +10,7 @@ mandir='$(datadir)/man'
 docdir='$(datadir)/doc/$(package)'
 unitdir='$(libdir)/systemd/system'
 generatordir='$(libdir)/systemd/system-generators'
+libcrypto="$(pkgconf --cflags --libs libcrypto)" 2>/dev/null || libcrypto='-lcrypto'
 enable_runparts=yes
 enable_setgid=no
 use_loglevelmax=no
@@ -114,6 +115,10 @@ do
             generatordir="${2}"
             shift 2;;
 
+        '--libcrypto')
+            libcrypto="${2}"
+            shift 2;;
+
         '--enable-boot')
             set_enable_flag boot ${2}
             shift 2;;
@@ -209,5 +214,6 @@ s|@mandir@|${mandir}|g
 s|@docdir@|${docdir}|g
 s|@unitdir@|${unitdir}|g
 s|@generatordir@|${generatordir}|g
+s|@libcrypto@|${libcrypto}|g
 s|@use_loglevelmax@|${use_loglevelmax}|g
 " Makefile.in > Makefile

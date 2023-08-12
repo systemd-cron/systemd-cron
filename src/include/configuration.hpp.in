@@ -1,0 +1,10 @@
+#include <string_view>
+using namespace std::literals;
+
+static const constexpr std::string_view USE_LOGLEVELMAX = "@use_loglevelmax@"sv;
+static const constexpr bool USE_RUNPARTS                = @use_runparts@;
+static const constexpr std::string_view BOOT_DELAY      = "@libexecdir@/systemd-cron/boot_delay"sv;
+#define STATEDIR "@statedir@"
+static const char * const SETGID_HELPER                 = "@libexecdir@/systemd-cron/crontab_setgid";
+
+static const char * const REBOOT_FILE = "/run/crond.reboot";
