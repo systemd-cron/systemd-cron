@@ -3,6 +3,7 @@
 
 
 #dow 0-6 0=Vasárnap 1=Hétfő 2=Kedd 3=Szerda 4=Csütörtök 5=Péntek 6=Szombat
+1 2 3 4 5 henry echo 0=Vasárnap 1=Hétfő 2=Kedd 3=Szerda 4=Csütörtök 5=Péntek 6=Szombat
 
 START_HOURS_RANGE=3-22
 
