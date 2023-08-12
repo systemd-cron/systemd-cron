@@ -614,7 +614,7 @@ def parse_crontab(filename:str,
                 value = envvar.group(2)
                 value = value.strip("'").strip('"').strip(' ')
                 if key == 'PERSISTENT' and value == 'auto':
-                    environmanet.pop(key, None)
+                    environment.pop(key, None)
                 else:
                     environment[key] = value
                 continue
