@@ -382,12 +382,22 @@ static auto replace(const char * cron_file, const char * user, const char * file
 enum class action_t : int { replace, list = 'l', remove = 'r', edit = 'e', show = 's', translate = 't' };
 
 #define USAGE                                \
-	"usage: %1$s         [-u user] [newtab]\n" \
-	"       %1$s -l      [-u user]\n"          \
-	"       %1$s -r [-i] [-u user]\n"          \
-	"       %1$s -e      [-u user]\n"          \
-	"       %1$s -s\n"                         \
-	"       %1$s -t                line\n"
+        "usage:\n" \
+        "  %1$s -h                     Show this help message and exit.\n" \
+        "  %1$s -s                     Show all user who have a crontab. (only for root)\n" \
+        "  %1$s [-u USER] [FILE]       Replace the current crontab, read it from STDIN or FILE\n" \
+        "  %1$s -e [-u USER]           Open the current crontab with an editor\n" \
+        "  %1$s -r [-u USER] [-i]      Remove a crontab, (-i: with confirmation)\n" \
+        "  %1$s -l [-u USER]           List current crontab.\n" \
+        "  %1$s -t line                Translate one crontab line.\n" \
+        "\n" \
+        "long options:\n"       \
+	"  %1$s -e, --edit\n"   \
+	"  %1$s -l, --list\n"   \
+	"  %1$s -r, --remove\n" \
+	"  %1$s -s, --show\n"   \
+	"  %1$s -t, --translate\n" \
+        "  %1$s -u, --user\n"
 
 static const constexpr struct option longopts[] = {{"list", no_argument, nullptr, 'l'},         //
                                                    {"remove", no_argument, nullptr, 'r'},       //
