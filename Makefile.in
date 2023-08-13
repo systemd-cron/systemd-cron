@@ -211,14 +211,15 @@ else
 endif
 
 common_headers := $(builddir)/include/configuration.hpp $(builddir)/include/libvoreutils.hpp.gch $(builddir)/include/util.hpp
+CFLAGS += -Wall -Wextra -fno-exceptions -Wno-psabi
 $(builddir)/include/libvoreutils.hpp.gch : $(builddir)/include/libvoreutils.hpp
-	$(CXX) -Wall -Wextra -fno-exceptions $(CFLAGS) $(CPPFLAGS) -std=c++20 -I $(builddir)/include            $< -o $@
+	$(CXX) $(CFLAGS) $(CPPFLAGS) -std=c++20 -I $(builddir)/include            $< -o $@
 
 $(builddir)/bin/systemd-crontab-generator: $(srcdir)/bin/systemd-crontab-generator.cpp $(common_headers) $(builddir)/include/part2timer.hpp $(builddir)/include/crond2timer.hpp
-	$(CXX) -Wall -Wextra -fno-exceptions $(CFLAGS) $(CPPFLAGS) -std=c++20 -I $(builddir)/include $(PCH_ARG) $< -o $@ $(LDFLAGS) @libcrypto@
+	$(CXX) $(CFLAGS) $(CPPFLAGS) -std=c++20 -I $(builddir)/include $(PCH_ARG) $< -o $@ $(LDFLAGS) @libcrypto@
 
 $(builddir)/bin/crontab: $(srcdir)/bin/crontab.cpp $(common_headers)
-	$(CXX) -Wall -Wextra -fno-exceptions $(CFLAGS) $(CPPFLAGS) -std=c++20 -I $(builddir)/include $(PCH_ARG) $< -o $@ $(LDFLAGS)
+	$(CXX) $(CFLAGS) $(CPPFLAGS) -std=c++20 -I $(builddir)/include $(PCH_ARG) $< -o $@ $(LDFLAGS)
 
 $(builddir)/bin/%: $(srcdir)/bin/%.sh
 	$(call in2out,$<,$@)
