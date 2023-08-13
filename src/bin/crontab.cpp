@@ -379,7 +379,7 @@ static auto replace(const char * cron_file, const char * user, const char * file
 }
 
 
-enum class action_t : char { replace, list = 'l', remove = 'r', edit = 'e', show = 's', translate = 't' };
+enum class action_t : int { replace, list = 'l', remove = 'r', edit = 'e', show = 's', translate = 't' };
 
 #define USAGE                                \
 	"usage: %1$s         [-u user] [newtab]\n" \
@@ -395,14 +395,15 @@ static const constexpr struct option longopts[] = {{"list", no_argument, nullptr
                                                    {"edit", no_argument, nullptr, 'e'},         //
                                                    {"show", no_argument, nullptr, 's'},         //
                                                    {"translate", no_argument, nullptr, 't'},    //
-                                                   {"user", required_argument, nullptr, 'u'}};  //
+                                                   {"user", required_argument, nullptr, 'u'},   //
+                                                   {0, 0, 0, 0}};                               //
 auto main(int argc, char * const * argv) -> int {
 	setlocale(LC_ALL, "");
 	self = argv[0];
 	bool ask{};
 	auto action = action_t::replace;
 	const char * user{};
-	for(char arg; (arg = getopt_long(argc, argv, "lriestu:", longopts, nullptr)) != -1;)
+	for(int arg; (arg = getopt_long(argc, argv, "lriestu:", longopts, nullptr)) != -1;)
 		switch(arg) {
 			case 'l':
 			case 'r':
