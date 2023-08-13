@@ -88,6 +88,7 @@ test: all
 	$(SHELLCHECK) $(out_programs_sh)
 	unshare -rm test/test-generator
 	unshare -ru test/test-m_o_f
+	unshare -rm test/test-r_s_s
 	$(foreach manpage,$(out_manuals),\
 		man --warnings --encoding=utf8 --local-file $(manpage) 2>&1 > /dev/null${\n})
 

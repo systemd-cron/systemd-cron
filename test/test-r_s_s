@@ -1,0 +1,30 @@
+#!/bin/sh
+# expects to run as root of a mountns
+R_S_S="$PWD/out/build/bin/remove_stale_stamps"
+mount -t tmpfs tmpfs /var/lib || exit
+mount -t tmpfs tmpfs /run     || exit
+mkdir -p /var/lib/systemd/timers /run/systemd/generator || exit
+
+
+touch -d@975711600 /var/lib/systemd/timers/stamp-cron-daily.timer          \
+                   /var/lib/systemd/timers/stamp-cron-weekly.timer         \
+                   /var/lib/systemd/timers/stamp-cron-monthly.timer        \
+                   /var/lib/systemd/timers/stamp-cron-quarterly.timer      \
+                   /var/lib/systemd/timers/stamp-cron-semi-annually.timer  \
+                   /var/lib/systemd/timers/stamp-cron-yearly.timer         \
+                   /var/lib/systemd/timers/stamp-cron-crontab-root-0.timer \
+                   /var/lib/systemd/timers/stamp-cron-zfsutils-linux-root-242bc1b186a7d177d1fc05adc24b8249.timer
+
+> /run/systemd/generator/cron-crontab-root-0.timer
+
+printf '%s\n' /var/lib/systemd/timers/stamp-cron-daily.timer          \
+              /var/lib/systemd/timers/stamp-cron-weekly.timer         \
+              /var/lib/systemd/timers/stamp-cron-monthly.timer        \
+              /var/lib/systemd/timers/stamp-cron-quarterly.timer      \
+              /var/lib/systemd/timers/stamp-cron-semi-annually.timer  \
+              /var/lib/systemd/timers/stamp-cron-yearly.timer         \
+              /var/lib/systemd/timers/stamp-cron-crontab-root-0.timer | sort > /run/expected
+
+
+"$R_S_S" || exit
+find /var/lib -type f | sort | diff -u /run/expected -
