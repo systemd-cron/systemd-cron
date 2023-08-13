@@ -436,11 +436,10 @@ struct Job {
 			this->command.command0 = std::move(pgm);
 		}
 
-		/*if(this->command.size() >= 3 && this->command[-2] == '>' && this->command[-1] == '/dev/null')
-		  this->command = this->command [0:-2];
-
-		if(this->command.size() >= 2 && this->command[-1] == '>/dev/null')
-		  this->command = this->command [0:-1];*/
+		if(this->command.size() > 2 && this->command.command.e[-2] == ">"sv && this->command.command.e[-1] == "/dev/null"sv)
+			this->command.command.e -= 2;
+		if(this->command.size() > 1 && this->command.command.e[-1] == ">/dev/null"sv)
+			this->command.command.e -= 1;
 	}
 
 	auto is_active() -> bool {
