@@ -1,12 +1,17 @@
-.TH SYSTEMD.CRON 7 "" "systemd-cron @version@" systemd.cron
-
-.SH NAME
-systemd.cron - systemd cron units
-
-.SH SYNOPSIS
+.Dd 2023-08-13
+.Dt SYSTEMD.CRON 7
+.Os systemd-cron @version@
+.
+.Sh NAME
+.Nm systemd.crom
+.Nd systemd units for cron periodic jobs
+.
+.Sh SYNOPSIS
 .de headline
+.if \\n[timer_\\$1] \\{ .
 .br
-.if \\n[timer_\\$1] cron-\\$1.timer, cron-\\$1.target, cron-\\$1.service
+cron-\\$1.timer, cron-\\$1.target, cron-\\$1.service
+. \\}
 ..
 cron.target
 .headline boot
@@ -21,179 +26,205 @@ cron.target
 .br
 cron-update.path, cron-update.service
 .br
-cron-failure@.service.
-
-.SH DESCRIPTION
-These units provide cron daemon functionality by running scripts in cron directories.
-.br
-The crontabs are monitored by cron-update.path and are automatically translated by
-.BR systemd-crontab-generator (8).
-
-.SH FILES
+cron-failure@.service
+.
+.Sh DESCRIPTION
+These units provide the functionality usually afforded by the cron daemon \(em
+running scripts in
+.Pa /etc/cron. Ns Ar schedule
+directories and sending mail on failure.
+.Pp
+Crontabs are monitored by
+.Nm cron-update.path
+and are automatically translated by
+.Xr systemd-crontab-generator 8 .
+.
+.Sh FILES
+.Bl -tag -compact -width ".Pa @statedir@"
+.\" Starts same as in systemd-crontab-generator.8
+.It Pa /etc/crontab
+Administrator's system crontab, see
+.Xr crontab 5 .
+.
+.It Pa /etc/cron.d
+System crontabs managed by packages live here.
+.
+.It Pa /etc/anacrontab
+.Xr anacrontab 5
+.
+.It Pa @statedir@
+Users' crontabs live here.
+.
+.Pp
 .de etccron
 .if \\n[etccron_\\$1] \{ .
-.TP
-.I /etc/cron.\\$1
+.It Pa /etc/cron.\\$1
 Directory for scripts to be executed \\$2.
-
 . \}
 ..
-.etccron boot "on boot"
-.etccron minutely "every minute"
-.etccron hourly "every hour"
-.etccron daily "every day"
-.etccron weekly "every week"
-.etccron monthly "every month"
-.etccron quarterly "every 3 months"
+.etccron boot          "on boot"
+.etccron minutely      "every minute"
+.etccron hourly        "every hour"
+.etccron daily         "every day"
+.etccron weekly        "every week"
+.etccron monthly       "every month"
+.etccron quarterly     "every 3 months"
 .etccron semi-annually "every 6 months"
-.etccron yearly "every year"
-.TP
-.I /etc/cron.d
-Directory for \fBcrontabs\fR to be executed on a custom schedule.
-The files in this folder must follow the \fBcrontab\fR(5) layout.
-
-.TP
-.I /usr/lib/systemd/system/<schedule>.timer
-.TP
-.I /etc/systemd/system/<schedule>.timer
-.br
-These native systemd timers will overide the legacy cron jobs.
-.br
-You can also use this mechanism to mask an unneeded crontab provide by a package:
-.br
-ln \-s /dev/null /etc/systemd/system/[package].timer
-
-.TP
-.I @statedir@
-User's crontabs, to be modifier using the \fBcrontab\fR(1) utility.
-
-.SH SYSTEM UNITS
-.TP
-cron.target
-The target unit which starts the others. This should be enabled and started to use cron functionality.
-
-.TP
-cron-update.path
-This monitor alteration of the
-.B FILES
-listed hereupper and will call cron-update.service
-
-.TP
-cron-update.service
-This trigger a 'systemctl daemon-reload', the only way to ask systemd to rerun the generator.
-
+.etccron yearly        "every year"
+.Pp
+.
+.It Pa /usr/lib/systemd/system/ Ns Ar schedule Ns Pa .timer
+.It Pa /etc/systemd/system/ Ns Ar schedule Ns Pa .timer
+Native systemd timers will override cron jobs with the same name.
+.Pp
+You can also use this mechanism to mask an unneeded crontab provided by a package via
+.Nm systemctl Cm mask Ar package Ns Li .timer .
+.El
+.
+.Sh UNITS
+.Bl -tag -compact -width ".Pa /etc/cron.semi-annually"
+.It Nm cron.target
+Target unit which starts the others, needs to be enabled to use systemd-cron.
+.
+.It Nm cron-update.path
+Monitors
+.Sx FILES
+and calls
+.
+.It Nm cron-update.service
+which runs
+.Nm systemctl Cm daemon-reload
+to re-run the generator.
+.Pp
+.
 .if '@enable_runparts@'yes' \{ .
-.TP
-cron-\fIschedule\fR.timer
-The timer units which pull the cron-\fIschedule\fR.target units at the appropriate time. Started and stopped by the
+.It Nm cron- Ns Ar schedule Ns Nm .timer
+Triggers
+.Nm cron- Ns Ar schedule Ns Nm .service
+on
+.Ar target .
+Started and stopped by the
 cron.target unit.
-
-.TP
-cron-\fIschedule\fR.target
-The targets invoke all service units wanted by them, including cron-\fIschedule\fR.service.
-
-.TP
-cron-\fIschedule\fR.service
-The service units which run scripts in the cron directories. Started and stopped by the cron-\fIschedule\fR.target
-units. You can use \fBjournalctl\fR(1) to view the output of scripts run
-from these units.
+.
+.It Nm cron- Ns Ar schedule Ns Nm .target
+Pulls in all service units wanted by the target, i.a.\&
+.Nm cron- Ns Ar schedule Ns Nm .service .
+.
+.It Nm cron- Ns Ar schedule Ns Nm .service
+Runs scripts in the
+.Pa /etc/cron. Ns Ar *
+directories.
+You can use
+.Xr journalctl 1
+to view the output of scripts run from these units.
+.Pp
 . \}
-
-.TP
-cron-failure@.service
-This service will send an email in case of failure.
-
-.SH LIMITATIONS
-This cron replacement only send mails on failure. The log of jobs is saved in systemd journal.
-Do \fInot\fR use with a cron daemon or anacron, otherwise scripts may be
-executed multiple times.
-.br
+.
+.It Nm cron-failure@.service
+Sends mail in case a cron service unit fails.
+.El
+.
+.Sh BUGS
+This cron replacement only sends mails on failure.
+Full job output is saved in the journal.
+.Pp
+Do
+.Em not
+use with a cron daemon or anacron, otherwise scripts may be executed multiple times.
+.Pp
 All services are run with
-.BR Type=oneshot ,
+.Fa Type Ns = Ns Sy oneshot ,
 which means you can't use systemd-cron to launch long lived forking daemons.
+.
+.Sh EXTENSIONS
+The generator can optionally turn any crontabs in persistent timers with the
+.Ev PERSISTENT Ns = Ns Sy true
+flag, while a regular cron and anacron setup won't catch up on the missed executions of crontabs on reboot.
+.
+.Sh EXAMPLES
+.Ss Start cron units
+.Bd -literal -compact
+.Li # Nm systemctl Cm start Li cron.target
+.Ed
+.
+.Ss Start cron units on boot
+.Bd -literal -compact
+.Li # Nm systemctl Cm enable Li cron.target
+.Ed
+.
+.Ss View script output
+.Bd -literal -compact
+.Li # Nm journalctl -u cron-daily
+.Ed
+.
+.Ss Override some generated timer start time
+.Bd -literal -compact -offset 4n
+.Li # Nm systemctl Cm edit Li cron-geoip-database-contrib-root-1.timer
+.Ed
+and add
+.Bd -literal -compact -offset 4n
+[Timer]
+OnCalendar=
+OnCalendar=*-*-* 18:36:00
+.Ed
+.
+.Ss "Override cron-daily.service priority, useful for old computers"
+.Bd -literal -compact -offset 4n
+.Li # Nm systemctl Cm edit Li cron-daily.service
+.Ed
+and add
+.Bd -literal -compact -offset 4n
+[Service]
+CPUSchedulingPolicy=idle
+IOSchedulingClass=idle
+.Ed
+.
+.Ss "Example service file executed every hour"
+.Bd -literal -compact
+[Unit]
+Description=Update the man db
 
-.SH EXTENSIONS
-The generator can optionally turn all crontabs in persistent timers with the
-.B PERSISTENT=true
-flag, while a regular cron+anacron setup won't catch-up the missed executions of crontabs on boot.
+[Service]
+Nice=19
+IOSchedulingClass=2
+IOSchedulingPriority=7
+ExecStart=/usr/bin/mandb --quiet
 
-.SH EXAMPLES
-
-.IP "Start cron units"
-.SB # systemctl start cron.target
-
-.IP "Start cron units on boot"
-.SB # systemctl enable cron.target
-
-.IP "View script output"
-.SB # journalctl -u cron-<schedule>
-
-.IP "Override some generated timer start time"
-.SB # systemctl edit cron-geoip-database-contrib-root-<...>.timer --full
-.br
-.I keep existing statements, but change this one:
-.br
-.SB [Timer]
-.br
-.SB OnCalendar=*-*-* 18:36:00
-
-.IP "Override cron-daily.service priority, useful for old computers"
-.br
-.SB # systemctl edit cron-daily.service
-.br
-.I this will open a blank editor when you can type a drop-in configuration file
-.I that will extend the current .service
-.br
-.SB [Service]
-.br
-.SB CPUSchedulingPolicy=idle
-.br
-.SB IOSchedulingClass=idle
-.br
-
-.IP "Example service file executed every hour"
-.SB [Unit]
-.br
-.SB Description=Update the man db
-
-.SB [Service]
-.br
-.SB Nice=19
-.br
-.SB IOSchedulingClass=2
-.br
-.SB IOSchedulingPriority=7
-.br
-.SB ExecStart=/usr/bin/mandb --quiet
-
-.SB [Install]
-.br
-.SB WantedBy=cron-hourly.target
-
-.SH NOTES
-.nr step 1 1
-.IP \n[step]. 3
-The exact times scripts are executed is determined by the values of the special calendar events \fIhourly\fR,
-\fIdaily\fR, \fIweekly\fR, \fImonthly\fR, and \fIyearly\fR defined by \fBsystemd.time\fR(7).
+[Install]
+WantedBy=cron-hourly.target
+.Ed
+.
+.Sh NOTES
+The exact times scripts are executed is determined by the values of the special calendar events
+.Sy hourly ,
+.Sy daily ,
+.Sy weekly ,
+.Sy monthly ,
+and
+.Sy yearly
+defined in
+.Xr systemd.time 7 .
 .if '@enable_runparts@'yes' \{ .
-.IP \n+[step].
-\fBrun-parts\fR(8) is used to run scripts. Scripts must be executable by \fIroot\fR to run.
+.Pp
+.Xr run-parts 8
+is used to run scripts, which must be executable by root.
 . \}
-
-.SH DIAGNOSTICS
-You can execute "systemctl list-timers" to have a overview of
-timers and know when they will elapse.
-
-.SH SEE ALSO
-.BR systemd (1),
-.BR systemd.unit (5),
-.BR systemd.service (5),
-.BR systemd.timer (5),
-.BR systemd.time (7),
-.BR systemd-crontab-generator (8),
-.BR run-parts (8),
-.BR crontab (1),
-.BR crontab (5)
-
-.SH AUTHOR
-Dwayne Bent
+.
+.Sh DIAGNOSTICS
+.\" First para same as in systemd-crontab-generator.8
+.Nm systemctl Cm list-timers
+shows an overview of current timers and when they'll elapse.
+.
+.Sh SEE ALSO
+.Xr crontab 1 ,
+.Xr systemd 1 ,
+.Xr crontab 5 ,
+.Xr systemd.service 5 ,
+.Xr systemd.timer 5 ,
+.Xr systemd.unit 5 ,
+.Xr systemd.time 7 ,
+.Xr run-parts 8 ,
+.Xr systemd-crontab-generator 8
+.
+.\".Sh AUTHOR
+.\".An Dwayne Bent

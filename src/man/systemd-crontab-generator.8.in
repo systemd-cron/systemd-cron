@@ -50,6 +50,7 @@ when packages add files under
 .
 .Sh FILES
 .Bl -tag -compact -width ".Pa @statedir@"
+.\" Starts same as in systemd.cron.7
 .It Pa /etc/crontab
 Administrator's system crontab, see
 .Xr crontab 5 .
@@ -80,6 +81,7 @@ flag set store their timestamps here.
 .El
 .
 .Sh DIAGNOSTICS
+.\" First para same as in systemd.cron.7
 .Nm systemctl Cm list-timers
 shows an overview of current timers and when they'll elapse.
 .Pp
