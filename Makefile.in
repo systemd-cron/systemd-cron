@@ -7,7 +7,6 @@ version		:= $(file < VERSION)
 
 schedules			:= @schedules@
 schedules_not			:= @schedules_not@
-schedules_all			:= $(schedules) $(schedules_not)
 enable_runparts		:= @enable_runparts@
 enable_setgid		:= @enable_setgid@
 use_loglevelmax		:= @use_loglevelmax@
@@ -69,6 +68,7 @@ define in2out
 		-e "s|\@libexecdir\@|$(libexecdir)|g" \
 		-e "s|\@version\@|$(version)|g" \
 		-e "s|\@use_loglevelmax\@|$(use_loglevelmax)|g" \
+		-e "s|\@enable_runparts\@|$(enable_runparts)|g" \
 		-e "s|\@schedule\@|$3|g" \
 		-e "s|\@requires\@|$4|g" \
 		$1 > $2
@@ -177,18 +177,14 @@ $(builddir)/man/%: $(srcdir)/man/%.in
 
 $(builddir)/man/systemd.cron.7: $(srcdir)/man/systemd.cron.7.in
 	$(call in2out,$<,$@)
-ifneq ($(enable_runparts),no)
-	$(foreach schedule_not,$(schedules_not),\
-		sed -i $@ -e '/cron-$(schedule_not).timer/d' \
-	               -e '/cron\.$(schedule_not)/,+3d' ${\n})
+ifneq ($(enable_runparts),yes)
+	sed -i $(foreach sched,$(schedules)    ,-e '1i.nr timer_$(sched) 0') $@
 else
-	sed -i $@ -e '/run-parts/d'
-	sed -i $@ -e '/cron-\\fIschedule\\fR\.timer/,+14d'
-	$(foreach schedule_not,$(schedules_not),\
-		sed -i $@ -e '/cron\.$(schedule_not)/,+3d' ${\n})
-	$(foreach schedule_all,$(schedules_all),\
-		sed -i $@ -e '/cron-$(schedule_all).timer/d' ${\n})
+	sed -i $(foreach sched,$(schedules)    ,-e '1i.nr timer_$(sched) 1') $@
 endif
+	sed -i $(foreach sched,$(schedules_not),-e '1i.nr timer_$(sched) 0') $@
+	sed -i $(foreach sched,$(schedules)    ,-e '1i.nr etccron_$(sched) 1') $@
+	sed -i $(foreach sched,$(schedules_not),-e '1i.nr etccron_$(sched) 0') $@
 
 $(builddir)/include/configuration.hpp : $(srcdir)/include/configuration.hpp.in Makefile
 	sed -e 's:\@use_loglevelmax\@:$(use_loglevelmax):' \
