@@ -1,8 +1,8 @@
--i -B8BITMIME root
+-i -B 8BITMIME root
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Date: Sat, 12 Aug 2023 17:49:04 -0000
+Content-Transfer-Encoding: binary
+Date: Fri, 01 Dec 2000 23:00:00 +0000
 From: root (systemd-cron)
 To: root
 Subject: [tarta] job noconfig.service failed

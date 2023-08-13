@@ -1,8 +1,8 @@
--i -B8BITMIME henry
+-i -B 8BITMIME henry
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Date: Sat, 12 Aug 2023 17:49:05 -0000
+Content-Transfer-Encoding: binary
+Date: Fri, 01 Dec 2000 23:00:00 +0000
 From: root (systemd-cron)
 To: henry
 Subject: [tarta] job user.service failed
