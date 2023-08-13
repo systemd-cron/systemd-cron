@@ -37,18 +37,16 @@ static const constexpr std::string_view VALID_CHARS = "-"
                                                       "abcdefghijklmnopqrstuvwxyz"sv;  // keep sorted
 
 
-// this is dumb, but gets the job done
 static const constexpr std::pair<std::string_view, std::string_view> PART2TIMER[] = {
-    {"apt-compat"sv, "apt-daily"sv},
-    {"dpkg"sv, "dpkg-db-backup"sv},
-    {"plocate"sv, "plocate-updatedb"sv},
-    {"sysstat"sv, "sysstat-summary"sv},
+    // kept sorted by Makefile
+#include "part2timer.hpp"
+    {"\xFF"sv, ""sv},  // we can't have an empty array (if no mapping set), so this sorts after everything
 };
 
 static const constexpr std::pair<std::string_view, std::string_view> CROND2TIMER[] = {
-    {"ntpsec"sv, "ntpsec-rotate-stats"sv},
-    {"ntpsec-ntpviz"sv, "ntpviz-daily"sv},
-    {"sysstat"sv, "sysstat-collect"sv},
+    // kept sorted by Makefile
+#include "crond2timer.hpp"
+    {"\xFF"sv, ""sv},  // we can't have an empty array (if no mapping set), so this sorts after everything
 };
 
 static auto which(const std::string_view & exe, std::optional<std::string_view> paths = {}) -> std::optional<std::string> {
