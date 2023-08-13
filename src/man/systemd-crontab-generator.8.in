@@ -1,100 +1,103 @@
-.TH SYSTEMD-CRONTAB-GENERATOR 8 "2014-06-29" "systemd-cron @version@" systemd-crontab-generator
-
-.SH NAME
-systemd-crontab-generator - translate cron schedules in systemd Units
-
-.SH SYNOPSIS
-/usr/lib/systemd/system-generators/systemd-crontab-generator output_folder
-
-.SH DESCRIPTION
-systemd-crontab-generator is a generator that translates the legacy cron files (see FILES)
-into native systemd units & timers.
-.PP
-It is not meant to be run manually, it is called automatically by systemd.
-.PP
-It is run
-.TP
-*
+.Dd 2023-08-13
+.Dt SYSTEMD-CRONTAB-GENERATOR 8
+.Os systemd-cron @version@
+.
+.Sh NAME
+.Nm systemd-crontab-generator
+.Nd translate cron schedules in systemd Units
+.
+.Sh SYNOPSIS
+.Li /usr/lib/systemd/system-generators/ Ns Nm systemd-crontab-generator
+.Ar output-dir
+.
+.Sh DESCRIPTION
+.Nm systemd-crontab-generator
+is a
+.Xr systemd.generator 7
+translating classic cron
+.Sx FILES
+into native
+.Xr systemd.timer 5 Ns / Ns Xr systemd.service 5
+pairs.
+.Pp
+It runs automatically
+.Bl -bullet -compact -offset 2n -width 1n
+.It
 during early boot,
-.TP
-*
-a second time by cron-after-var.service, only if /var is a separate mount,
-in order to process user crontabs in @statedir@; if any,
-.TP
-*
-after each manual updates to the cron files, (*)
-.TP
-*
-and when distribution packages add files in /etc/cron.d/. (*)
-.PP
-
-.BR (*) :
-those are monitored by cron-update.path
-
-.PP
-systemd\-crontab\-generator
-implements the
-\m[blue]\fBgenerator specification\fR\m[]\&\s-2\u[1]\d\s+2\&.
-
-.SH FILES
-.TP
-.B /etc/crontab
-System crontab, see \fBcrontab\fR(5).
-
-.TP
-.B /etc/cron.d
-Directory for system crontabs provided by packages.
-
-.TP
-.B /etc/anacrontab
-See \fBanacrontab\fR(5).
-
-.TP
-.B @statedir@
-Directory for users crontabs.
-.br
-
-.TP
-.B /run/systemd/generator
-Directory where the generated units are stored.
-
-.TP
-.B /run/crond.reboot
-Flag used to avoid running @reboot jobs again after boot.
-
-.TP
-.B /var/lib/systemd/timers
-Directory where systemd store time stamps needed for the
-.I Persistent
-feature.
-
-.SH DIAGNOSTICS
-You can execute
-.B "systemctl list-timers"
-to have a overview of timers and know when they will elapse.
-.br
-
-If you get errors like
-.br
-.B /usr/lib/systemd/system-generators/systemd-crontab-generator failed with error code 1.
-.br
-in the journal, you can manually run
-.br
-.B "/usr/lib/systemd/system-generators/systemd-crontab-generator /tmp"
-.br
-to get a more verbose error message.
-
-.SH SEE ALSO
-\fBsystemd.cron\fR(7), \fBcrontab\fR(5), \fBsystemd.unit\fR(5), \fBsystemd.timer\fR(5)
-
-.SH "NOTES"
-.IP " 1." 4
-generator specification
-.RS 4
-\%http://www.freedesktop.org/wiki/Software/systemd/Generators
-.RE
-
-.SH AUTHOR
-Konstantin Stepanov <me@kstep.me> for the generator
-.br
-Alexandre Detiste <alexandre@detiste.be> for this man page
+.
+.It
+a second time by
+.Ic cron-after-var.service
+if
+.Pa /var
+is a separate mount-point,
+in order to process user crontabs in
+.Pa @statedir@ ,
+.
+.It
+after each update to
+.Pa /etc/crontab Ns \(dg
+and
+.Pa /etc/anacrontab Ns \(dg,
+and
+.
+.It
+when packages add files under
+.Pa /etc/cron.d Ns \(dg
+.El
+(\(dg: monitored by
+.Ic cron-update.path ) .
+.
+.Sh FILES
+.Bl -tag -compact -width ".Pa @statedir@"
+.It Pa /etc/crontab
+Administrator's system crontab, see
+.Xr crontab 5 .
+.
+.It Pa /etc/cron.d
+System crontabs managed by packages live here.
+.
+.It Pa /etc/anacrontab
+.Xr anacrontab 5
+.
+.It Pa @statedir@
+Users' crontabs live here.
+.
+.It Pa /run/systemd/generator
+Automatically generated units go here.
+.
+.It Pa /run/crond.reboot
+If this file exists,
+.Sy @reboot
+jobs aren't re-generated.
+Managed automatically.
+.
+.It Pa /var/lib/systemd/timers
+.Xr systemd.timer 5 Ns s
+with the
+.Fa Persistent
+flag set store their timestamps here.
+.El
+.
+.Sh DIAGNOSTICS
+.Nm systemctl Cm list-timers
+shows an overview of current timers and when they'll elapse.
+.Pp
+If you see something to the effect of
+.Dl /usr/lib/systemd/system-generators/systemd-crontab-generator failed with error code 1.
+in the journal, you can run
+.Li /usr/lib/systemd/system-generators/ Ns Nm systemd-crontab-generator Pa /tmp/test
+for more verbose output.
+.
+.Sh SEE ALSO
+.Xr crontab 5 ,
+.Xr systemd.unit 5 ,
+.Xr systemd.timer 5 ,
+.Xr systemd.cron 7
+.
+.\".Sh AUTHOR
+.\".An -split
+.\".An Konstantin Stepanov Aq Mt me@kstep.me
+.\"\(em generator
+.\".An Alexandre Detiste Aq Mt alexandre@detiste.be
+.\"\(em manual
