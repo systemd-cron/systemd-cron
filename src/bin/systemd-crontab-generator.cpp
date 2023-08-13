@@ -982,9 +982,8 @@ static auto is_masked(const char * path, std::string_view name, vore::span<const
 
 		if(!access(unit_file.c_str(), F_OK)) {
 			const char * reason = "native timer is present";
-			char real[PATH_MAX];
-			if(realpath(unit_file.c_str(), real) && real == "/dev/null"sv)
-				// TODO: check 0-byte file
+			struct stat sb;
+			if(!stat(unit_file.c_str(), &sb) && sb.st_size == 0)
 				reason = "it is masked";
 			log(Log::NOTICE, "ignoring %s/%.*s because %s", path, FORMAT_SV(name), reason);
 			return true;
