@@ -770,8 +770,9 @@ def main() -> None:
                        distro_start_hour[schedule] = int(job.timespec_hour[0])
                    except ValueError:
                        log(Log.ERR, 'invalid hour in /etc/crontab: %s' % job.line)
-                   continue
-            generate_timer_unit(job)
+                   break
+            else:
+                generate_timer_unit(job)
 
     CRONTAB_FILES = files('/etc/cron.d')
     for filename in CRONTAB_FILES:
