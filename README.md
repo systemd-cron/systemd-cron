@@ -23,11 +23,11 @@ Dependencies
 ----------------
 * systemd ≥ 236
 * UsrMerged system
-* [run-parts][3] (optional)
-* /usr/sbin/sendmail (optional, evaluated at runtime)
 * C and C++20 compilers
 * libssl (-lcrypto)
 * support for /usr/lib/sysusers.d/*.conf (optional)
+* [run-parts][3] (optional)
+* /usr/sbin/sendmail (optional, evaluated at runtime)
 
 Dependencies history
 ------------------------
@@ -101,7 +101,7 @@ Other options include:
 * `--enable-semi_annually[=yes|no]` Include support for the semi-annually timer.
   Default: `no`.
 * `--enable-yearly[=yes|no]` Include support for the yearly timer.
-  Default: `no`.
+  Default: `yes`.
 * `--enable-setgid[=yes|no]` Compile setgid C helper for crontab. Needs C compiler.
   Default: `no`.
 * `--libcrypto=<flags>` Compiler and linker flags required to build and link to libcrypto.
@@ -142,8 +142,8 @@ Copyright
 © 2014, Dwayne Bent : original package with static units  
 © 2014, Konstantin Stepanov (me@kstep.me) : author of crontab generator  
 © 2014, Daniel Schaal : review of crontab generator  
-© 2014, Alexandre Detiste (alexandre@detiste.be) : manpage for crontab generator  
-
+© 2014-2023, Alexandre Detiste (alexandre@detiste.be) : maintainer  
+© 2023, наб (nabijaczleweli@nabijaczleweli.xyz) : rewrite of generator in C++  
 
 [1]: http://www.freedesktop.org/wiki/Software/systemd/ "systemd"
 [2]: http://en.wikipedia.org/wiki/Cron "cron"
