@@ -18,7 +18,7 @@ START_HOURS_RANGE=3-22
 # *  *  *  *  * user-name command to be executed
 21 5 * * *   root    test -x /etc/cron.daily/popularity-contest && /etc/cron.daily/popularity-contest --crond
 */5 * * * * root true
-00  0 * * 1-5 root echo Monday to Friday, double space, leading zero
+00  0 * * 1-5 eroot echo Monday to Friday, double space, leading zero
 00  0 * * 0-3 root echo test US mode
 0 0 * * 4-7 root echo test EU mode
 @daily root ls
