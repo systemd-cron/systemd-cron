@@ -379,34 +379,34 @@ static auto replace(const char * cron_file, const char * user, const char * file
 }
 
 
-enum class action_t : int { replace, list = 'l', remove = 'r', edit = 'e', show = 's', translate = 't' };
+enum class action_t { replace, list = 'l', remove = 'r', edit = 'e', show = 's', translate = 't' };
 
-#define USAGE                                \
-        "usage:\n" \
-        "  %1$s -h                     Show this help message and exit.\n" \
-        "  %1$s -s                     Show all user who have a crontab. (only for root)\n" \
-        "  %1$s [-u USER] [FILE]       Replace the current crontab, read it from STDIN or FILE\n" \
-        "  %1$s -e [-u USER]           Open the current crontab with an editor\n" \
-        "  %1$s -r [-u USER] [-i]      Remove a crontab, (-i: with confirmation)\n" \
-        "  %1$s -l [-u USER]           List current crontab.\n" \
-        "  %1$s -t line                Translate one crontab line.\n" \
-        "\n" \
-        "long options:\n"       \
-	"  %1$s -e, --edit\n"   \
-	"  %1$s -l, --list\n"   \
-	"  %1$s -r, --remove\n" \
-	"  %1$s -s, --show\n"   \
-	"  %1$s -t, --translate\n" \
-        "  %1$s -u, --user\n"
+#define USAGE                                                                               \
+	"usage:\n"                                                                                \
+	"  %1$s -h                     Show this help message and exit.\n"                        \
+	"  %1$s -s                     Show all user who have a crontab. (only for root)\n"       \
+	"  %1$s [-u USER] [FILE]       Replace the current crontab, read it from STDIN or FILE\n" \
+	"  %1$s -e [-u USER]           Open the current crontab with an editor\n"                 \
+	"  %1$s -r [-u USER] [-i]      Remove a crontab, (-i: with confirmation)\n"               \
+	"  %1$s -l [-u USER]           List current crontab.\n"                                   \
+	"  %1$s -t line                Translate one crontab line.\n"                             \
+	"\n"                                                                                      \
+	"long options:\n"                                                                         \
+	"  %1$s -e, --edit\n"                                                                     \
+	"  %1$s -l, --list\n"                                                                     \
+	"  %1$s -r, --remove\n"                                                                   \
+	"  %1$s -s, --show\n"                                                                     \
+	"  %1$s -t, --translate\n"                                                                \
+	"  %1$s -u, --user\n"
 
-static const constexpr struct option longopts[] = {{"list", no_argument, nullptr, 'l'},         //
-                                                   {"remove", no_argument, nullptr, 'r'},       //
-                                                   {"ask", no_argument, nullptr, 'i'},          //
-                                                   {"edit", no_argument, nullptr, 'e'},         //
-                                                   {"show", no_argument, nullptr, 's'},         //
-                                                   {"translate", no_argument, nullptr, 't'},    //
-                                                   {"user", required_argument, nullptr, 'u'},   //
-                                                   {0, 0, 0, 0}};                               //
+static const constexpr struct option longopts[] = {{"list", no_argument, nullptr, 'l'},        //
+                                                   {"remove", no_argument, nullptr, 'r'},      //
+                                                   {"ask", no_argument, nullptr, 'i'},         //
+                                                   {"edit", no_argument, nullptr, 'e'},        //
+                                                   {"show", no_argument, nullptr, 's'},        //
+                                                   {"translate", no_argument, nullptr, 't'},   //
+                                                   {"user", required_argument, nullptr, 'u'},  //
+                                                   {}};                                        //
 auto main(int argc, char * const * argv) -> int {
 	setlocale(LC_ALL, "");
 	self = argv[0];
@@ -453,7 +453,7 @@ auto main(int argc, char * const * argv) -> int {
 				return std::fprintf(stderr, USAGE, self), 1;
 		}
 	else if(action == action_t::translate)
-			return std::fprintf(stderr, USAGE, self), 1;
+		return std::fprintf(stderr, USAGE, self), 1;
 	char getlogin_buf[LOGIN_NAME_MAX + 1];
 	if(!user)
 		if(!getlogin_r(getlogin_buf, sizeof(getlogin_buf)))
