@@ -1,10 +1,5 @@
 #!/bin/sh
-expr=.
 while [ $# -gt 1 ]; do
-	case "$1" in
-		--property=User) expr=User ;;
-		--property=Environment) expr=Environment ;;
-	esac
 	shift
 done
-exec grep "$expr" "$1"
+exec cat "$1"

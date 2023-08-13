@@ -1,0 +1,3 @@
+#!/bin/sh
+PATH="${PATH#*:}"
+exec date -ud@975711600 "$@"
