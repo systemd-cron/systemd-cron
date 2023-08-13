@@ -1,9 +1,17 @@
-v1.16.6 : 2023-08-10
+v1.16.6 : 2023-08-13
+
+   * THIS IS THE LAST VERSION BEFORE MERGING THE C++ REWRITE
 
    * after a survey of downstream users,
      "cron-yearly.{service|timer}" are now enabled by default.
      This can be disabled again with an ./configure option.
+   * run-part-less-mode: read base starting hour
+     of daily/weeky/monthly jobs from distro's /etc/crontab
+     if present
 
+   [наб <nabijaczleweli@nabijaczleweli.xyz>]
+   * fix more regressions found since the 1.16 OO-rewrite
+   * review crontab_setgid.c
 
 v1.16.5 : 2023-08-09
 
@@ -33,7 +41,7 @@ v1.16.3 : 2023-07-29
 
    [наб <nabijaczleweli@nabijaczleweli.xyz>]
    * various improvements to the configure script & Makefile
-   * rewrite boot_delay as ashell script for faster execution
+   * rewrite boot_delay as a shell script for faster execution
    * review of the man pages
    * better error handling in crontab setgid helper
 
