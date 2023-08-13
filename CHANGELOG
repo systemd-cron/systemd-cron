@@ -1,17 +1,4 @@
-v1.99.0 : 2023-08-13
-
-   Experimental release awaiting feedback by distributions.
-
-   [наб <nabijaczleweli@nabijaczleweli.xyz>]
-   * rewrite of the generator and crontab in C++
-
-   [adetiste]
-   * the C crontab_setgid.c security helper remain unchanged
-   * the run-part-less-mode is now the default because
-     so many softwares are now providing their own .timer.
-     The old behavior is still supported as a configure option
-
-v1.16.6 : 2023-08-13
+v1.16.7 : 2023-08-13
 
    * THIS IS THE LAST VERSION BEFORE MERGING THE C++ REWRITE
 
@@ -25,6 +12,10 @@ v1.16.6 : 2023-08-13
    [наб <nabijaczleweli@nabijaczleweli.xyz>]
    * fix more regressions found since the 1.16 OO-rewrite
    * review crontab_setgid.c
+
+v1.16.7 : 2023-08-13
+
+   * discarded version
 
 v1.16.5 : 2023-08-09
 
