@@ -443,12 +443,6 @@ auto main(int argc, char * const * argv) -> int {
 			case action_t::translate:
 				file = argv[optind];
 				break;
-				// deluser in adduser package expects this behaviour
-			case action_t::list:
-			case action_t::remove:
-			case action_t::edit:
-				user = argv[optind];
-				break;
 			default:
 				return std::fprintf(stderr, USAGE, self), 1;
 		}
