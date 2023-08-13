@@ -107,7 +107,7 @@ static auto list(const char * cron_file, const char * user) -> int {
 	auto err = errno;
 
 	if(err == ENOENT)
-		return std::fprintf(stderr, "no crontab for %s\n", user), 1;
+		return std::fprintf(stderr, "no crontab for %s\n", user), ENOENT;
 
 	if(std::string_view{user} != getlogin())
 		return std::fprintf(stderr, "you can not display %s's crontab\n", user), 1;
