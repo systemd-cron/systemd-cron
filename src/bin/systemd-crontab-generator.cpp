@@ -446,14 +446,6 @@ struct Job {
 		if(this->schedule == "reboot"sv && !access(REBOOT_FILE, F_OK))
 			return false;
 
-		//		if(len(this->command) == 6 && this->command[0] == '[' && this->command[1] in['-d', '-e'] && this->command[2].startswith('/run/systemd') &&
-		//		   this->command[3] == ']' && this->command[4] == '||')
-		//			return false;
-		//
-		//		if(len(this->command) == 5 && this->command[0] == 'test' && this->command[1] in['-d', '-e'] && this->command[2].startswith('/run/systemd') &&
-		//		   this->command[3] == '||')
-		//			return false;
-
 		return true;
 	}
 
