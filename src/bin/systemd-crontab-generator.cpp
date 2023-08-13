@@ -595,7 +595,7 @@ struct Job {
 		return scriptlet;
 	}
 
-	auto generate_unit_header(FILE * into, const char * tp, const char * inject) -> void {  // TODO: remove inject, just write it in caller; need for byte compat
+	auto generate_unit_header(FILE * into, const char * tp) -> void {
 		std::fputs("[Unit]\n", into);
 		std::fprintf(into, "Description=[%s] \"", tp);
 		{
@@ -623,14 +623,12 @@ struct Job {
 
 		std::fputs("\"\n", into);
 		std::fputs("Documentation=man:systemd-crontab-generator(8)\n", into);
-		if(inject)
-			std::fputs(inject, into);
 		if(this->filename != "-"sv)
 			std::fprintf(into, "SourcePath=%.*s\n", FORMAT_SV(this->filename));
 	}
 
 	auto generate_service(FILE * into) -> void {
-		this->generate_unit_header(into, "Cron", nullptr);
+		this->generate_unit_header(into, "Cron");
 		if(auto itr = this->environment.find("MAILTO"sv); itr != std::end(this->environment) && itr->second.empty())
 			;  // mails explicitely disabled
 		else if(!HAS_SENDMAIL)
@@ -667,8 +665,8 @@ struct Job {
 	}
 
 	auto generate_timer(FILE * into) -> void {
-		this->generate_unit_header(into, "Timer", "PartOf=cron.target\n");
-		// std::fputs("PartOf=cron.target\n", into); TODO: see generate_unit_header
+		this->generate_unit_header(into, "Timer");
+		std::fputs("PartOf=cron.target\n", into);
 		std::fputc('\n', into);
 
 		std::fputs("[Timer]\n", into);
