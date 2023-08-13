@@ -5,11 +5,13 @@ CRONTAB ?= crontab
 
 version		:= $(file < VERSION)
 
-schedules			:= @schedules@
-schedules_not			:= @schedules_not@
+schedules		:= @schedules@
+schedules_not		:= @schedules_not@
 enable_runparts		:= @enable_runparts@
 enable_setgid		:= @enable_setgid@
 use_loglevelmax		:= @use_loglevelmax@
+part2timer		:= @part2timer@
+crond2timer		:= @crond2timer@
 
 prefix		:= @prefix@
 bindir		:= @bindir@
@@ -186,6 +188,11 @@ endif
 	sed -i $(foreach sched,$(schedules)    ,-e '1i.nr etccron_$(sched) 1') $@
 	sed -i $(foreach sched,$(schedules_not),-e '1i.nr etccron_$(sched) 0') $@
 
+$(builddir)/include/part2timer.hpp : $(part2timer) Makefile
+	 sort $< | sed '/^#/d;/^$$/d;s/^/{"/;s/	/"sv, "/;s/$$/"sv},/' > $@
+$(builddir)/include/crond2timer.hpp : $(crond2timer) Makefile
+	 sort $< | sed '/^#/d;/^$$/d;s/^/{"/;s/	/"sv, "/;s/$$/"sv},/' > $@
+
 $(builddir)/include/configuration.hpp : $(srcdir)/include/configuration.hpp.in Makefile
 	sed -e 's:\@use_loglevelmax\@:$(use_loglevelmax):' \
 	    -e 's:\@use_runparts\@:$(use_runparts):' \
@@ -207,7 +214,7 @@ common_headers := $(builddir)/include/configuration.hpp $(builddir)/include/libv
 $(builddir)/include/libvoreutils.hpp.gch : $(builddir)/include/libvoreutils.hpp
 	$(CXX) -Wall -Wextra -fno-exceptions $(CFLAGS) $(CPPFLAGS) -std=c++20 -I $(builddir)/include            $< -o $@
 
-$(builddir)/bin/systemd-crontab-generator: $(srcdir)/bin/systemd-crontab-generator.cpp $(common_headers)
+$(builddir)/bin/systemd-crontab-generator: $(srcdir)/bin/systemd-crontab-generator.cpp $(common_headers) $(builddir)/include/part2timer.hpp $(builddir)/include/crond2timer.hpp
 	$(CXX) -Wall -Wextra -fno-exceptions $(CFLAGS) $(CPPFLAGS) -std=c++20 -I $(builddir)/include $(PCH_ARG) $< -o $@ $(LDFLAGS) @libcrypto@
 
 $(builddir)/bin/crontab: $(srcdir)/bin/crontab.cpp $(common_headers)

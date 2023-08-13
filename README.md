@@ -106,6 +106,10 @@ Other options include:
   Default: `no`.
 * `--libcrypto=<flags>` Compiler and linker flags required to build and link to libcrypto.
   Default: `pkgconf --cflags --libs libcrypto` or `-lcrypto`.
+* `--with-part2timer=file` Mapping from basename in /etc/cron.{daily,weekly,etc.) to unit name.
+  Default: `/dev/null`.
+* `--with-crond2timer=file` Mapping from basename in /etc/cron.d to unit name.
+  Default: `/dev/null`.
 
 A typical configuration for the latest systemd would be:
 
@@ -117,6 +121,16 @@ Alternatively you can also generate individual .timer/.service for all the jobs
 in /etc/cron.{hourly,daily,weekly,monthly,...}:
 
     $ ./configure --enable-runparts=no
+
+
+`part2timer` and `crond2timer` are in the format
+
+    basename<tab>unitbasename
+
+(empty lines and start-of-line `#`-comments permitted; unitbasename doesn't include ".timer") and may be useful when, for example,
+`/etc/cron.daily/plocate` has a timer called `plocate-updatedb.timer` or `/etc/cron.d/ntpsec` has a timer called `ntpsec-rotate-stats.timer`:
+without the override, the jobs would run twice since native-timer detection would be looking for `plocate.timer` and `ntpsec.timer`.
+
 
 ### Caveat
 
