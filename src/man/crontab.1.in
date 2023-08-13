@@ -1,73 +1,135 @@
-.TH "CRONTAB" "1" "2014-12-10" "systemd-cron @version@" "crontab"
-
-.SH NAME
-crontab - maintain crontab files for individual users
-
-.SH SYNOPSIS
-crontab [\-u user] file
-.br
-crontab [\-u user] [\-l | \-r | \-e | \-s] [\-i]
-.br
-crontab \-t CRONTAB
-
-.TP
-.B (blank)
-default operation is replace
-.TP
-.BR -u ", " --user
-edit some other user's crontab
-.TP
-.BR -l ", " --list
-list user's crontab
-.TP
-.BR -r ", " --remove
-delete user's crontab
-.TP
-.BR -e ", " --edit
-edit user's crontab
-.TP
-.BR -s ", " --show
-show all user who have a crontab
-.TP
-.BR -i ", " --ask
-prompt before deleting user's crontab
-.TP
-.BR -t ", " --translate\  \fICRONTAB\fP
-translate one cron record and print the result to STDOUT
-
-.SH DESCRIPTION
-Crontab is the program used to let users install, deinstall or list
-recurrent jobs in the legacy cron format.
-.br
-Each user can have their own crontab, and though these are files in @statedir@,
-they are not intended to be edited directly.
-.br
-These jobs are then automatically translated in systemd Timers & Units
-by systemd-crontab-generator.
-
-.SH FILES
-.TP
-.I @statedir@
-Directory for users crontabs.
-.TP
-.I /etc/cron.allow
-list of users that can use crontab
-.TP
-.I /etc/cron.deny
-list of users that aren't allowed to use crontab
-.br
-(by default, only root can use crontab)
-
-.SH LIMITATIONS
+.Dd 2023-08-13
+.Dt CRONTAB 1
+.Os systemd-cron @version@
+.
+.Sh NAME
+.Nm crontab
+.Nd maintain crontab files for individual users
+.
+.Sh SYNOPSIS
+.Nm
+.Op Fl u Ar user
+.Op Ar newtab
+.
+.Nm
+.Fl l
+.Op Fl u Ar user
+.
+.Nm
+.Fl r
+.Op Fl i
+.Op Fl u Ar user
+.
+.Nm
+.Fl e
+.Op Fl u Ar user
+.
+.Nm
+.Fl s
+.
+.Nm
+.Fl t
+.Ar line
+.
+.Sh DESCRIPTION
+.Nm
+lets users install, uninstall, view, and edit recurrent jobs in the
+.Xr crontab 5
+format,
+as well as pre-view and convert them to
+.Xr systemd.timer 5
+pairs.
+root may also spy on who which users have installed crontabs.
+.Pp
+.\" Assumes DEFAULT_NOACCESS=0
+Each user may have their own crontab, but this can be limited by
+.Pa /etc/cron.allow
+to create an explicit allow-list or
+.Pa /etc/cron.deny
+to deny access to individual users.
+.Pp
+Crontabs are checked before installing \(em
+if they are found to be invalid, installation is aborted and a summary of errors is written to the standard error stream.
+.
+.Sh OPTIONS
+.Bl -tag -compact -width ".Fl u , -user Ns = Ns Ar user"
+.It (by default)
+replace the user's crontab from
+.Ar newtab
+.Pq standard input stream if Qo Sy - Qc , the default .
+.
+.It Fl l , -list
+Copy user's crontab to the standard output stream, or error if there is none.
+.
+.It Fl r , -remove
+Remove user's crontab.
+.It Fl i , -ask
+Output a confirmation prompt before doing so.
+.
+.It Fl e , -edit
+Let user edit crontab, install when they're done.
+.
+.It Fl s , -show
+List which users have a crontab installed.
+Nonexistent users are warned about to the standard error stream.
+Only root can do this.
+.
+.It Fl t , -translate
+Validate and translate a
+.Xr crontab 5
+.Ar line
+into a native
+.Xr systemd.timer 5
+pair to the standard output stream.
+.Pp
+.
+.It Fl u , -user Ns = Ns Ar user
+Edit
+.Ar user Ns 's
+crontab instead of the currently-logged-in user's.
+Only root can do this, and they should be careful about using
+.Nm
+without this option \(em the current user is determined by
+.Xr logname 1 ,
+not by UID!
+.El
+.
+.Sh FILES
+.Bl -tag -compact -width ".Pa @statedir@"
+.\" Assumes DEFAULT_NOACCESS=0
+.It Pa /etc/cron.allow
+If exists, only users listed here (one username per line) can install their own crontabs.
+Otherwise, everyone can.
+.
+.It Pa /etc/cron.deny
+Users listed here aren't allowed to install their own crontabs.
+.
+.It Pa @statedir@
+Crontabs live here.
+.El
+.
+.Sh ENVIRONMENT
+.Ev EDITOR ,
+.Ev VISUAL ,
+.Nm editor ,
+.Nm vim ,
+.Nm nano ,
+and
+.Nm mcedit
+are tried, in order, when using
+.Fl e .
+.
+.Sh SEE ALSO
+.Xr crontab 5 ,
+.Xr systemd.cron 7
+for a summary of the format and how to tweak installed cronjobs \(em
+.Nm systemctl Cm edit Li cron- Ns Ar schedule Ns Li .\& Ns Brq Li timer Ns |\& Ns Li service .
+.
+.Sh BUGS
 SELinux is not supported.
-.TP
-Some extra settings can only be tweaked with
-.PP
-    systemctl edit cron-<schedule>.[timer|service]
-.TP
-see systemd.cron(7) for more details.
-
-.SH AUTHOR
-Konstantin Stepanov <me@kstep.me>
-.br
-Alexandre Detiste <alexandre@detiste.be> for this manpage & setgid helper
+.
+.\".Sh AUTHOR
+.\".An -split
+.\".An Konstantin Stepanov Aq Mt me@kstep.me
+.\".An Alexandre Detiste Aq Mt alexandre@detiste.be
+.\"\(em manual and setgid helper
