@@ -38,13 +38,13 @@ static const constexpr std::string_view VALID_CHARS = "-"
 
 
 static const constexpr std::pair<std::string_view, std::string_view> PART2TIMER[] = {
-    // kept sorted by Makefile
+// kept sorted by Makefile
 #include "part2timer.hpp"
     {"\xFF"sv, ""sv},  // we can't have an empty array (if no mapping set), so this sorts after everything
 };
 
 static const constexpr std::pair<std::string_view, std::string_view> CROND2TIMER[] = {
-    // kept sorted by Makefile
+// kept sorted by Makefile
 #include "crond2timer.hpp"
     {"\xFF"sv, ""sv},  // we can't have an empty array (if no mapping set), so this sorts after everything
 };
@@ -115,7 +115,8 @@ struct Job {
 	std::string environment_PATH_storage;  // borrowed into environment on expansion
 	std::string_view shell;
 	std::size_t random_delay;
-	std::string period;                       // either period or timespec
+	std::string period;  // either period or timespec
+	std::optional<std::string_view> timezone;
 	std::set<std::uint8_t> timespec_minute;   // 0-60                           or TIMESPEC_ASTERISK
 	std::set<std::uint8_t> timespec_hour;     // 0-24                           or TIMESPEC_ASTERISK
 	std::set<std::uint8_t> timespec_dom;      // 0-31                           or TIMESPEC_ASTERISK
@@ -127,7 +128,7 @@ struct Job {
 	std::size_t start_hour;
 	bool persistent;
 	bool batch;
-	std::string jobid;  // should be cow
+	std::string jobid;
 	std::string unit_name;
 	std::string_view user;
 	std::optional<std::string_view> home;  // 'static
@@ -234,6 +235,10 @@ struct Job {
 			} else {
 				if(k == "SHELL"sv)
 					this->shell = v;
+
+				if(k == "TZ"sv)
+					if(!v.empty() && !access(("/usr/share/zoneinfo/"s += v).c_str(), F_OK))
+						this->timezone = v;
 
 				if(k == "MAILTO"sv && !v.empty())
 					if(!HAS_SENDMAIL)
@@ -670,8 +675,12 @@ struct Job {
 		std::fputs("[Timer]\n", into);
 		if(this->schedule == "reboot"sv)
 			std::fprintf(into, "OnBootSec=%zum\n", this->boot_delay);
-		else
-			std::fprintf(into, "OnCalendar=%.*s\n", FORMAT_SV(this->schedule));
+		else {
+			std::fprintf(into, "OnCalendar=%.*s", FORMAT_SV(this->schedule));
+			if(this->timezone)
+				std::fprintf(into, " %.*s", FORMAT_SV(*this->timezone));
+			std::fputc('\n', into);
+		}
 		if(this->random_delay > 1)
 			std::fprintf(into, "RandomizedDelaySec=%zum\n", this->random_delay);
 		if(this->persistent)
