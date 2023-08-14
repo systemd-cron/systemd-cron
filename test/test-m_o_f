@@ -1,7 +1,7 @@
 #!/bin/sh
 # needs to run as root of a UTS namespace to set hostname
 # uses fake "systemctl"/"sendmail" programs to validate the output
-M_O_F="$PWD/out/build/bin/mail_on_failure"
+M_O_F="${M_O_F:-"$PWD/out/build/bin/mail_on_failure"}"
 cd test/m_o_f || exit
 hostname tarta
 

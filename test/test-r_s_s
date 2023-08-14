@@ -1,6 +1,6 @@
 #!/bin/sh
 # expects to run as root of a mountns
-R_S_S="$PWD/out/build/bin/remove_stale_stamps"
+R_S_S="${R_S_S:-"$PWD/out/build/bin/remove_stale_stamps"}"
 mount -t tmpfs tmpfs /var/lib || exit
 mount -t tmpfs tmpfs /run     || exit
 mkdir -p /var/lib/systemd/timers /run/systemd/generator || exit

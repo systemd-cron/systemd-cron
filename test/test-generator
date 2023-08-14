@@ -1,6 +1,6 @@
 #!/bin/sh
 # expects to run as root of a mountns
-S_C_G="$PWD/out/build/bin/systemd-crontab-generator"
+S_C_G="${S_C_G:-"$PWD/out/build/bin/systemd-crontab-generator"}"
 TESTDIR="$PWD/test/"
 PATH="/usr/bin:$PATH"
 

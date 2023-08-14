@@ -88,9 +88,9 @@ dist: $(tarball)
 
 test: all
 	$(SHELLCHECK) $(out_programs_sh)
-	unshare -rm test/test-generator
-	unshare -ru test/test-m_o_f
-	unshare -rm test/test-r_s_s
+	{ [ "$$S_C_G" = 'skip' ] && echo 'Skipped!'; } || unshare -rm test/test-generator
+	{ [ "$$M_O_F" = 'skip' ] && echo 'Skipped!'; } || unshare -ru test/test-m_o_f
+	{ [ "$$R_S_S" = 'skip' ] && echo 'Skipped!'; } || unshare -rm test/test-r_s_s
 	$(foreach manpage,$(out_manuals),\
 		man --warnings --encoding=utf8 --local-file $(manpage) 2>&1 > /dev/null${\n})
 
