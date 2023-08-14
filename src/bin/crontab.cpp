@@ -14,7 +14,7 @@ static const bool HAVE_SETGID = [] {
 }();
 
 
-template <class... A>  // TODO: kill path?
+template <class... A>
 static auto exec(const char * prog, A... args) -> int {
 	execl(prog, self, static_cast<const char *>(args)..., static_cast<const char *>(nullptr));
 
