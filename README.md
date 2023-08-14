@@ -36,6 +36,7 @@ Dependencies history
 * systemd ≥ 212, persistent timers
 * systemd ≥ 217, minutely, quarterly & semi-annually timers
 * systemd ≥ 229, real random delay support with `RandomizedDelaySec` option [(bug)][90]
+* systemd ≥ 235, support for timezones
 * systemd ≥ 236, `LogLevelMax` option
 
 Installation
