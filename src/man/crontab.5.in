@@ -139,6 +139,15 @@ only recognize @ keywords to be persistent
 force all further jobs not to be persistent
 
 .TP
+.B TZ
+The job is scheduled in this time-zone instead of in the system time-zone.
+Must be a full IANA time-zone name
+(as found under
+.IR /usr/share/zoneinfo ),
+otherwise no special semantics.
+Always passed to the job.
+
+.TP
 .B BATCH
 This boolean flag is translated to options
 .B CPUSchedulingPolicy=idle
