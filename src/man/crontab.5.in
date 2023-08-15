@@ -336,17 +336,6 @@ see systemd.cron(7) for more details.
 
 .SH LIMITATIONS
 The
-.I systemd-cron
-units runs with a defined timezone. It currently does not support
-per-user or per-task timezones. All the tasks: system's and user's will be run based on the
-configured timezone. Even if a user specifies the
-.I TZ
-environment variable in his
-.I crontab
-this will affect only the commands executed in the crontab, not the execution
-of the crontab tasks themselves.
-
-The
 .I crontab
 syntax does not make it possible to define all possible periods one could
 imagine off. For example, it is not straightforward to define the last
