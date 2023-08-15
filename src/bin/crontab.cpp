@@ -82,6 +82,13 @@ static auto check(const char * file) -> bool {
 	return run_generator("--check", file, true, true) == 0;
 }
 
+static auto test(const char * file) -> bool {
+	auto rc = check(file);
+	if (rc) std::puts("No syntax issues were found in the crontab file.");
+	else std::puts("Invalid crontab file. Syntax issues were found.");
+	return !rc;
+}
+
 static auto version() -> int {
 	std::puts(VERSION);
 	return 0;
@@ -384,7 +391,7 @@ static auto replace(const char * cron_file, const char * user, const char * file
 }
 
 
-enum class action_t { replace, list = 'l', remove = 'r', edit = 'e', show = 's', translate = 't', version = 'V' };
+enum class action_t { replace, list = 'l', remove = 'r', edit = 'e', show = 's', translate = 't', test = 'T', version = 'V' };
 
 #define USAGE                                                                               \
 	"usage:\n"                                                                                \
@@ -395,6 +402,7 @@ enum class action_t { replace, list = 'l', remove = 'r', edit = 'e', show = 's',
 	"  %1$s -r [-u USER] [-i]      Remove a crontab, (-i: with confirmation)\n"               \
 	"  %1$s -l [-u USER]           List current crontab.\n"                                   \
 	"  %1$s -t line                Translate one crontab line.\n"                             \
+	"  %1$s -T FILE                Check one whole crontab file.\n"                           \
 	"  %1$s -V                     Display systemd-cron version.\n"                           \
 	"\n"                                                                                      \
 	"long options:\n"                                                                         \
@@ -402,6 +410,7 @@ enum class action_t { replace, list = 'l', remove = 'r', edit = 'e', show = 's',
 	"  %1$s -l, --list\n"                                                                     \
 	"  %1$s -r, --remove\n"                                                                   \
 	"  %1$s -s, --show\n"                                                                     \
+	"  %1$s -T, --test\n"                                                                     \
 	"  %1$s -t, --translate\n"                                                                \
 	"  %1$s -V, --version\n"                                                                  \
 	"  %1$s -u, --user\n"
@@ -412,22 +421,26 @@ static const constexpr struct option longopts[] = {{"list", no_argument, nullptr
                                                    {"edit", no_argument, nullptr, 'e'},        //
                                                    {"show", no_argument, nullptr, 's'},        //
                                                    {"translate", no_argument, nullptr, 't'},   //
+                                                   {"test", no_argument, nullptr, 'T'},        //
                                                    {"version", no_argument, nullptr, 'V'},     //
+                                                   {"help", no_argument, nullptr, 'h'},        //
                                                    {"user", required_argument, nullptr, 'u'},  //
                                                    {}};                                        //
+
 auto main(int argc, char * const * argv) -> int {
 	setlocale(LC_ALL, "");
 	self = argv[0];
 	bool ask{};
 	auto action = action_t::replace;
 	const char * user{};
-	for(int arg; (arg = getopt_long(argc, argv, "lriestVu:", longopts, nullptr)) != -1;)
+	for(int arg; (arg = getopt_long(argc, argv, "lriestTVhu:", longopts, nullptr)) != -1;)
 		switch(arg) {
 			case 'l':
 			case 'r':
 			case 'e':
 			case 's':
 			case 't':
+			case 'T':
 			case 'V':
 				action = static_cast<action_t>(arg);
 				break;
@@ -438,6 +451,7 @@ auto main(int argc, char * const * argv) -> int {
 			case 'u':
 				user = optarg;
 				break;
+			case 'h':
 			default:
 				return std::fprintf(stderr, USAGE, self), 1;
 		}
@@ -449,13 +463,14 @@ auto main(int argc, char * const * argv) -> int {
 	if(argv[optind])
 		switch(action) {
 			case action_t::replace:
+			case action_t::test:
 			case action_t::translate:
 				file = argv[optind];
 				break;
 			default:
 				return std::fprintf(stderr, USAGE, self), 1;
 		}
-	else if(action == action_t::translate)
+	else if(action == action_t::translate || action == action_t::test)
 		return std::fprintf(stderr, USAGE, self), 1;
 	char getlogin_buf[LOGIN_NAME_MAX + 1];
 	if(!user)
@@ -487,6 +502,8 @@ auto main(int argc, char * const * argv) -> int {
 			return edit(cron_file, user);
 		case action_t::show:
 			return show();
+		case action_t::test:
+			return test(file);
 		case action_t::translate:
 			return translate(file);
 		case action_t::version:

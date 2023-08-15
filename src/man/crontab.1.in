@@ -31,6 +31,10 @@
 .Fl t
 .Ar line
 .
+.Nm
+.Fl T
+.Ar FILE
+.
 .Sh DESCRIPTION
 .Nm
 lets users install, uninstall, view, and edit recurrent jobs in the
@@ -81,6 +85,11 @@ Validate and translate a
 into a native
 .Xr systemd.timer 5
 pair to the standard output stream.
+.It Fl T , -test
+Validate a
+.Xr crontab 5
+.Ar file
+.
 .Pp
 .
 .It Fl u , -user Ns = Ns Ar user
@@ -125,7 +134,7 @@ are tried, in order, when using
 for a summary of the format and how to tweak installed cronjobs \(em
 .Nm systemctl Cm edit Li cron- Ns Ar schedule Ns Li .\& Ns Brq Li timer Ns |\& Ns Li service .
 .
-.Sh BUGS
+.Sh LIMITATIONS
 SELinux is not supported.
 .
 .\".Sh AUTHOR
