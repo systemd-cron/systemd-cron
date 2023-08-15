@@ -196,6 +196,7 @@ $(builddir)/include/crond2timer.hpp : $(crond2timer) Makefile
 $(builddir)/include/configuration.hpp : $(srcdir)/include/configuration.hpp.in Makefile
 	sed -e 's:\@use_loglevelmax\@:$(use_loglevelmax):' \
 	    -e 's:\@use_runparts\@:$(use_runparts):' \
+	    -e 's:\@version\@:$(version):' \
 	    -e 's:\@libexecdir\@:$(libexecdir):' \
 	    -e 's:\@statedir\@:$(statedir):' $< > $@
 

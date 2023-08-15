@@ -45,6 +45,7 @@ static auto copy_FILE(FILE * from, FILE * to) -> void {
 }
 
 static const char * const generator_path = std::getenv("SYSTEMD_CRON_GENERATOR") ?: "/usr/lib/systemd/system-generators/systemd-crontab-generator";
+
 static auto run_generator(const char * op, const char * file_or_line, bool file_is_file, bool fork) -> int {
 	vore::file::FILE<false> copy;
 	if(file_is_file)
@@ -81,6 +82,10 @@ static auto check(const char * file) -> bool {
 	return run_generator("--check", file, true, true) == 0;
 }
 
+static auto version() -> int {
+	std::puts(VERSION);
+	return 0;
+}
 
 // try to fix things up if running as root
 static auto try_chmod(const char * cron_file = nullptr, const char * user = nullptr) -> void {
@@ -379,7 +384,7 @@ static auto replace(const char * cron_file, const char * user, const char * file
 }
 
 
-enum class action_t { replace, list = 'l', remove = 'r', edit = 'e', show = 's', translate = 't' };
+enum class action_t { replace, list = 'l', remove = 'r', edit = 'e', show = 's', translate = 't', version = 'V' };
 
 #define USAGE                                                                               \
 	"usage:\n"                                                                                \
@@ -390,6 +395,7 @@ enum class action_t { replace, list = 'l', remove = 'r', edit = 'e', show = 's',
 	"  %1$s -r [-u USER] [-i]      Remove a crontab, (-i: with confirmation)\n"               \
 	"  %1$s -l [-u USER]           List current crontab.\n"                                   \
 	"  %1$s -t line                Translate one crontab line.\n"                             \
+	"  %1$s -V                     Display systemd-cron version.\n"                           \
 	"\n"                                                                                      \
 	"long options:\n"                                                                         \
 	"  %1$s -e, --edit\n"                                                                     \
@@ -397,6 +403,7 @@ enum class action_t { replace, list = 'l', remove = 'r', edit = 'e', show = 's',
 	"  %1$s -r, --remove\n"                                                                   \
 	"  %1$s -s, --show\n"                                                                     \
 	"  %1$s -t, --translate\n"                                                                \
+	"  %1$s -V, --version\n"                                                                  \
 	"  %1$s -u, --user\n"
 
 static const constexpr struct option longopts[] = {{"list", no_argument, nullptr, 'l'},        //
@@ -405,6 +412,7 @@ static const constexpr struct option longopts[] = {{"list", no_argument, nullptr
                                                    {"edit", no_argument, nullptr, 'e'},        //
                                                    {"show", no_argument, nullptr, 's'},        //
                                                    {"translate", no_argument, nullptr, 't'},   //
+                                                   {"version", no_argument, nullptr, 'V'},     //
                                                    {"user", required_argument, nullptr, 'u'},  //
                                                    {}};                                        //
 auto main(int argc, char * const * argv) -> int {
@@ -413,13 +421,14 @@ auto main(int argc, char * const * argv) -> int {
 	bool ask{};
 	auto action = action_t::replace;
 	const char * user{};
-	for(int arg; (arg = getopt_long(argc, argv, "lriestu:", longopts, nullptr)) != -1;)
+	for(int arg; (arg = getopt_long(argc, argv, "lriestVu:", longopts, nullptr)) != -1;)
 		switch(arg) {
 			case 'l':
 			case 'r':
 			case 'e':
 			case 's':
 			case 't':
+			case 'V':
 				action = static_cast<action_t>(arg);
 				break;
 			case 'i':
@@ -480,6 +489,8 @@ auto main(int argc, char * const * argv) -> int {
 			return show();
 		case action_t::translate:
 			return translate(file);
+		case action_t::version:
+			return version();
 		default:
 			__builtin_unreachable();
 	}
