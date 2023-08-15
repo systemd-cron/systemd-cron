@@ -50,7 +50,7 @@ systemctl show --property=User --property=Environment "$unit" | {
 		                  'MIME-Version'              '1.0'                            \
 		                  'Content-Transfer-Encoding' 'binary'                         \
 		                  'Date'                      "$(date -R)"                     \
-		                  'From'                      "$mailfrom (systemd-cron)"       \
+		                  'From'                      "$mailfrom (systemd-cron @version@)" \
 		                  'To'                        "$mailto"                        \
 		                  'Subject'                   "[$(uname -n)] job $unit failed" \
 		                  'Auto-Submitted'            'auto-generated'
