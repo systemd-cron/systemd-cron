@@ -139,6 +139,8 @@ in /etc/cron.{hourly,daily,weekly,monthly,...}:
 `/etc/cron.daily/plocate` has a timer called `plocate-updatedb.timer` or `/etc/cron.d/ntpsec` has a timer called `ntpsec-rotate-stats.timer`:
 without the override, the jobs would run twice since native-timer detection would be looking for `plocate.timer` and `ntpsec.timer`.
 
+If there is already a perfect 1:1 mapping between `/etc/cron.<freq>/<job>` and `/usr/lib/systemd/system/<job>.timer`,
+then it is not needed to add an entry to these tables.
 
 ### Caveat
 
