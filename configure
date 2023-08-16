@@ -1,4 +1,6 @@
 #!/bin/sh
+set -e
+set -u
 
 prefix='/usr'
 bindir='$(prefix)/bin'
@@ -22,15 +24,15 @@ part2timer=/dev/null
 crond2timer=/dev/null
 
 
-enable_boot=yes
-enable_minutely=no
-enable_hourly=yes
-enable_daily=yes
-enable_weekly=yes
-enable_monthly=yes
-enable_quarterly=no
-enable_semi_annually=no
-enable_yearly=yes
+_enable_boot=yes
+_enable_minutely=no
+_enable_hourly=yes
+_enable_daily=yes
+_enable_weekly=yes
+_enable_monthly=yes
+_enable_quarterly=no
+_enable_semi_annually=no
+_enable_yearly=yes
 
 
 orig_args="$*"
@@ -69,6 +71,7 @@ usage()
     grep ^'### Configuration' README.md -A 50
 }
 
+# shellcheck disable=SC2181
 if [ $? -ne 0 ]
 then
     usage
@@ -79,9 +82,9 @@ set_enable_flag()
 {
     if [ -z "${2}" ]
     then
-        eval "enable_${1}=yes"
+        eval "_enable_${1}=yes"
     elif [ "${2}" = 'yes' ] || [ "${2}" = 'no' ]; then
-        eval "enable_${1}=${2}"
+        eval "_enable_${1}=${2}"
     else
         echo "ERROR: Unknown value for enable-${1}: '${2}'. Expected 'yes' or 'no'."
     fi
@@ -216,13 +219,15 @@ done
 
 check_sched_enabled()
 {
-    if eval [ "\"\${enable_${1}}\"" = \'yes\' ]; then
+    if eval [ "\"\${_enable_${1}}\"" = \'yes\' ]; then
         schedules="${schedules} ${2}"
     else
         schedules_not="${schedules_not} ${2}"
     fi
 }
 
+schedules=""
+schedules_not=""
 check_sched_enabled boot          boot
 check_sched_enabled minutely      minutely
 check_sched_enabled hourly        hourly
