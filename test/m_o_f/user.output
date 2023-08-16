@@ -3,9 +3,10 @@ Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: binary
 Date: Fri, 01 Dec 2000 23:00:00 +0000
-From: root (systemd-cron @VERSION@)
+From: root (systemd-cron)
 To: henry
 Subject: [tarta] job user.service failed
+X-Mailer: systemd-cron @VERSION@
 Auto-Submitted: auto-generated
 
 User=henry
