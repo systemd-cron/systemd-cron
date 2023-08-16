@@ -3,6 +3,8 @@
 S_C_G="${S_C_G:-"$PWD/out/build/bin/systemd-crontab-generator"}"
 TESTDIR="$PWD/test/"
 PATH="/usr/bin:$PATH"
+USE_RUN_PARTS="${1:-no}"
+echo "USE_RUN_PARTS:$USE_RUN_PARTS"
 
 mount -t tmpfs tmpfs /etc || exit
 
@@ -111,11 +113,14 @@ test_test_crontab_common() {
 	assert_key cron-crontab-root-79873eb1181afcc4e7f8c0cde4c8bd1a.timer 'OnCalendar'  '*-*-* 3:0:0'              root-@daily
 	assert_key cron-crontab-root-79873eb1181afcc4e7f8c0cde4c8bd1a.timer 'Persistent'  'true'                     root-@daily
 
+if [ "$USE_RUN_PARTS" = 'no' ]
+then
 	assert_key cron-daily-id.service  'Description'       '[Cron] "/etc/cron.daily/id"'              /etc/cron.daily
 	assert_key cron-daily-id.service  'ExecStartPre'      '-/usr/libexec/systemd-cron/boot_delay 10' /etc/cron.daily    # hourly,daily = 2nd, *5min for each longer one
 	assert_key cron-daily-id.service  'ExecStart'         '/etc/cron.daily/id'                       /etc/cron.daily
 	assert_key cron-daily-id.timer    'OnCalendar'        '*-*-* 5:10:0'                             /etc/cron.daily
 	assert_key cron-daily-id.timer    'Persistent'        'true'                                     /etc/cron.daily
+fi
 }
 test_test_crontab_common
 

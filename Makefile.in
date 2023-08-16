@@ -89,7 +89,7 @@ dist: $(tarball)
 
 test: all
 	$(SHELLCHECK) $(out_programs_sh)
-	{ [ "$$S_C_G" = 'skip' ] && echo 'Skipped!'; } || unshare -rm test/test-generator
+	{ [ "$$S_C_G" = 'skip' ] && echo 'Skipped!'; } || unshare -rm test/test-generator $(enable_runparts)
 	{ [ "$$M_O_F" = 'skip' ] && echo 'Skipped!'; } || unshare -ru test/test-m_o_f
 	{ [ "$$R_S_S" = 'skip' ] && echo 'Skipped!'; } || unshare -rm test/test-r_s_s
 	$(foreach manpage,$(out_manuals),\
