@@ -1,3 +1,21 @@
+v2.0 : 2023-08-28
+
+   [наб]
+   * rewrite of the generator and crontab utility in C++
+     which gives a lot more performance
+
+   * rewrite mail_on_failure in Shell
+   * drop depedency on Python
+   * again majors improvements in the configure/Makefile scripts
+   * support for timezones with TZ= environment variable,
+     this requires systemd 235
+   * an extensive testsuite (#51)
+
+   [adetiste]
+   * rewrite remove_stale_stamps in Shell; take into account
+     the new "run-part-less" mode introduced in v1.5.15
+   * use pkg-conf to get systemd $unitdir & $ $generatordir
+
 v1.16.7 : 2023-08-13
 
    * THIS IS THE LAST VERSION BEFORE MERGING THE C++ REWRITE
