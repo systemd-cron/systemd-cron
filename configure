@@ -33,6 +33,7 @@ enable_yearly=yes
 
 orig_args="$*"
 ARGS=$(getopt -n "$(basename "${0}")" -o '' -l '
+help::,
 prefix:,
 bindir:,
 confdir:,
@@ -79,6 +80,10 @@ eval set -- "${ARGS}"
 while true;
 do
     case "${1}" in
+        '--help')
+            grep ^'### Configuration' README.md -A 48
+            exit 0;;
+
         '--prefix')
             prefix="${2}"
             shift 2;;

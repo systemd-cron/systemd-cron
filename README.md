@@ -25,7 +25,7 @@ Dependencies
 * UsrMerged system
 * C and C++20 compilers
 * libssl (-lcrypto)
-* pkg-conf
+* pkg-conf (optional)
 * support for /usr/lib/sysusers.d/*.conf (optional)
 * [run-parts][3] (optional)
 * /usr/sbin/sendmail (optional, evaluated at runtime)
@@ -84,8 +84,12 @@ follow the standard GNU [installation directories][4]:
 
 Other options include:
 
+* `--enable-runparts[=yes|no]` Use static units for /etc/cron.{hourly,daily,...}
+  Default: `yes`.
 * `--unitdir=<path>` Path to systemd unit files.
-  Default: `<libdir>/systemd/system`.
+  Default: `pkgconf systemd --variable=systemdsystemunitdir` or `<libdir>/systemd/system`.
+* `--generatordir=<path>` Path to systemd generators.
+  Default: `pkgconf systemd --variable=systemdsystemgeneratordir` or `<libdir>/systemd/system-generators`.
 * `--enable-boot[=yes|no]` Include support for the boot timer.
   Default: `yes`.
 * `--enable-minutely[=yes|no]` Include support for the minutely timer.
