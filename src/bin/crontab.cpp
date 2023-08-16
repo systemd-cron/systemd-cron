@@ -84,8 +84,10 @@ static auto check(const char * file) -> bool {
 
 static auto test(const char * file) -> bool {
 	auto rc = check(file);
-	if (rc) std::puts("No syntax issues were found in the crontab file.");
-	else std::puts("Invalid crontab file. Syntax issues were found.");
+	if(rc)
+		std::puts("No syntax issues were found in the crontab file.");
+	else
+		std::puts("Invalid crontab file. Syntax issues were found.");
 	return !rc;
 }
 
