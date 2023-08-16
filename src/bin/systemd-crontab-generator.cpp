@@ -1022,7 +1022,7 @@ static auto is_backup(const char * path, const std::string_view & name) -> bool 
 	              name.find('~') != std::string_view::npos ||
 	              name.find(".dpkg-"sv) != std::string_view::npos ||
 	              name == "0anacron";
-	log(Log::DEBUG, "ignoring %s/%.*s", path, FORMAT_SV(name));
+	if(backup) log(Log::DEBUG, "ignoring %s/%.*s", path, FORMAT_SV(name));
 	return backup;
 }
 
