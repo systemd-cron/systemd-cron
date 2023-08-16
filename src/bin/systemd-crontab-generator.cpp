@@ -72,6 +72,10 @@ static auto systemd_bool(const std::string_view & string) -> bool {
 }
 
 enum class Log : std::uint8_t { EMERG, ALERT, CRIT, ERR, WARNING, NOTICE, INFO, DEBUG };
+// there could be an IGNORE level for logging the .placeholder
+// with a priority even lower than DEBUG only log to stdout
+// but never to dmesg
+
 static __attribute__((format(printf, 2, 3))) void log(Log level, const char * fmt, ...) {
 	va_list args;
 	va_start(args, fmt);
@@ -1009,8 +1013,17 @@ static auto is_masked(const char * path, std::string_view name, vore::span<const
 	return false;
 }
 
-static auto is_backup(const std::string_view & name) -> bool {
-	return name[0] == '.' || name.find('~') != std::string_view::npos || name.find(".dpkg-"sv) != std::string_view::npos;
+static auto is_backup(const char * path, const std::string_view & name) -> bool {
+	if (name == ".placeholder") {
+		return true;
+	}
+
+	bool backup = name[0] == '.' ||
+	              name.find('~') != std::string_view::npos ||
+	              name.find(".dpkg-"sv) != std::string_view::npos ||
+	              name == "0anacron";
+	log(Log::DEBUG, "ignoring %s/%.*s", path, FORMAT_SV(name));
+	return backup;
 }
 
 static auto realmain() -> int {
@@ -1050,10 +1063,8 @@ static auto realmain() -> int {
 	for_each_file("/etc/cron.d", [&](std::string_view basename) {
 		if(is_masked("/etc/cron.d", basename, {std::begin(CROND2TIMER), std::end(CROND2TIMER)}))
 			return;
-		if(is_backup(basename)) {
-			log(Log::DEBUG, "ignoring %s/%.*s", "/etc/cron.d", FORMAT_SV(basename));
+		if(is_backup("/etc/cron.d", basename))
 			return;
-		}
 		auto filename = "/etc/cron.d/"s += basename;
 		if(!parse_crontab(filename, withuser_t::from_cmd0, /*monotonic=*/false, [&](auto && job) {
 			   if(!job.valid) {
@@ -1077,10 +1088,8 @@ static auto realmain() -> int {
 			for_each_file(directory.c_str(), [&](std::string_view basename) {
 				if(is_masked(directory.c_str(), basename, {std::begin(PART2TIMER), std::end(PART2TIMER)}))
 					return;
-				if(is_backup(basename) || basename == "0anacron"sv) {
-					log(Log::DEBUG, "ignoring %.*s/%.*s", FORMAT_SV(directory), FORMAT_SV(basename));
+				if(is_backup(directory.c_str(), basename))
 					return;
-				}
 				auto filename            = (directory + '/') += basename;
 				std::string_view command = filename;
 				Job job{filename, filename};
