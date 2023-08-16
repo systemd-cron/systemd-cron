@@ -90,6 +90,8 @@ Other options include:
   Default: `pkgconf systemd --variable=systemdsystemunitdir` or `<libdir>/systemd/system`.
 * `--generatordir=<path>` Path to systemd generators.
   Default: `pkgconf systemd --variable=systemdsystemgeneratordir` or `<libdir>/systemd/system-generators`.
+* `--sysusersdir=<path>` Path to systemd-sysusers snippets.
+  Default: `pkgconf systemd --variable=sysusersdir` or `<libdir>/sysusers.d`.
 * `--enable-boot[=yes|no]` Include support for the boot timer.
   Default: `yes`.
 * `--enable-minutely[=yes|no]` Include support for the minutely timer.

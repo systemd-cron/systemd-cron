@@ -7,11 +7,13 @@ libdir='$(prefix)/lib'
 libexecdir='$(prefix)/libexec'
 statedir='/var/spool/cron'
 mandir='$(datadir)/man'
-docdir='$(datadir)/doc/$(package)'
+docdir='$(datadir)/doc/systemd-cron'
 unitdir="$(pkgconf systemd --variable=systemdsystemunitdir)" 2>/dev/null || \
 unitdir='$(libdir)/systemd/system'
 generatordir="$(pkgconf systemd --variable=systemdsystemgeneratordir)" 2>/dev/null || \
 generatordir='$(libdir)/systemd/system-generators'
+sysusersdir="$(pkgconf systemd --variable=sysusersdir)" 2>/dev/null || \
+sysusersdir='$(libdir)/sysusers.d'
 libcrypto="$(pkgconf --cflags --libs libcrypto)" 2>/dev/null || libcrypto='-lcrypto'
 enable_runparts=yes
 enable_setgid=no
@@ -45,6 +47,7 @@ mandir:,
 docdir:,
 unitdir:,
 generatordir:,
+sysusersdir:,
 enable-boot::,
 enable-minutely::,
 enable-hourly::,
@@ -61,15 +64,23 @@ with-part2timer:,
 with-crond2timer:,
 ' -- "${@}")
 
-if [ $? -ne 0 ]; then
+usage()
+{
+    grep ^'### Configuration' README.md -A 50
+}
+
+if [ $? -ne 0 ]
+then
+    usage
     exit 1
 fi
 
 set_enable_flag()
 {
-    if [ -z ${2} ]; then
+    if [ -z "${2}" ]
+    then
         eval "enable_${1}=yes"
-    elif [ ${2} = 'yes' ] || [ ${2} = 'no' ]; then
+    elif [ "${2}" = 'yes' ] || [ "${2}" = 'no' ]; then
         eval "enable_${1}=${2}"
     else
         echo "ERROR: Unknown value for enable-${1}: '${2}'. Expected 'yes' or 'no'."
@@ -81,7 +92,7 @@ while true;
 do
     case "${1}" in
         '--help')
-            grep ^'### Configuration' README.md -A 48
+            usage
             exit 0;;
 
         '--prefix')
@@ -128,52 +139,56 @@ do
             generatordir="${2}"
             shift 2;;
 
+        '--sysusersdir')
+            sysusersdir="${2}"
+            shift 2;;
+
         '--libcrypto')
             libcrypto="${2}"
             shift 2;;
 
         '--enable-boot')
-            set_enable_flag boot ${2}
+            set_enable_flag boot "${2}"
             shift 2;;
 
         '--enable-minutely')
-            set_enable_flag minutely ${2}
+            set_enable_flag minutely "${2}"
             shift 2;;
 
         '--enable-hourly')
-            set_enable_flag hourly ${2}
+            set_enable_flag hourly "${2}"
             shift 2;;
 
         '--enable-daily')
-            set_enable_flag daily ${2}
+            set_enable_flag daily "${2}"
             shift 2;;
 
         '--enable-weekly')
-            set_enable_flag weekly ${2}
+            set_enable_flag weekly "${2}"
             shift 2;;
 
         '--enable-monthly')
-            set_enable_flag monthly ${2}
+            set_enable_flag monthly "${2}"
             shift 2;;
 
         '--enable-quarterly')
-            set_enable_flag quarterly ${2}
+            set_enable_flag quarterly "${2}"
             shift 2;;
 
         '--enable-semi_annually')
-            set_enable_flag semi_annually ${2}
+            set_enable_flag semi_annually "${2}"
             shift 2;;
 
         '--enable-yearly')
-            set_enable_flag yearly ${2}
+            set_enable_flag yearly "${2}"
             shift 2;;
 
         '--enable-setgid')
-            set_enable_flag setgid ${2}
+            set_enable_flag setgid "${2}"
             shift 2;;
 
         '--enable-runparts')
-            set_enable_flag runparts ${2}
+            set_enable_flag runparts "${2}"
             shift 2;;
 
         '--use-loglevelmax')
@@ -235,6 +250,7 @@ s|@mandir@|${mandir}|g
 s|@docdir@|${docdir}|g
 s|@unitdir@|${unitdir}|g
 s|@generatordir@|${generatordir}|g
+s|@sysusersdir@|${sysusersdir}|g
 s|@libcrypto@|${libcrypto}|g
 s|@use_loglevelmax@|${use_loglevelmax}|g
 s|@part2timer@|${part2timer}|g
