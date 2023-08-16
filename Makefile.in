@@ -88,7 +88,7 @@ distprep: $(distdir)
 dist: $(tarball)
 
 test: all
-	$(SHELLCHECK) $(out_programs_sh)
+	$(SHELLCHECK) $(out_programs_sh) configure
 	{ [ "$$S_C_G" = 'skip' ] && echo 'Skipped!'; } || unshare -rm test/test-generator $(enable_runparts)
 	{ [ "$$M_O_F" = 'skip' ] && echo 'Skipped!'; } || unshare -ru test/test-m_o_f $(version)
 	{ [ "$$R_S_S" = 'skip' ] && echo 'Skipped!'; } || unshare -rm test/test-r_s_s
