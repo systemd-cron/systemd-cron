@@ -5,7 +5,7 @@ v2.0 : 2023-08-28
      which gives a lot more performance
 
    * rewrite mail_on_failure in Shell
-   * drop depedency on Python
+   * drop dependency on Python
    * again majors improvements in the configure/Makefile scripts
    * support for timezones with TZ= environment variable,
      this requires systemd 235
