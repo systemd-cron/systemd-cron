@@ -2,21 +2,33 @@
 set -e
 set -u
 
+# SC2016: the variable expansion is handled by Make
+
 prefix='/usr'
+# shellcheck disable=SC2016
 bindir='$(prefix)/bin'
+# shellcheck disable=SC2016
 datadir='$(prefix)/share'
+# shellcheck disable=SC2016
 libdir='$(prefix)/lib'
+# shellcheck disable=SC2016
 libexecdir='$(prefix)/libexec'
 statedir='/var/spool/cron'
+# shellcheck disable=SC2016
 mandir='$(datadir)/man'
+# shellcheck disable=SC2016
 docdir='$(datadir)/doc/systemd-cron'
+# shellcheck disable=SC2016
 unitdir="$(pkgconf systemd --variable=systemdsystemunitdir)" 2>/dev/null || \
 unitdir='$(libdir)/systemd/system'
+# shellcheck disable=SC2016
 generatordir="$(pkgconf systemd --variable=systemdsystemgeneratordir)" 2>/dev/null || \
 generatordir='$(libdir)/systemd/system-generators'
+# shellcheck disable=SC2016
 sysusersdir="$(pkgconf systemd --variable=sysusersdir)" 2>/dev/null || \
 sysusersdir='$(libdir)/sysusers.d'
-libcrypto="$(pkgconf --cflags --libs libcrypto)" 2>/dev/null || libcrypto='-lcrypto'
+libcrypto="$(pkgconf --cflags --libs libcrypto)" 2>/dev/null || \
+libcrypto='-lcrypto'
 enable_runparts=yes
 enable_setgid=no
 use_loglevelmax=no
