@@ -10,9 +10,9 @@ set -u
 # now with the transition to run-part-less mode,
 # these become extraneous cruft too and
 # can/should be removed if the matching .timer
-# does not exists anymore
+# does not exist anymore
 
-find /var/lib/systemd/timers/ -name 'stamp-cron-*' -mtime +10 | while read -r stamp
+find /var/lib/systemd/timers/ -name 'stamp-cron-*' -type f -mtime +10 | while read -r stamp
 do
     timer=${stamp##*/stamp-}
 
