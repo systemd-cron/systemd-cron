@@ -33,7 +33,7 @@
 .
 .Nm
 .Fl T
-.Ar FILE
+.Ar crontab
 .
 .Sh DESCRIPTION
 .Nm
@@ -85,11 +85,13 @@ Validate and translate a
 into a native
 .Xr systemd.timer 5
 pair to the standard output stream.
-.It Fl T , -test
-Validate a
-.Xr crontab 5
-.Ar file
 .
+.It Fl T , -test
+Validate whether
+.Ar crontab
+is a valid
+.Xr crontab 5
+file.
 .Pp
 .
 .It Fl u , -user Ns = Ns Ar user
