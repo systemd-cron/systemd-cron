@@ -1,13 +1,22 @@
-#!/bin/sh
+#!/bin/bash
 # needs to run as root of a UTS namespace to set hostname
 # uses fake "systemctl"/"sendmail" programs to validate the output
+set -u
 M_O_F="${M_O_F:-"$PWD/out/build/bin/mail_on_failure"}"
+
+if [ $# -eq 0 ]
+then
+    read -r V < VERSION
+else
+    V="$1"
+fi
+
 cd test/m_o_f || exit
 hostname tarta
 
 PATH=".:$PATH"
 err=0
 for f in *.service; do
-	"$M_O_F" --verbose "$f" 2>&1 | diff -u "${f%.service}.output" - || err=1
+	"$M_O_F" --verbose "$f" 2>&1 | diff -u <(sed "s#@VERSION@#${V}#" < "${f%.service}.output") - || err=1
 done
 exit $err

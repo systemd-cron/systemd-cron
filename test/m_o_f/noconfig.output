@@ -3,7 +3,7 @@ Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: binary
 Date: Fri, 01 Dec 2000 23:00:00 +0000
-From: root (systemd-cron)
+From: root (systemd-cron @VERSION@)
 To: root
 Subject: [tarta] job noconfig.service failed
 Auto-Submitted: auto-generated
