@@ -1,6 +1,16 @@
 #!/bin/sh
+
 set -e
 set -u
+
+# previously the {daily/weekly/monthly/..} stamps
+# were special-cased: they were to be purged only
+# once at 'systemd-cron' removal
+
+# now with the transition to run-part-less mode,
+# these become extraneous cruft too and
+# can/should be removed if the matching .timer
+# does not exists anymore
 
 find /var/lib/systemd/timers/ -name 'stamp-cron-*' -mtime +10 | while read -r stamp
 do
