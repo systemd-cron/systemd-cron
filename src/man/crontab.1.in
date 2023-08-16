@@ -101,8 +101,11 @@ crontab instead of the currently-logged-in user's.
 Only root can do this, and they should be careful about using
 .Nm
 without this option \(em the current user is determined by
-.Xr logname 1 ,
-not by UID!
+.Pf $ Ev LOGNAME ,
+.Pf $ Ev USER ,
+.Pf $ Ev LNAME
+.Pf $ Ev USERNAME ,
+and only then by the real UID!
 .El
 .
 .Sh FILES

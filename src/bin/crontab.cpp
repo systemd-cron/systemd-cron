@@ -24,6 +24,20 @@ static auto exec(const char * prog, A... args) -> int {
 }
 
 
+// Matches https://github.com/python/cpython/blob/3.11/Lib/getpass.py
+static const std::string_view current_user = []() -> std::string_view {
+	for(auto var : {"LOGNAME", "USER", "LNAME", "USERNAME"})
+		if(auto val = std::getenv(var))
+			return val;
+
+	static char pwusername[LOGIN_NAME_MAX + 1];
+	if(auto ent = getpwuid(getuid()))
+		return std::strncpy(pwusername, ent->pw_name, LOGIN_NAME_MAX);
+
+	return {};
+}();
+
+
 static __attribute__((format(printf, 1, 2))) auto confirm(const char * fmt, ...) -> bool {
 	for(char buf[128];;) {
 		va_list args;
@@ -123,7 +137,7 @@ static auto list(const char * cron_file, const char * user) -> int {
 	if(err == ENOENT)
 		return std::fprintf(stderr, "no crontab for %s\n", user), ENOENT;
 
-	if(std::string_view{user} != getlogin())
+	if(user != current_user)
 		return std::fprintf(stderr, "you can not display %s's crontab\n", user), 1;
 
 	if(HAVE_SETGID)
@@ -147,7 +161,7 @@ static auto remove(const char * cron_file, const char * user, bool ask) -> int {
 	if(err == EROFS)
 		return std::fprintf(stderr, "%s is on a read-only filesystem\n", cron_file), 1;
 
-	if(std::string_view{user} != getlogin())
+	if(user != current_user)
 		return std::fprintf(stderr, "you can not delete %s's crontab\n", user), 1;
 
 	if(HAVE_SETGID)
@@ -211,7 +225,7 @@ static auto edit(const char * cron_file, const char * user) -> int {
 
 			if(err == ENOENT)
 				std::fputs("# min hour dom month dow command\n", tmp);
-			else if(std::string_view{user} != getlogin())
+			else if(user != current_user)
 				return std::fprintf(stderr, "you can not edit %s's crontab\n", user), 1;
 			else if(HAVE_SETGID)
 				switch(pid_t child = vfork()) {
@@ -290,7 +304,7 @@ static auto edit(const char * cron_file, const char * user) -> int {
 
 	int err = errno;
 
-	if(std::string_view{user} != getlogin())
+	if(user != current_user)
 		return std::fprintf(stderr, "you can not edit %s's crontab, your edit is kept here: %s\n", user, tmp_path.buf), 1;
 
 	if(err == ENOSPC)
@@ -363,7 +377,7 @@ static auto replace(const char * cron_file, const char * user, const char * file
 		return 0;
 	int err = errno;
 
-	if(std::string_view{user} != getlogin())
+	if(user != current_user)
 		return std::fprintf(stderr, "you can not replace %s's crontab\n", user), 1;
 
 	if(errno == ENOSPC)
@@ -474,10 +488,8 @@ auto main(int argc, char * const * argv) -> int {
 		}
 	else if(action == action_t::translate || action == action_t::test)
 		return std::fprintf(stderr, USAGE, self), 1;
-	char getlogin_buf[LOGIN_NAME_MAX + 1];
 	if(!user)
-		if(!getlogin_r(getlogin_buf, sizeof(getlogin_buf)))
-			user = getlogin_buf;
+		user = current_user.data();
 
 	if(!user || !getpwnam(user))
 		return std::fprintf(stderr, "user '%s' unknown\n", user), 1;
