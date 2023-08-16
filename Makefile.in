@@ -190,9 +190,9 @@ endif
 	sed -i $(foreach sched,$(schedules_not),-e '1i.nr etccron_$(sched) 0') $@
 
 $(builddir)/include/part2timer.hpp : $(part2timer)
-	 sort $< | sed '/^#/d;/^$$/d;s/^/{"/;s/	/"sv, "/;s/$$/"sv},/' > $@
+	sort $< | awk '/^#/ || /^$$/ {next}  { print "{\"" $$1 "\"sv, \"" $$2 "\"sv}," }' > $@
 $(builddir)/include/crond2timer.hpp : $(crond2timer)
-	 sort $< | sed '/^#/d;/^$$/d;s/^/{"/;s/	/"sv, "/;s/$$/"sv},/' > $@
+	sort $< | awk '/^#/ || /^$$/ {next}  { print "{\"" $$1 "\"sv, \"" $$2 "\"sv}," }' > $@
 
 $(builddir)/include/configuration.hpp : $(srcdir)/include/configuration.hpp.in
 	sed -e 's:\@use_loglevelmax\@:$(use_loglevelmax):' \

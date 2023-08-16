@@ -133,7 +133,7 @@ in /etc/cron.{hourly,daily,weekly,monthly,...}:
 
 `part2timer` and `crond2timer` are in the format
 
-    basename<tab>unitbasename
+    basename<whitespace>unitbasename[<whitespace>whatever[...
 
 (empty lines and start-of-line `#`-comments permitted; unitbasename doesn't include ".timer") and may be useful when, for example,
 `/etc/cron.daily/plocate` has a timer called `plocate-updatedb.timer` or `/etc/cron.d/ntpsec` has a timer called `ntpsec-rotate-stats.timer`:
