@@ -25,6 +25,7 @@ Dependencies
 * UsrMerged system
 * C and C++20 compilers
 * libssl (-lcrypto)
+* pkg-conf
 * support for /usr/lib/sysusers.d/*.conf (optional)
 * [run-parts][3] (optional)
 * /usr/sbin/sendmail (optional, evaluated at runtime)

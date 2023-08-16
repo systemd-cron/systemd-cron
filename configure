@@ -8,7 +8,9 @@ libexecdir='$(prefix)/libexec'
 statedir='/var/spool/cron'
 mandir='$(datadir)/man'
 docdir='$(datadir)/doc/$(package)'
+unitdir="$(pkgconf systemd --variable=systemdsystemunitdir)" 2>/dev/null || \
 unitdir='$(libdir)/systemd/system'
+generatordir="$(pkgconf systemd --variable=systemdsystemgeneratordir)" 2>/dev/null || \
 generatordir='$(libdir)/systemd/system-generators'
 libcrypto="$(pkgconf --cflags --libs libcrypto)" 2>/dev/null || libcrypto='-lcrypto'
 enable_runparts=yes
