@@ -39,6 +39,7 @@ Dependencies history
 * systemd ≥ 229, real random delay support with `RandomizedDelaySec` option [(bug)][90]
 * systemd ≥ 235, support for timezones
 * systemd ≥ 236, `LogLevelMax` option
+* systemd ≥ 251, OnFailure handler receives $MONITOR_UNIT and more.
 
 Installation
 ----------------
