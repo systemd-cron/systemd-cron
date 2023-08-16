@@ -111,8 +111,6 @@ Other options include:
   Default: `no`.
 * `--enable-yearly[=yes|no]` Include support for the yearly timer.
   Default: `yes`.
-* `--enable-setgid[=yes|no]` Compile setgid C helper for crontab. Needs C compiler.
-  Default: `no`.
 * `--libcrypto=<flags>` Compiler and linker flags required to build and link to libcrypto.
   Default: `pkgconf --cflags --libs libcrypto` or `-lcrypto`.
 * `--with-part2timer=file` Mapping from basename in /etc/cron.{daily,weekly,etc.) to unit name.

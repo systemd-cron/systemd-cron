@@ -8,7 +8,6 @@ version		:= $(file < VERSION)
 schedules		:= @schedules@
 schedules_not		:= @schedules_not@
 enable_runparts		:= @enable_runparts@
-enable_setgid		:= @enable_setgid@
 use_loglevelmax		:= @use_loglevelmax@
 part2timer		:= @part2timer@
 crond2timer		:= @crond2timer@
@@ -102,13 +101,13 @@ install: all
 	install -m755 -D $(builddir)/bin/mail_on_failure $(DESTDIR)$(libexecdir)/systemd-cron/mail_on_failure
 	install -m755 -D $(builddir)/bin/boot_delay $(DESTDIR)$(libexecdir)/systemd-cron/boot_delay
 	install -m644 -D $(srcdir)/lib/sysusers.d/systemd-cron.conf $(DESTDIR)$(sysusersdir)/systemd-cron.conf
-ifneq ($(enable_setgid),no)
 	install -m755 -D $(builddir)/bin/crontab_setgid $(DESTDIR)$(libexecdir)/systemd-cron/crontab_setgid
+
+# Arch linux specific
 	if getent group cron > /dev/null 2>&1; then \
 	    chgrp cron $(DESTDIR)$(libexecdir)/systemd-cron/crontab_setgid ; \
 	    chmod 2755 $(DESTDIR)$(libexecdir)/systemd-cron/crontab_setgid ; \
 	fi
-endif
 
 	install -m644 -D $(builddir)/man/systemd.cron.7 $(DESTDIR)$(mandir)/man7/systemd.cron.7
 	install -m644 -D $(builddir)/man/crontab.1 $(DESTDIR)$(mandir)/man1/$(CRONTAB).1
@@ -228,9 +227,7 @@ $(builddir)/bin/%: $(srcdir)/bin/%.sh
 	chmod +x $@
 
 $(builddir)/bin/crontab_setgid: $(srcdir)/bin/crontab_setgid.c
-ifneq ($(enable_setgid),no)
 	$(CC) $(CFLAGS) $(CPPFLAGS) $< -DCRONTAB_DIR='"$(statedir)"' -o $@ $(LDFLAGS)
-endif
 
 $(outputs): $(builddir)
 
