@@ -76,7 +76,7 @@ define in2out
 		$1 > $2
 endef
 
-all: $(outputs)
+all: $(builddir) $(outputs)
 
 clean:
 	rm -rf $(outdir)
@@ -229,7 +229,7 @@ $(builddir)/bin/%: $(srcdir)/bin/%.sh
 $(builddir)/bin/crontab_setgid: $(srcdir)/bin/crontab_setgid.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) $< -DCRONTAB_DIR='"$(statedir)"' -o $@ $(LDFLAGS)
 
-$(outputs): $(builddir)
+$(outputs): | $(builddir)
 
 $(outdir):
 	mkdir -p $@
