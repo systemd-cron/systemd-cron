@@ -26,7 +26,7 @@ cron.target
 .br
 cron-update.path, cron-update.service
 .br
-cron-failure@.service
+cron-mail@.service
 .
 .Sh DESCRIPTION
 These units provide the functionality usually afforded by the cron daemon \(em
@@ -120,7 +120,7 @@ to view the output of scripts run from these units.
 .Pp
 . \}
 .
-.It Nm cron-failure@.service
+.It Nm cron-mail@.service
 Sends mail in case a cron service unit fails.
 .El
 .

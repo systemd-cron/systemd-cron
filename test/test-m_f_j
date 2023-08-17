@@ -2,7 +2,7 @@
 # needs to run as root of a UTS namespace to set hostname
 # uses fake "systemctl"/"sendmail" programs to validate the output
 set -u
-M_O_F="${M_O_F:-"$PWD/out/build/bin/mail_on_failure"}"
+M_O_F="${M_O_F:-"$PWD/out/build/bin/mail_for_job"}"
 trap 'rm -rf "$tmpdir"' EXIT INT
 tmpdir="$(mktemp -d)/"
 
@@ -13,7 +13,7 @@ else
     V="$1"
 fi
 
-cd test/m_o_f || exit
+cd test/m_f_j || exit
 hostname tarta
 
 PATH=".:$PATH"
@@ -21,6 +21,6 @@ err=0
 for f in *.service; do
     of="${f%.service}.output"
     sed "s#@VERSION@#${V}#" < "$of" > "${tmpdir}$of"
-    "$M_O_F" --verbose "$f" 2>&1 | diff -u "${tmpdir}$of" - || err=1
+    "$M_O_F" "$f" verbose 2>&1 | diff -u "${tmpdir}$of" - || err=1
 done
 exit $err

@@ -91,10 +91,11 @@ assert_dat() {  # file content testname
 	"$S_C_G" /etc/out2
 	cd /etc/out2 || exit
 
-	assert_key cron-crontab-henry-0.service 'User'             'henry'                         henry-unknown-user
-	assert_key cron-crontab-henry-0.service 'Requires'         'systemd-user-sessions.service' henry-unknown-user
-	assert_ney cron-crontab-henry-0.service 'RequiresMountsFor'                                henry-unknown-user
-	assert_key cron-crontab-henry-0.service 'Description'      '[Cron] "1 2 3 4 5 henry echo 0=Vasárnap 1=Hétfő 2=Kedd 3=Szerda 4=Csütörtök 5=Péntek 6=Szombat"' henry-the-hungarian
+	assert_key cron-crontab-henry-0.service 'User'              'henry'                                           henry-unknown-user
+	assert_key cron-crontab-henry-0.service 'Requires'          'systemd-user-sessions.service'                   henry-unknown-user
+	assert_ney cron-crontab-henry-0.service 'RequiresMountsFor'                                                   henry-unknown-user
+	assert_key cron-crontab-henry-0.service 'OnFailure'         'cron-mail@cron\x2dcrontab\x2dhenry\x2d0.service' onfailure_escaped
+	assert_key cron-crontab-henry-0.service 'Description'       '[Cron] "1 2 3 4 5 henry echo 0=Vasárnap 1=Hétfő 2=Kedd 3=Szerda 4=Csütörtök 5=Péntek 6=Szombat"' henry-the-hungarian
 
 	assert_key cron-crontab-henry-0.timer   'OnCalendar'       'Fri *-4-3 2:1:00'              henry\'s-calendar
 

@@ -40,7 +40,7 @@ out_targets	:=
 endif
 out_units		:= $(out_services) $(out_timers) $(out_targets) $(builddir)/units/cron.target \
                            $(builddir)/units/cron-update.path $(builddir)/units/cron-update.service \
-                           $(builddir)/units/cron-failure@.service
+                           $(builddir)/units/cron-mail@.service
 out_manuals		:= $(patsubst $(srcdir)/man/%.in,$(builddir)/man/%,$(wildcard $(srcdir)/man/*))
 out_programs_sh		:= $(subst $(srcdir),$(builddir),$(patsubst %.sh,%,$(wildcard $(srcdir)/bin/*.sh)))
 out_programs_cpp	:= $(subst $(srcdir),$(builddir),$(patsubst %.cpp,%,$(wildcard $(srcdir)/bin/*.cpp)))
@@ -87,7 +87,7 @@ dist: $(tarball)
 test: test-unshare test-nounshare
 test-unshare: all
 	unshare -rm test/test-generator $(enable_runparts) "$(statedir)"
-	unshare -ru test/test-m_o_f $(version)
+	unshare -ru test/test-m_f_j $(version)
 	unshare -rm test/test-r_s_s
 test-nounshare: all
 	$(SHELLCHECK) $(out_programs_sh) configure
@@ -98,7 +98,7 @@ install: all
 	install -m755 -D $(builddir)/bin/crontab $(DESTDIR)$(bindir)/$(CRONTAB)
 	install -m755 -D $(builddir)/bin/systemd-crontab-generator $(DESTDIR)$(generatordir)/systemd-crontab-generator
 	install -m755 -D $(builddir)/bin/remove_stale_stamps $(DESTDIR)$(libexecdir)/systemd-cron/remove_stale_stamps
-	install -m755 -D $(builddir)/bin/mail_on_failure $(DESTDIR)$(libexecdir)/systemd-cron/mail_on_failure
+	install -m755 -D $(builddir)/bin/mail_for_job $(DESTDIR)$(libexecdir)/systemd-cron/mail_for_job
 	install -m755 -D $(builddir)/bin/boot_delay $(DESTDIR)$(libexecdir)/systemd-cron/boot_delay
 	install -m644 -D $(srcdir)/lib/sysusers.d/systemd-cron.conf $(DESTDIR)$(sysusersdir)/systemd-cron.conf
 	install -m755 -D $(builddir)/bin/crontab_setgid $(DESTDIR)$(libexecdir)/systemd-cron/crontab_setgid
@@ -118,7 +118,7 @@ install: all
 	install -m644 -D $(builddir)/units/cron.target $(DESTDIR)$(unitdir)/cron.target
 	install -m644 $(builddir)/units/cron-update.path $(DESTDIR)$(unitdir)
 	install -m644 $(builddir)/units/cron-update.service $(DESTDIR)$(unitdir)
-	install -m644 $(builddir)/units/cron-failure@.service $(DESTDIR)$(unitdir)
+	install -m644 $(builddir)/units/cron-mail@.service $(DESTDIR)$(unitdir)
 
 ifneq ($(enable_runparts),no)
 	$(foreach schedule,$(schedules),\
@@ -144,7 +144,7 @@ endif
 $(builddir)/units/cron-update.service: $(srcdir)/units/cron-update.service.in
 	$(call in2out,$<,$@)
 
-$(builddir)/units/cron-failure@.service: $(srcdir)/units/cron-failure@.service.in
+$(builddir)/units/cron-mail@.service: $(srcdir)/units/cron-mail@.service.in
 	$(call in2out,$<,$@)
 
 $(builddir)/units/cron-%.service: $(srcdir)/units/cron-schedule.service.in
