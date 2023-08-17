@@ -14,7 +14,7 @@ v2.0 : 2023-08-16
    [adetiste]
    * rewrite remove_stale_stamps in Shell; take into account
      the new "run-part-less" mode introduced in v1.5.15
-   * use pkg-conf to get systemd $unitdir & $generatordir
+   * use pkgconf to get systemd $unitdir & $generatordir
 
 v1.16.7 : 2023-08-13
 
