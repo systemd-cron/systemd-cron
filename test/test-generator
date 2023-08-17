@@ -8,6 +8,10 @@ USE_RUN_PARTS="${1:-no}"
 echo "USE_RUN_PARTS: $USE_RUN_PARTS"
 
 mount -t tmpfs tmpfs /etc || exit
+STATEDIR="${2:-"/var/spool/cron"}"
+if [ -d "$STATEDIR" ]; then
+	mount -t tmpfs tmpfs "$STATEDIR" || exit
+fi
 
 
 err=0
