@@ -1,13 +1,14 @@
--i -B 8BITMIME henry
+-i -B 8BITMIME root
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: binary
 Date: Fri, 01 Dec 2000 23:00:00 +0000
 From: root (systemd-cron)
-To: henry
-Subject: [tarta] job user.service failed
+To: root
+Subject: [tarta] job ok.service output
 X-Mailer: systemd-cron @VERSION@
 Auto-Submitted: auto-generated
 
-User=henry
+User=
 Environment=
+ActiveState=inactive

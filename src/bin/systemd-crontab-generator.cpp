@@ -640,8 +640,15 @@ struct Job {
 			;  // mails explicitely disabled
 		else if(!HAS_SENDMAIL)
 			;  // mails automaticaly disabled
-		else
-			std::fputs("OnFailure=cron-failure@%i.service\n", into);
+		else {
+			std::fputs("OnFailure=cron-mail@", into);
+			for(auto c : this->unit_name)  // the only funny byte we need to escape is '-' thanks to VALID_CHARS
+				if(c == '-')
+					std::fputs("\\x2d", into);
+				else
+					std::fputc(c, into);
+			std::fputs(".service\n", into);
+		}
 		if(this->user != "root"sv || this->filename.find(STATEDIR) != std::string_view::npos) {
 			std::fputs("Requires=systemd-user-sessions.service\n", into);
 			if(this->home)

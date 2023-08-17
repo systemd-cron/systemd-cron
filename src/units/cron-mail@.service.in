@@ -1,5 +1,5 @@
 [Unit]
-Description=systemd-cron OnFailure for %i
+Description=systemd-cron job mail — %I
 Documentation=man:systemd.cron(7)
 RefuseManualStart=true
 RefuseManualStop=true
@@ -8,6 +8,6 @@ ConditionFileIsExecutable=|/usr/lib/sendmail
 
 [Service]
 Type=oneshot
-ExecStart=@libexecdir@/systemd-cron/mail_on_failure %i
+ExecStart=@libexecdir@/systemd-cron/mail_for_job %I
 User=_cron-failure
 Group=systemd-journal
