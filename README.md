@@ -83,7 +83,7 @@ follow the standard GNU [installation directories][4]:
 * `--mandir=<path>`
 * `--docdir=<path>`
 
-Other options include:
+Other options include (`pkgconf` may be overridden with `$PKG_CONFIG`):
 
 * `--enable-runparts[=yes|no]` Use static units for /etc/cron.{hourly,daily,...}
   Default: `yes`.
