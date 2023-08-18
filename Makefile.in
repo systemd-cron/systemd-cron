@@ -3,8 +3,7 @@ CFLAGS += -Wall
 SHELLCHECK ?= shellcheck
 CRONTAB ?= crontab
 
-version		:= $(file < VERSION)
-
+version		:= @version@
 schedules		:= @schedules@
 schedules_not		:= @schedules_not@
 enable_runparts		:= @enable_runparts@

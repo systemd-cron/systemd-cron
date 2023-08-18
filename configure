@@ -36,6 +36,7 @@ enable_runparts=yes
 use_loglevelmax=no
 part2timer=/dev/null
 crond2timer=/dev/null
+read -r version < VERSION
 
 
 enable_boot=yes
@@ -77,6 +78,7 @@ enable-runparts::,
 use-loglevelmax::,
 with-part2timer:,
 with-crond2timer:,
+with-version:,
 ' -- "${@}")
 
 usage()
@@ -220,6 +222,10 @@ do
             crond2timer="${2}"
             shift 2;;
 
+        '--with-version')
+            version="${2}"
+            shift 2;;
+
         '--')
             shift
             break;;
@@ -268,4 +274,5 @@ s|@libcrypto@|${libcrypto}|g
 s|@use_loglevelmax@|${use_loglevelmax}|g
 s|@part2timer@|${part2timer}|g
 s|@crond2timer@|${crond2timer}|g
+s|@version@|${version}|g
 " Makefile.in > Makefile
