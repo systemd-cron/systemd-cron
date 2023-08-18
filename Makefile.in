@@ -184,9 +184,16 @@ ifneq ($(enable_runparts),yes)
 else
 	sed -i $(foreach sched,$(schedules)    ,-e '1i.nr timer_$(sched) 1') $@
 endif
+
+ifneq ($(schedules_not),)
 	sed -i $(foreach sched,$(schedules_not),-e '1i.nr timer_$(sched) 0') $@
+endif
+
 	sed -i $(foreach sched,$(schedules)    ,-e '1i.nr etccron_$(sched) 1') $@
+
+ifneq ($(schedules_not),)
 	sed -i $(foreach sched,$(schedules_not),-e '1i.nr etccron_$(sched) 0') $@
+endif
 
 $(builddir)/include/part2timer.hpp : $(part2timer)
 	sort $< | awk '/^#/ || /^$$/ {next}  { print "{\"" $$1 "\"sv, \"" $$2 "\"sv}," }' > $@
