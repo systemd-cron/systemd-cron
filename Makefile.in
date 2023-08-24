@@ -1,5 +1,4 @@
 CFLAGS ?= -O2
-CFLAGS += -Wall
 SHELLCHECK ?= shellcheck
 CRONTAB ?= crontab
 
