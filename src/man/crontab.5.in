@@ -95,9 +95,9 @@ recipients by separating recipient users with a comma.
 If MAILTO is defined but empty (MAILTO=""), no mail will be sent.
 Otherwise mail is sent to the owner of the crontab.
 .br
-This mail only contains an small excerpt from the log, as seen when using
+This mail contains
 .B systemctl status
-The full output remains available in the journal.
+and the full log for the failed run, copied from the journal.
 
 .TP
 .B RANDOM_DELAY
