@@ -1,3 +1,8 @@
+v2.0.2 : 2023-09-01
+
+   [наб]
+   * Makefile: split test target into test: test-{no,}unshare
+
 v2.0.1 : 2023-08-22
 
    [наб & Dwayne Bent]
