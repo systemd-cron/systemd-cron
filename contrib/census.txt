@@ -1,0 +1,19 @@
+# census on how s-d-c is configured on various distros
+
+--statedir
+    Arch: /var/spool/cron/
+    Debian: /var/spool/cron/crontabs/ (managed by cron-daemon-common)
+    Fedora: ?
+    Gentoo: /var/spool/cron/crontabs/ (has sys-process/cronbase)
+
+--enable-boot
+    Arch: yes
+    Debian: no
+    Fedora: ?
+    Gentoo: (optional)
+
+creation of a system group for the setgid helper
+    Arch: ?
+    Debian: managed by cron-daemon-common
+    Fedora: ?
+    Gentoo: ?
