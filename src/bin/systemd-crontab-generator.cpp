@@ -814,8 +814,12 @@ static auto parse_crontab(std::string_view filename, withuser_t withuser, bool m
 	vore::file::mapping map;
 	{
 		vore::file::fd<true> f{filename.data(), O_RDONLY | O_CLOEXEC};
-		if(f == -1)
-			return errno == ENOENT;
+		if(f == -1) {
+			if(withuser == withuser_t::initial)  // Treat ENOENT as an error only for crontab -t and crontab -T, otherwise ignore
+				return false;
+			else
+				return errno == ENOENT;
+		}
 
 		struct stat sb;
 		fstat(f, &sb);
