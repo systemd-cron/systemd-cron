@@ -15,13 +15,15 @@ SENDMAIL="$(command -v "$SENDMAIL" || command -v sendmail || command -v /usr/sbi
 	exit 0
 }
 
-systemctl show --property=User --property=Environment "$unit" | {
+systemctl show --property=User --property=Environment --property=InvocationID "$unit" | {
 	user=
 	job_env=
+	invocation_id=
 	while IFS='=' read -r k v; do
 		case "$k" in
-			'User'       )	user="$v"    ;;
-			'Environment')	job_env="$v" ;;
+			'User'        )	user="$v"          ;;
+			'Environment' )	job_env="$v"       ;;
+			'InvocationID')	invocation_id="$v" ;;
 		esac
 	done
 	[ -z "$user" ] && user='root'
@@ -62,6 +64,8 @@ systemctl show --property=User --property=Environment "$unit" | {
 			C|POSIX|*.utf8|*.utf-8|*.UTF-8)	               ;;  # ok, we can safely use this locale as UTF-8
 			*                             )	LC_ALL=C.UTF-8 ;;  # forced to comply with charset=
 		esac
-		systemctl status "$unit"
+
+		systemctl status -n0 "$unit"
+		journalctl -u "$unit" _SYSTEMD_INVOCATION_ID="$invocation_id" + INVOCATION_ID="$invocation_id"
 	} 2>&1 | "$SENDMAIL" -i -B 8BITMIME "$mailto"
 }
