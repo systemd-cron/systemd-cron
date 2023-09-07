@@ -122,7 +122,7 @@ do
             shift 2;;
 
         '--confdir')
-            print "--confdir ${2} is ignored"
+            echo "--confdir ${2} is ignored"
             shift 2;;
 
         '--datadir')
