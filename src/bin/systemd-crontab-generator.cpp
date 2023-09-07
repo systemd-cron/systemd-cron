@@ -1108,31 +1108,31 @@ static auto realmain() -> int {
 				job.output();
 			});
 		}
+	}
 
-		if(!parse_crontab("/etc/anacrontab", withuser_t::from_basename, /*monotonic=*/true, [&](auto && job) {
-			   if(!job.valid) {
-				   log(Log::ERR, "truncated line in /etc/anacrontab: %.*s", FORMAT_SV(job.line));
-				   return;
-			   }
-			   generate_timer_unit(job);
-		   }))
-			log(Log::ERR, "%s: %s", "/etc/anacrontab", std::strerror(errno));
+	if(!parse_crontab("/etc/anacrontab", withuser_t::from_basename, /*monotonic=*/true, [&](auto && job) {
+		   if(!job.valid) {
+			   log(Log::ERR, "truncated line in /etc/anacrontab: %.*s", FORMAT_SV(job.line));
+			   return;
+		   }
+		   generate_timer_unit(job);
+	   }))
+		log(Log::ERR, "%s: %s", "/etc/anacrontab", std::strerror(errno));
 
-		if(struct stat sb; !stat(STATEDIR, &sb) && S_ISDIR(sb.st_mode)) {
-			// /var is avaible
-			for_each_file(STATEDIR, [&](std::string_view basename) {
-				if(basename.find('.') != std::string_view::npos)
-					return;
+	if(struct stat sb; !stat(STATEDIR, &sb) && S_ISDIR(sb.st_mode)) {
+		// /var is avaible
+		for_each_file(STATEDIR, [&](std::string_view basename) {
+			if(basename.find('.') != std::string_view::npos)
+				return;
 
-				auto filename = (std::string{STATEDIR} += '/') += basename;
-				if(!parse_crontab(filename, withuser_t::from_basename, /*monotonic=*/false, [&](auto && job) { generate_timer_unit(job); }))
-					log(Log::ERR, "%s: %s", filename.c_str(), std::strerror(errno));
-			});
-			vore::file::fd<false>{REBOOT_FILE, O_WRONLY | O_CREAT | O_CLOEXEC, 0666};
-		} else {
-			if(!workaround_var_not_mounted())
-				log(Log::WARNING, "%s: %s", "cron-after-var.service", std::strerror(errno));
-		}
+			auto filename = (std::string{STATEDIR} += '/') += basename;
+			if(!parse_crontab(filename, withuser_t::from_basename, /*monotonic=*/false, [&](auto && job) { generate_timer_unit(job); }))
+				log(Log::ERR, "%s: %s", filename.c_str(), std::strerror(errno));
+		});
+		vore::file::fd<false>{REBOOT_FILE, O_WRONLY | O_CREAT | O_CLOEXEC, 0666};
+	} else {
+		if(!workaround_var_not_mounted())
+			log(Log::WARNING, "%s: %s", "cron-after-var.service", std::strerror(errno));
 	}
 
 	return 0;
