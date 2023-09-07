@@ -47,7 +47,9 @@ assert_dat() {  # file content testname
 	              '1 * * * mon-wed dummy true'                                \
 	                                                                          \
 	              '# test_substitutions'                                      \
+	              'BATCH=1'                                                   \
 	              '1 * * * mon-wed dummy echo dev null > /dev/null'           \
+	              'BATCH=0'                                                   \
 	              '1 * * * mon-wed dummy echo devnull  >/dev/null'            \
 	                                                                          \
 	              '# test_tz'                                                 \
@@ -72,6 +74,8 @@ assert_dat() {  # file content testname
 
 	assert_dat cron-crontab-dummy-3.sh      '/usr/bin/echo dev null' test_substitutions
 	assert_dat cron-crontab-dummy-4.sh      '/usr/bin/echo devnull'  test_substitutions
+	assert_key cron-crontab-dummy-3.service 'CPUSchedulingPolicy' 'idle' test_substitutions_BATCH
+	assert_ney cron-crontab-dummy-4.service 'CPUSchedulingPolicy'        test_substitutions_BATCH
 
 	assert_key cron-crontab-dummy-5.timer   'OnCalendar' 'Mon,Tue,Wed *-*-* *:1:00 Europe/Warsaw'       test_tz  # systemd accepts zones it finds in the zoneinfo file, but only by exact match
 	assert_key cron-crontab-dummy-6.timer   'OnCalendar' 'Mon,Tue,Wed *-*-* *:1:00'                     test_tz  # TZ=UTC0 is valid (as is TZ=UTC2), but systemd doesn't accept it as a suffix

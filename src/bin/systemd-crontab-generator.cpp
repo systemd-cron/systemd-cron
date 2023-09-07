@@ -66,9 +66,9 @@ static std::string TIMERS_DIR;
 static std::optional<std::uint64_t> UPTIME;
 
 static auto systemd_bool(const std::string_view & string) -> bool {
-	return strncasecmp(string.data(), "1", string.size()) ||    //
-	       strncasecmp(string.data(), "yes", string.size()) ||  //
-	       strncasecmp(string.data(), "true", string.size());
+	return !strncasecmp(string.data(), "1", string.size()) ||    //
+	       !strncasecmp(string.data(), "yes", string.size()) ||  //
+	       !strncasecmp(string.data(), "true", string.size());
 }
 
 enum class Log : std::uint8_t { EMERG, ALERT, CRIT, ERR, WARNING, NOTICE, INFO, DEBUG };
