@@ -10,7 +10,7 @@ v2.1.0 : 2023-09-08
    * run-parts mode: re-enable processing of
                      /etc/anacrontab and /var/spool/cron
    * fix systemd_bool() logic inversion, has impact on
-     handling of PERISTENT= and BATCH= overrides.
+     handling of PERSISTENT= and BATCH= overrides.
 
 v2.0.2 : 2023-09-01
 
