@@ -5,7 +5,7 @@ v2.1.0 : 2023-09-08
    * possibly send e-mails more like traditional cron.
      The behaviour can be controlled by defining the MAILTO=,
      CRON_MAIL_SUCCESS= & CRON_MAIL_FORMAT= & parameters
-     globally in in /etc/crontab or in dividual crontabs.
+     globally in /etc/crontab or in individual crontabs.
 
    Fix new 2.x feature:
 
