@@ -121,13 +121,38 @@ to view the output of scripts run from these units.
 . \}
 .
 .It Nm cron-mail@.service
-Sends mail in case a cron service unit fails.
+Sends mail in case a cron service unit fails, succeeds, or succeeds-but-only-if-it-wrote-something.
+The instance name
+.Pq the bit after the Sy @
+is the escaped unit name without
+.Pa .service ,
+followed by optional arguments delimited by spaces
+.Pq also escaped as Sq Sy \ex20 :
+.Bl -tag -compact -width ".Sy nometadata"
+.It Sy nonempty
+exit silently if the unit produced no output
+.Pq equivalent to Ev CRON_MAIL_SUCCESS Ns = Ns Sy nonempty
+for
+.Va OnSuccess Ns = ) ,
+.It Sy nometadata
+don't include
+.Nm systemctl Cm status
+output, don't add usual
+.Nm journalctl
+metadata to the output
+.Pq equivalent to Ev CRON_MAIL_FORMAT Ns = Ns Sy nometadata ,
+and
+.It Sy verbose
+log reason before exiting silently.
+.El
+.Pp
+Overriding this via
+.Nm systemctl Cm edit
+can be useful, especially for units under
+.Pa /etc/cron. Ns Ar * .
 .El
 .
 .Sh BUGS
-This cron replacement only sends mails on failure.
-Full job output is saved in the journal.
-.Pp
 Do
 .Em not
 use with a cron daemon or anacron, otherwise scripts may be executed multiple times.
