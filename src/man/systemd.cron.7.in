@@ -124,10 +124,10 @@ to view the output of scripts run from these units.
 Sends mail in case a cron service unit fails, succeeds, or succeeds-but-only-if-it-wrote-something.
 The instance name
 .Pq the bit after the Sy @
-is the escaped unit name without
-.Pa .service ,
-followed by optional arguments delimited by spaces
-.Pq also escaped as Sq Sy \ex20 :
+is the unit name,
+followed by optional arguments delimited by
+colons
+.Pq Sq Sy \&: :
 .Bl -tag -compact -width ".Sy nometadata"
 .It Sy nonempty
 exit silently if the unit produced no output

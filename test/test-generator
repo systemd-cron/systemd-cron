@@ -127,45 +127,45 @@ assert_dat() {  # file content testname
 	assert_key cron-crontab-dummy-5.timer   'OnCalendar' 'Mon,Tue,Wed *-*-* *:1:00 Europe/Warsaw'       test_tz  # systemd accepts zones it finds in the zoneinfo file, but only by exact match
 	assert_key cron-crontab-dummy-6.timer   'OnCalendar' 'Mon,Tue,Wed *-*-* *:1:00'                     test_tz  # TZ=UTC0 is valid (as is TZ=UTC2), but systemd doesn't accept it as a suffix
 
-	assert_key cron-crontab-dummy-6.service  'OnSuccess' 'cron-mail@cron\x2dcrontab\x2ddummy\x2d6\x20nonempty.service'  test_cron_mail_success_default
-	assert_key cron-crontab-dummy-6.service  'OnFailure' 'cron-mail@cron\x2dcrontab\x2ddummy\x2d6.service'              test_cron_mail_success_default
-	assert_key cron-crontab-dummy-7.service  'OnSuccess' 'cron-mail@cron\x2dcrontab\x2ddummy\x2d7.service'              test_cron_mail_success=always
-	assert_key cron-crontab-dummy-7.service  'OnFailure' 'cron-mail@cron\x2dcrontab\x2ddummy\x2d7.service'              test_cron_mail_success=always
-	assert_key cron-crontab-dummy-8.service  'OnSuccess' 'cron-mail@cron\x2dcrontab\x2ddummy\x2d8.service'              test_cron_mail_success=yes
-	assert_key cron-crontab-dummy-8.service  'OnFailure' 'cron-mail@cron\x2dcrontab\x2ddummy\x2d8.service'              test_cron_mail_success=yes
-	assert_key cron-crontab-dummy-9.service  'OnSuccess' 'cron-mail@cron\x2dcrontab\x2ddummy\x2d9.service'              test_cron_mail_success=true
-	assert_key cron-crontab-dummy-9.service  'OnFailure' 'cron-mail@cron\x2dcrontab\x2ddummy\x2d9.service'              test_cron_mail_success=true
-	assert_key cron-crontab-dummy-10.service 'OnSuccess' 'cron-mail@cron\x2dcrontab\x2ddummy\x2d10.service'             test_cron_mail_success=1
-	assert_key cron-crontab-dummy-10.service 'OnFailure' 'cron-mail@cron\x2dcrontab\x2ddummy\x2d10.service'             test_cron_mail_success=1
-	assert_ney cron-crontab-dummy-11.service 'OnSuccess'                                                                test_cron_mail_success=never
-	assert_key cron-crontab-dummy-11.service 'OnFailure' 'cron-mail@cron\x2dcrontab\x2ddummy\x2d11.service'             test_cron_mail_success=never
-	assert_ney cron-crontab-dummy-12.service 'OnSuccess'                                                                test_cron_mail_success=no
-	assert_key cron-crontab-dummy-12.service 'OnFailure' 'cron-mail@cron\x2dcrontab\x2ddummy\x2d12.service'             test_cron_mail_success=no
-	assert_ney cron-crontab-dummy-13.service 'OnSuccess'                                                                test_cron_mail_success=false
-	assert_key cron-crontab-dummy-13.service 'OnFailure' 'cron-mail@cron\x2dcrontab\x2ddummy\x2d13.service'             test_cron_mail_success=false
-	assert_ney cron-crontab-dummy-14.service 'OnSuccess'                                                                test_cron_mail_success=0
-	assert_key cron-crontab-dummy-14.service 'OnFailure' 'cron-mail@cron\x2dcrontab\x2ddummy\x2d14.service'             test_cron_mail_success=0
-	assert_key cron-crontab-dummy-15.service 'OnSuccess' 'cron-mail@cron\x2dcrontab\x2ddummy\x2d15\x20nonempty.service' test_cron_mail_success=inherit  # same as default at toplevel
-	assert_key cron-crontab-dummy-15.service 'OnFailure' 'cron-mail@cron\x2dcrontab\x2ddummy\x2d15.service'             test_cron_mail_success=inherit
-	assert_key cron-crontab-dummy-16.service 'OnSuccess' 'cron-mail@cron\x2dcrontab\x2ddummy\x2d16\x20nonempty.service' test_cron_mail_success=nonempty
-	assert_key cron-crontab-dummy-16.service 'OnFailure' 'cron-mail@cron\x2dcrontab\x2ddummy\x2d16.service'             test_cron_mail_success=nonempty
-	assert_key cron-crontab-dummy-17.service 'OnSuccess' 'cron-mail@cron\x2dcrontab\x2ddummy\x2d17\x20nonempty.service' test_cron_mail_success=non-empty
-	assert_key cron-crontab-dummy-17.service 'OnFailure' 'cron-mail@cron\x2dcrontab\x2ddummy\x2d17.service'             test_cron_mail_success=non-empty
-	assert_key cron-crontab-dummy-18.service 'OnSuccess' 'cron-mail@cron\x2dcrontab\x2ddummy\x2d18\x20nonempty.service'               test_cron_mail_format=normal
-	assert_key cron-crontab-dummy-18.service 'OnFailure' 'cron-mail@cron\x2dcrontab\x2ddummy\x2d18.service'                           test_cron_mail_format=normal
-	assert_key cron-crontab-dummy-19.service 'OnSuccess' 'cron-mail@cron\x2dcrontab\x2ddummy\x2d19\x20nonempty\x20nometadata.service' test_cron_mail_format=nometadata
-	assert_key cron-crontab-dummy-19.service 'OnFailure' 'cron-mail@cron\x2dcrontab\x2ddummy\x2d19\x20nometadata.service'             test_cron_mail_format=nometadata
-	assert_key cron-crontab-dummy-20.service 'OnSuccess' 'cron-mail@cron\x2dcrontab\x2ddummy\x2d20\x20nonempty.service'               test_cron_mail_format=inherit  # same as default at toplevel
-	assert_key cron-crontab-dummy-20.service 'OnFailure' 'cron-mail@cron\x2dcrontab\x2ddummy\x2d20.service'                           test_cron_mail_format=inherit
-	assert_key cron-crontab-dummy-21.service 'OnSuccess' 'cron-mail@cron\x2dcrontab\x2ddummy\x2d21\x20nonempty\x20nometadata.service' test_cron_mail_format=no-metadata
-	assert_key cron-crontab-dummy-21.service 'OnFailure' 'cron-mail@cron\x2dcrontab\x2ddummy\x2d21\x20nometadata.service'             test_cron_mail_format=no-metadata
+	assert_key cron-crontab-dummy-6.service  'OnSuccess' 'cron-mail@%n:nonempty.service'            test_cron_mail_success_default
+	assert_key cron-crontab-dummy-6.service  'OnFailure' 'cron-mail@%n.service'                     test_cron_mail_success_default
+	assert_key cron-crontab-dummy-7.service  'OnSuccess' 'cron-mail@%n.service'                     test_cron_mail_success=always
+	assert_key cron-crontab-dummy-7.service  'OnFailure' 'cron-mail@%n.service'                     test_cron_mail_success=always
+	assert_key cron-crontab-dummy-8.service  'OnSuccess' 'cron-mail@%n.service'                     test_cron_mail_success=yes
+	assert_key cron-crontab-dummy-8.service  'OnFailure' 'cron-mail@%n.service'                     test_cron_mail_success=yes
+	assert_key cron-crontab-dummy-9.service  'OnSuccess' 'cron-mail@%n.service'                     test_cron_mail_success=true
+	assert_key cron-crontab-dummy-9.service  'OnFailure' 'cron-mail@%n.service'                     test_cron_mail_success=true
+	assert_key cron-crontab-dummy-10.service 'OnSuccess' 'cron-mail@%n.service'                     test_cron_mail_success=1
+	assert_key cron-crontab-dummy-10.service 'OnFailure' 'cron-mail@%n.service'                     test_cron_mail_success=1
+	assert_ney cron-crontab-dummy-11.service 'OnSuccess'                                            test_cron_mail_success=never
+	assert_key cron-crontab-dummy-11.service 'OnFailure' 'cron-mail@%n.service'                     test_cron_mail_success=never
+	assert_ney cron-crontab-dummy-12.service 'OnSuccess'                                            test_cron_mail_success=no
+	assert_key cron-crontab-dummy-12.service 'OnFailure' 'cron-mail@%n.service'                     test_cron_mail_success=no
+	assert_ney cron-crontab-dummy-13.service 'OnSuccess'                                            test_cron_mail_success=false
+	assert_key cron-crontab-dummy-13.service 'OnFailure' 'cron-mail@%n.service'                     test_cron_mail_success=false
+	assert_ney cron-crontab-dummy-14.service 'OnSuccess'                                            test_cron_mail_success=0
+	assert_key cron-crontab-dummy-14.service 'OnFailure' 'cron-mail@%n.service'                     test_cron_mail_success=0
+	assert_key cron-crontab-dummy-15.service 'OnSuccess' 'cron-mail@%n:nonempty.service'            test_cron_mail_success=inherit  # same as default at toplevel
+	assert_key cron-crontab-dummy-15.service 'OnFailure' 'cron-mail@%n.service'                     test_cron_mail_success=inherit
+	assert_key cron-crontab-dummy-16.service 'OnSuccess' 'cron-mail@%n:nonempty.service'            test_cron_mail_success=nonempty
+	assert_key cron-crontab-dummy-16.service 'OnFailure' 'cron-mail@%n.service'                     test_cron_mail_success=nonempty
+	assert_key cron-crontab-dummy-17.service 'OnSuccess' 'cron-mail@%n:nonempty.service'            test_cron_mail_success=non-empty
+	assert_key cron-crontab-dummy-17.service 'OnFailure' 'cron-mail@%n.service'                     test_cron_mail_success=non-empty
+	assert_key cron-crontab-dummy-18.service 'OnSuccess' 'cron-mail@%n:nonempty.service'            test_cron_mail_format=normal
+	assert_key cron-crontab-dummy-18.service 'OnFailure' 'cron-mail@%n.service'                     test_cron_mail_format=normal
+	assert_key cron-crontab-dummy-19.service 'OnSuccess' 'cron-mail@%n:nonempty:nometadata.service' test_cron_mail_format=nometadata
+	assert_key cron-crontab-dummy-19.service 'OnFailure' 'cron-mail@%n:nometadata.service'          test_cron_mail_format=nometadata
+	assert_key cron-crontab-dummy-20.service 'OnSuccess' 'cron-mail@%n:nonempty.service'            test_cron_mail_format=inherit  # same as default at toplevel
+	assert_key cron-crontab-dummy-20.service 'OnFailure' 'cron-mail@%n.service'                     test_cron_mail_format=inherit
+	assert_key cron-crontab-dummy-21.service 'OnSuccess' 'cron-mail@%n:nonempty:nometadata.service' test_cron_mail_format=no-metadata
+	assert_key cron-crontab-dummy-21.service 'OnFailure' 'cron-mail@%n:nometadata.service'          test_cron_mail_format=no-metadata
 
-	assert_key cron-crondtab-dummy-0.service 'OnSuccess' 'cron-mail@cron\x2dcrondtab\x2ddummy\x2d0\x20nonempty\x20nometadata.service' test_MAIL_inherit_default
-	assert_key cron-crondtab-dummy-0.service 'OnFailure' 'cron-mail@cron\x2dcrondtab\x2ddummy\x2d0\x20nometadata.service'             test_MAIL_inherit_default
-	assert_ney cron-crondtab-dummy-1.service 'OnSuccess'                                                                              test_MAIL_inherit_partial
-	assert_key cron-crondtab-dummy-1.service 'OnFailure' 'cron-mail@cron\x2dcrondtab\x2ddummy\x2d1\x20nometadata.service'             test_MAIL_inherit_partial
-	assert_key cron-crondtab-dummy-2.service 'OnSuccess' 'cron-mail@cron\x2dcrondtab\x2ddummy\x2d2\x20nonempty\x20nometadata.service' test_MAIL_inherit_explicit
-	assert_key cron-crondtab-dummy-2.service 'OnFailure' 'cron-mail@cron\x2dcrondtab\x2ddummy\x2d2\x20nometadata.service'             test_MAIL_inherit_explicit
+	assert_key cron-crondtab-dummy-0.service 'OnSuccess' 'cron-mail@%n:nonempty:nometadata.service' test_MAIL_inherit_default
+	assert_key cron-crondtab-dummy-0.service 'OnFailure' 'cron-mail@%n:nometadata.service'          test_MAIL_inherit_default
+	assert_ney cron-crondtab-dummy-1.service 'OnSuccess'                                            test_MAIL_inherit_partial
+	assert_key cron-crondtab-dummy-1.service 'OnFailure' 'cron-mail@%n:nometadata.service'          test_MAIL_inherit_partial
+	assert_key cron-crondtab-dummy-2.service 'OnSuccess' 'cron-mail@%n:nonempty:nometadata.service' test_MAIL_inherit_explicit
+	assert_key cron-crondtab-dummy-2.service 'OnFailure' 'cron-mail@%n:nometadata.service'          test_MAIL_inherit_explicit
 }
 
 
@@ -179,10 +179,10 @@ assert_dat() {  # file content testname
 	"$S_C_G" /etc/out2
 	cd /etc/out2 || exit
 
-	assert_key cron-crontab-henry-0.service 'User'              'henry'                                           henry-unknown-user
-	assert_key cron-crontab-henry-0.service 'Requires'          'systemd-user-sessions.service'                   henry-unknown-user
-	assert_ney cron-crontab-henry-0.service 'RequiresMountsFor'                                                   henry-unknown-user
-	assert_key cron-crontab-henry-0.service 'OnFailure'         'cron-mail@cron\x2dcrontab\x2dhenry\x2d0.service' onfailure_escaped
+	assert_key cron-crontab-henry-0.service 'User'              'henry'                         henry-unknown-user
+	assert_key cron-crontab-henry-0.service 'Requires'          'systemd-user-sessions.service' henry-unknown-user
+	assert_ney cron-crontab-henry-0.service 'RequiresMountsFor'                                 henry-unknown-user
+	assert_key cron-crontab-henry-0.service 'OnFailure'         'cron-mail@%n.service'          onfailure_escaped
 	assert_key cron-crontab-henry-0.service 'Description'       '[Cron] "1 2 3 4 5 henry echo 0=Vasárnap 1=Hétfő 2=Kedd 3=Szerda 4=Csütörtök 5=Péntek 6=Szombat"' henry-the-hungarian
 
 	assert_key cron-crontab-henry-0.timer   'OnCalendar'       'Fri *-4-3 2:1:00'              henry\'s-calendar

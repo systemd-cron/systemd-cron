@@ -684,19 +684,14 @@ struct Job {
 	}
 
 	auto format_on_failure(FILE * into, const char * on, bool nonempty = false) -> void {
-		std::fprintf(into, "On%s=cron-mail@", on);
-		for(auto c : this->unit_name)  // the only funny byte we need to escape is '-' thanks to VALID_CHARS
-			if(c == '-')
-				std::fputs("\\x2d", into);
-			else
-				std::fputc(c, into);
+		std::fprintf(into, "On%s=cron-mail@%%n", on);
 		if(nonempty)
-			std::fputs("\\x20nonempty", into);
+			std::fputs(":nonempty", into);
 		switch(this->cron_mail_format) {
 			case cron_mail_format_t::normal:
 				break;
 			case cron_mail_format_t::nometadata:
-				std::fputs("\\x20nometadata", into);
+				std::fputs(":nometadata", into);
 				break;
 		}
 		std::fputs(".service\n", into);
@@ -713,14 +708,11 @@ struct Job {
 
 			switch(this->cron_mail_success) {
 				case cron_mail_success_t::never:
-					// fprintf(stderr, "%s never\n", this->unit_name.c_str());
 					break;
 				case cron_mail_success_t::always:
-					// fprintf(stderr, "%s always\n", this->unit_name.c_str());
 					this->format_on_failure(into, "Success");
 					break;
 				case cron_mail_success_t::nonempty:
-					// fprintf(stderr, "%s nonempty\n", this->unit_name.c_str());
 					this->format_on_failure(into, "Success", true);
 					break;
 			}

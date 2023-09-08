@@ -1,22 +1,20 @@
 #!/bin/sh -f
 
-usage() {
-	printf 'usage: %s unit [nonempty] [nometadata] [verbose]\n' "$0" >&2
+[ $# -eq 1 ] || {
+	printf 'usage: %s unit[:nonempty][:nometadata][:verbose]\n' "$0" >&2
 	exit 1
 }
-
-[ $# -eq 0 ] && usage
-unit="$1"; shift
+unit="$1"
 
 verbose=
 metadata=m
 nonempty=
-while [ $# -ne 0 ]; do
-	case "$1" in
-		verbose   )	verbose=v;  shift ;;
-		nonempty  )	nonempty=n; shift ;;
-		nometadata)	metadata=;  shift ;;
-		*         )	usage             ;;
+while :; do
+	case "$unit" in
+		*:verbose   )	verbose=v;  unit="${unit%:*}" ;;
+		*:nonempty  )	nonempty=n; unit="${unit%:*}" ;;
+		*:nometadata)	metadata=;  unit="${unit%:*}" ;;
+		*           )	break                         ;;
 	esac
 done
 
