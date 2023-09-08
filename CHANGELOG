@@ -1,6 +1,12 @@
 v2.1.0 : 2023-09-08
 
    [наб]
+   New feature:
+   * possibly send e-mails more like traditional cron.
+     The behaviour can be controlled by defining the MAILTO=,
+     CRON_MAIL_SUCCESS= & CRON_MAIL_FORMAT= & parameters
+     globally in in /etc/crontab or in dividual crontabs.
+
    Fix new 2.x feature:
 
    * treat "crontab -t | -T" argument not existing as an error
