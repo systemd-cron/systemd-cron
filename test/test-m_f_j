@@ -21,6 +21,6 @@ err=0
 for f in *.service; do
     of="${f%.service}.output"
     sed "s#@VERSION@#${V}#" < "$of" > "${tmpdir}$of"
-    "$M_F_J" "$f" verbose 2>&1 | diff -u "${tmpdir}$of" - || err=1
+    "$M_F_J" "$f":verbose 2>&1 | diff -u "${tmpdir}$of" - || err=1
 done
 exit $err
