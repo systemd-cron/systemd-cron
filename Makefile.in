@@ -103,12 +103,6 @@ install: all
 	install -m644 -D $(srcdir)/lib/sysusers.d/systemd-cron.conf $(DESTDIR)$(sysusersdir)/systemd-cron.conf
 	install -m755 -D $(builddir)/bin/crontab_setgid $(DESTDIR)$(libexecdir)/systemd-cron/crontab_setgid
 
-# Arch linux specific
-	if getent group cron > /dev/null 2>&1; then \
-	    chgrp cron $(DESTDIR)$(libexecdir)/systemd-cron/crontab_setgid ; \
-	    chmod 2755 $(DESTDIR)$(libexecdir)/systemd-cron/crontab_setgid ; \
-	fi
-
 	install -m644 -D $(builddir)/man/systemd.cron.7 $(DESTDIR)$(mandir)/man7/systemd.cron.7
 	install -m644 -D $(builddir)/man/crontab.1 $(DESTDIR)$(mandir)/man1/$(CRONTAB).1
 	install -m644 -D $(builddir)/man/crontab.5 $(DESTDIR)$(mandir)/man5/$(CRONTAB).5
