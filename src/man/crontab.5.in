@@ -87,7 +87,7 @@ SHELL and PATH may be overridden by settings in the crontab.
 .TP
 .B MAILTO
 .br
-On error
+When sending output from a job,
 .IR systemd.cron (7)
 will look at MAILTO. If MAILTO is defined mail is sent to this email address.
 MAILTO may also be used to direct mail to multiple
@@ -95,9 +95,57 @@ recipients by separating recipient users with a comma.
 If MAILTO is defined but empty (MAILTO=""), no mail will be sent.
 Otherwise mail is sent to the owner of the crontab.
 .br
-This mail contains
+By default, this mail contains
 .B systemctl status
 and the full log for the failed run, copied from the journal.
+
+.TP
+.B CRON_MAIL_SUCCESS
+Control if (when) to send mail with output from successful jobs.
+.br
+.BR 'nonempty' ,\  'non-empty' :
+mail is only sent if the job left anything in the journal
+(i.e. wrote something to the standard output or error streams);
+this is the default, and matches classic cron
+.br
+.BR 'always' ,\  'yes' ,\  'true' ,\  '1' :
+always send mail
+.br
+.BR 'never' ,\  'no' ,\  'false' ,\  '0' :
+never send mail for a successful job
+.IP
+Mail is
+.I always
+sent for failed jobs.
+
+.TP
+.B CRON_MAIL_FORMAT
+Control the format of the content of cron-job-related messages.
+.br
+.BR 'normal' :
+.B systemctl status
++
+.B journalctl
+output (incl. time, process names, the usual) for the run;
+this is the default
+.br
+.BR 'nometadata' ,\  'no-metadata' :
+raw journal contents
+.RB ( -o\ cat :
+just standard output + error streams);
+this matches classic cron
+.IP
+.B CRON_MAIL_SUCCESS
+and
+.BR CRON_MAIL_FORMAT ,
+if changed in
+.IR /etc/crontab ,
+are remembered for all other crontabs
+.RI ( /etc/cron.d ", " /etc/anacron ",  users'\ crontabs)"
+and act as an administrator-controlled default.
+They can be set to
+.BR 'inherit'
+to get that default back.
 
 .TP
 .B RANDOM_DELAY

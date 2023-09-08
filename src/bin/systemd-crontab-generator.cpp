@@ -70,6 +70,11 @@ static auto systemd_bool(const std::string_view & string) -> bool {
 	       !strncasecmp(string.data(), "yes", string.size()) ||  //
 	       !strncasecmp(string.data(), "true", string.size());
 }
+static auto systemd_bool_false(const std::string_view & string) -> bool {
+	return !strncasecmp(string.data(), "0", string.size()) ||   //
+	       !strncasecmp(string.data(), "no", string.size()) ||  //
+	       !strncasecmp(string.data(), "false", string.size());
+}
 
 enum class Log : std::uint8_t { EMERG, ALERT, CRIT, ERR, WARNING, NOTICE, INFO, DEBUG };
 // there could be an IGNORE level for logging the .placeholder
@@ -110,6 +115,22 @@ enum class withuser_t : std::uint8_t {
 	initial,        // --check/--translate
 };
 
+enum class cron_mail_success_t : std::uint8_t {
+	never,     // no OnSuccess=
+	always,    // plain OnSuccess=
+	nonempty,  // OnSuccess=...\x20nonempty
+
+	dflt = nonempty,
+};
+
+enum class cron_mail_format_t : bool {
+	normal,      // systemctl status + journalctl
+	nometadata,  // journalctl -o cat
+
+	dflt = normal,
+};
+
+
 struct Job {
 	std::string filename;
 	std::string_view basename;
@@ -136,6 +157,8 @@ struct Job {
 	std::string unit_name;
 	std::string_view user;
 	std::optional<std::string_view> home;  // 'static
+	cron_mail_success_t cron_mail_success;
+	cron_mail_format_t cron_mail_format;
 	struct {
 		vore::span<const std::string_view *> command;  // subview of parts
 		std::optional<std::string> command0;           // except this is command[0] if set
@@ -201,6 +224,9 @@ struct Job {
 		this->valid           = true;
 		this->batch           = false;
 		this->sunday_is_seven = false;
+
+		this->cron_mail_success = cron_mail_success_t::dflt;
+		this->cron_mail_format  = cron_mail_format_t::dflt;
 	}
 
 	auto log(Log priority, const char * message) -> void { ::log(priority, "%s in %.*s: %.*s", message, FORMAT_SV(this->filename), FORMAT_SV(this->line)); }
@@ -211,8 +237,11 @@ struct Job {
 	}
 
 	// decode some environment variables that influence the behaviour of systemd-cron itself
-	auto decode_environment(const std::map<std::string_view, std::string_view> & environment, bool default_persistent) -> void {
-		this->persistent = default_persistent;
+	auto decode_environment(const std::map<std::string_view, std::string_view> & environment, bool default_persistent,
+	                        cron_mail_success_t default_cron_mail_success, cron_mail_format_t default_cron_mail_format) -> void {
+		this->persistent        = default_persistent;
+		this->cron_mail_success = default_cron_mail_success;
+		this->cron_mail_format  = default_cron_mail_format;
 		for(auto && [k, v] : environment) {
 			if(k == "PERSISTENT"sv)
 				this->persistent = systemd_bool(v);
@@ -234,8 +263,28 @@ struct Job {
 				this->boot_delay = int_map(v, err);
 				if(err)
 					this->log(Log::WARNING, "invalid DELAY");
-			} else if(k == "BATCH"sv) {
+			} else if(k == "BATCH"sv)
 				this->batch = systemd_bool(v);
+			else if(k == "CRON_MAIL_SUCCESS"sv) {
+				if(v == "never"sv || systemd_bool_false(v))
+					this->cron_mail_success = cron_mail_success_t::never;
+				else if(v == "always"sv || systemd_bool(v))
+					this->cron_mail_success = cron_mail_success_t::always;
+				else if(v == "nonempty"sv || v == "non-empty"sv)
+					this->cron_mail_success = cron_mail_success_t::nonempty;
+				else if(v == "inherit"sv)
+					this->cron_mail_success = default_cron_mail_success;
+				else
+					this->log(Log::WARNING, "unknown CRON_MAIL_SUCCESS value");
+			} else if(k == "CRON_MAIL_FORMAT"sv) {
+				if(v == "normal"sv)
+					this->cron_mail_format = cron_mail_format_t::normal;
+				else if(v == "nometadata"sv || v == "no-metadata"sv)
+					this->cron_mail_format = cron_mail_format_t::nometadata;
+				else if(v == "inherit"sv)
+					this->cron_mail_format = default_cron_mail_format;
+				else
+					this->log(Log::WARNING, "unknown CRON_MAIL_FORMAT value");
 			} else {
 				if(k == "SHELL"sv)
 					this->shell = v;
@@ -634,6 +683,25 @@ struct Job {
 			std::fprintf(into, "SourcePath=%.*s\n", FORMAT_SV(this->filename));
 	}
 
+	auto format_on_failure(FILE * into, const char * on, bool nonempty = false) -> void {
+		std::fprintf(into, "On%s=cron-mail@", on);
+		for(auto c : this->unit_name)  // the only funny byte we need to escape is '-' thanks to VALID_CHARS
+			if(c == '-')
+				std::fputs("\\x2d", into);
+			else
+				std::fputc(c, into);
+		if(nonempty)
+			std::fputs("\\x20nonempty", into);
+		switch(this->cron_mail_format) {
+			case cron_mail_format_t::normal:
+				break;
+			case cron_mail_format_t::nometadata:
+				std::fputs("\\x20nometadata", into);
+				break;
+		}
+		std::fputs(".service\n", into);
+	}
+
 	auto generate_service(FILE * into) -> void {
 		this->generate_unit_header(into, "Cron");
 		if(auto itr = this->environment.find("MAILTO"sv); itr != std::end(this->environment) && itr->second.empty())
@@ -641,13 +709,21 @@ struct Job {
 		else if(!HAS_SENDMAIL)
 			;  // mails automaticaly disabled
 		else {
-			std::fputs("OnFailure=cron-mail@", into);
-			for(auto c : this->unit_name)  // the only funny byte we need to escape is '-' thanks to VALID_CHARS
-				if(c == '-')
-					std::fputs("\\x2d", into);
-				else
-					std::fputc(c, into);
-			std::fputs(".service\n", into);
+			this->format_on_failure(into, "Failure");
+
+			switch(this->cron_mail_success) {
+				case cron_mail_success_t::never:
+					// fprintf(stderr, "%s never\n", this->unit_name.c_str());
+					break;
+				case cron_mail_success_t::always:
+					// fprintf(stderr, "%s always\n", this->unit_name.c_str());
+					this->format_on_failure(into, "Success");
+					break;
+				case cron_mail_success_t::nonempty:
+					// fprintf(stderr, "%s nonempty\n", this->unit_name.c_str());
+					this->format_on_failure(into, "Success", true);
+					break;
+			}
 		}
 		if(this->user != "root"sv || this->filename.find(STATEDIR) != std::string_view::npos) {
 			std::fputs("Requires=systemd-user-sessions.service\n", into);
@@ -817,7 +893,8 @@ static auto environment_write(const std::map<std::string_view, std::string_view>
 
 
 template <class F>
-static auto parse_crontab(std::string_view filename, withuser_t withuser, bool monotonic /*=false*/, F && cbk) -> bool {
+static auto parse_crontab(std::string_view filename, withuser_t withuser, bool monotonic /*=false*/, cron_mail_success_t default_cron_mail_success,
+                          cron_mail_format_t default_cron_mail_format, F && cbk) -> bool {
 	vore::file::mapping map;
 	{
 		vore::file::fd<true> f{filename.data(), O_RDONLY | O_CLOEXEC};
@@ -866,13 +943,13 @@ static auto parse_crontab(std::string_view filename, withuser_t withuser, bool m
 
 		Job j{filename, line};
 		if(monotonic) {
-			j.decode_environment(environment, /*default_persistent=*/true);
+			j.decode_environment(environment, /*default_persistent=*/true, default_cron_mail_success, default_cron_mail_format);
 			j.parse_anacrontab();
 		} else if(line[0] == '@') {
-			j.decode_environment(environment, /*default_persistent=*/true);
+			j.decode_environment(environment, /*default_persistent=*/true, default_cron_mail_success, default_cron_mail_format);
 			j.parse_crontab_at(withuser);
 		} else {
-			j.decode_environment(environment, /*default_persistent=*/false);
+			j.decode_environment(environment, /*default_persistent=*/false, default_cron_mail_success, default_cron_mail_format);
 			j.parse_crontab_timespec(withuser);
 		}
 		j.decode();
@@ -1042,14 +1119,19 @@ static auto realmain() -> int {
 
 	std::optional<std::string> fallback_mailto;
 	std::map<std::string_view, std::uint8_t> distro_start_hour;
+	cron_mail_success_t toplevel_cron_mail_success = cron_mail_success_t::dflt;
+	cron_mail_format_t toplevel_cron_mail_format   = cron_mail_format_t::dflt;
 
-	if(!parse_crontab("/etc/crontab", withuser_t::from_cmd0, /*monotonic=*/false, [&](auto && job) {
+	if(!parse_crontab("/etc/crontab", withuser_t::from_cmd0, /*monotonic=*/false, cron_mail_success_t::dflt, cron_mail_format_t::dflt, [&](auto && job) {
 		   if(auto itr = job.environment.find("MAILTO"sv); itr != std::end(job.environment))
 			   fallback_mailto = itr->second;
 		   if(!job.valid) {
 			   log(Log::ERR, "truncated line in /etc/crontab: %.*s", FORMAT_SV(job.line));
 			   return;
 		   }
+
+		   toplevel_cron_mail_success = job.cron_mail_success;
+		   toplevel_cron_mail_format  = job.cron_mail_format;
 
 		   // legacy boilerplate: ignore jobs that run /etc/cron.hourly, daily, weekly, monthly
 		   //                     (but save the starting hour for daily, weekly, and monthly)
@@ -1074,7 +1156,7 @@ static auto realmain() -> int {
 		if(is_backup("/etc/cron.d", basename))
 			return;
 		auto filename = "/etc/cron.d/"s += basename;
-		if(!parse_crontab(filename, withuser_t::from_cmd0, /*monotonic=*/false, [&](auto && job) {
+		if(!parse_crontab(filename, withuser_t::from_cmd0, /*monotonic=*/false, toplevel_cron_mail_success, toplevel_cron_mail_format, [&](auto && job) {
 			   if(!job.valid) {
 				   log(Log::ERR, "truncated line in %.*s: %.*s", FORMAT_SV(filename), FORMAT_SV(job.line));
 				   return;
@@ -1117,7 +1199,7 @@ static auto realmain() -> int {
 		}
 	}
 
-	if(!parse_crontab("/etc/anacrontab", withuser_t::from_basename, /*monotonic=*/true, [&](auto && job) {
+	if(!parse_crontab("/etc/anacrontab", withuser_t::from_basename, /*monotonic=*/true, toplevel_cron_mail_success, toplevel_cron_mail_format, [&](auto && job) {
 		   if(!job.valid) {
 			   log(Log::ERR, "truncated line in /etc/anacrontab: %.*s", FORMAT_SV(job.line));
 			   return;
@@ -1133,9 +1215,11 @@ static auto realmain() -> int {
 				return;
 
 			auto filename = (std::string{STATEDIR} += '/') += basename;
-			if(!parse_crontab(filename, withuser_t::from_basename, /*monotonic=*/false, [&](auto && job) { generate_timer_unit(job); }))
+			if(!parse_crontab(filename, withuser_t::from_basename, /*monotonic=*/false, toplevel_cron_mail_success, toplevel_cron_mail_format,
+			                  [&](auto && job) { generate_timer_unit(job); }))
 				log(Log::ERR, "%s: %s", filename.c_str(), std::strerror(errno));
 		});
+
 		vore::file::fd<false>{REBOOT_FILE, O_WRONLY | O_CREAT | O_CLOEXEC, 0666};
 	} else {
 		if(!workaround_var_not_mounted())
@@ -1148,7 +1232,7 @@ static auto realmain() -> int {
 
 static auto check(const char * cron_file) -> int {
 	bool err{};
-	if(!parse_crontab(cron_file, withuser_t::initial, /*monotonic=*/false, [&](auto && job) {
+	if(!parse_crontab(cron_file, withuser_t::initial, /*monotonic=*/false, cron_mail_success_t::dflt, cron_mail_format_t::dflt, [&](auto && job) {
 		   if(!job.valid) {
 			   err = true;
 			   job.log(Log::ERR, "truncated line");
