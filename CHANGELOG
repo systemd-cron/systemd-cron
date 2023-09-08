@@ -1,6 +1,8 @@
 v2.1.1 : 2023-09-08
 
-   Fix ...
+   [наб]
+   Fix: use ':' instead of ' ' to marshall
+        OnSuccess/OnFailure unit names.
 
 v2.1.0 : 2023-09-08
 
