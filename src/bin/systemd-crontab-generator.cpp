@@ -653,7 +653,9 @@ struct Job {
 
 	auto generate_unit_header(FILE * into, const char * tp) -> void {
 		std::fputs("[Unit]\n", into);
-		std::fprintf(into, "Description=[%s] \"", tp);
+		std::fprintf(into, "Description=[%s] ", tp);
+		if(this->line[0] != '/')
+			std::fputc('\"', into);
 		{
 			auto desc = this->line;
 			wchar_t c;
@@ -676,8 +678,10 @@ struct Job {
 						continue;
 				}
 		}
+		if(this->line[0] != '/')
+			std::fputc('\"', into);
+		std::fputc('\n', into);
 
-		std::fputs("\"\n", into);
 		std::fputs("Documentation=man:systemd-crontab-generator(8)\n", into);
 		if(this->filename != "-"sv)
 			std::fprintf(into, "SourcePath=%.*s\n", FORMAT_SV(this->filename));

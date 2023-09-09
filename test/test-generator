@@ -213,7 +213,7 @@ test_test_crontab_common() {
 
 if [ "$USE_RUN_PARTS" = 'no' ]
 then
-	assert_key cron-daily-id.service  'Description'       '[Cron] "/etc/cron.daily/id"'              /etc/cron.daily
+	assert_key cron-daily-id.service  'Description'       '[Cron] /etc/cron.daily/id'                /etc/cron.daily
 	assert_key cron-daily-id.service  'ExecStartPre'      '-/usr/libexec/systemd-cron/boot_delay 10' /etc/cron.daily    # hourly.daily = 2nd, *5min for each longer one
 	assert_key cron-daily-id.service  'ExecStart'         '/etc/cron.daily/id'                       /etc/cron.daily
 	assert_key cron-daily-id.timer    'OnCalendar'        '*-*-* 5:10:0'                             /etc/cron.daily
