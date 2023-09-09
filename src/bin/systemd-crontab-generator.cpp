@@ -684,7 +684,7 @@ struct Job {
 	}
 
 	auto format_on_failure(FILE * into, const char * on, bool nonempty = false) -> void {
-		std::fprintf(into, "On%s=cron-mail@%%n", on);
+		std::fprintf(into, "On%s=cron-mail@%%n:%s", on, on);
 		if(nonempty)
 			std::fputs(":nonempty", into);
 		switch(this->cron_mail_format) {

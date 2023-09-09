@@ -134,6 +134,7 @@ exit silently if the unit produced no output
 .Pq equivalent to Ev CRON_MAIL_SUCCESS Ns = Ns Sy nonempty
 for
 .Va OnSuccess Ns = ) ,
+.
 .It Sy nometadata
 don't include
 .Nm systemctl Cm status
@@ -142,9 +143,11 @@ output, don't add usual
 metadata to the output
 .Pq equivalent to Ev CRON_MAIL_FORMAT Ns = Ns Sy nometadata ,
 and
+.
 .It Sy verbose
 log reason before exiting silently.
 .El
+(upper-case arguments are ignored).
 .Pp
 Overriding this via
 .Nm systemctl Cm edit

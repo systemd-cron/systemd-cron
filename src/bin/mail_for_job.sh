@@ -1,7 +1,7 @@
 #!/bin/sh -f
 
 [ $# -eq 1 ] || {
-	printf 'usage: %s unit[:nonempty][:nometadata][:verbose]\n' "$0" >&2
+	printf 'usage: %s unit[:Success|:Failure][:nonempty][:nometadata][:verbose]\n' "$0" >&2
 	exit 1
 }
 unit="$1"
@@ -14,6 +14,7 @@ while :; do
 		*:verbose   )	verbose=v;  unit="${unit%:*}" ;;
 		*:nonempty  )	nonempty=n; unit="${unit%:*}" ;;
 		*:nometadata)	metadata=;  unit="${unit%:*}" ;;
+		*:[A-Z]*    )	            unit="${unit%:*}" ;;  # https://github.com/systemd-cron/systemd-cron/issues/120
 		*           )	break                         ;;
 	esac
 done
