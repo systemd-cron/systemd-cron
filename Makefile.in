@@ -9,7 +9,6 @@ enable_runparts		:= @enable_runparts@
 use_loglevelmax		:= @use_loglevelmax@
 part2timer		:= @part2timer@
 crond2timer		:= @crond2timer@
-nometadata		:= @nometadata@
 
 prefix		:= @prefix@
 bindir		:= @bindir@
@@ -194,8 +193,6 @@ $(builddir)/include/part2timer.hpp : $(part2timer)
 	sort $< | awk '/^#/ || /^$$/ {next}  { print "{\"" $$1 "\"sv, \"" $$2 "\"sv}," }' > $@
 $(builddir)/include/crond2timer.hpp : $(crond2timer)
 	sort $< | awk '/^#/ || /^$$/ {next}  { print "{\"" $$1 "\"sv, \"" $$2 "\"sv}," }' > $@
-$(builddir)/include/nometadata.hpp : $(nometadata)
-	sort $< | awk '/^#/ || /^$$/ {next}  { print "{\"" $$1 "\"sv}," }' > $@
 
 $(builddir)/include/configuration.hpp : $(srcdir)/include/configuration.hpp.in
 	mkdir -p $(builddir)/include
@@ -221,7 +218,7 @@ CFLAGS += -Wall -Wextra -fno-exceptions -Wno-psabi
 $(builddir)/include/libvoreutils.hpp.gch : $(builddir)/include/libvoreutils.hpp
 	$(CXX) $(CFLAGS) $(CPPFLAGS) -std=c++20 -I $(builddir)/include            $< -o $@
 
-$(builddir)/bin/systemd-crontab-generator: $(srcdir)/bin/systemd-crontab-generator.cpp $(common_headers) $(builddir)/include/part2timer.hpp $(builddir)/include/crond2timer.hpp $(builddir)/include/nometadata.hpp
+$(builddir)/bin/systemd-crontab-generator: $(srcdir)/bin/systemd-crontab-generator.cpp $(common_headers) $(builddir)/include/part2timer.hpp $(builddir)/include/crond2timer.hpp
 	$(CXX) $(CFLAGS) $(CPPFLAGS) -std=c++20 -I $(builddir)/include $(PCH_ARG) $< -o $@ $(LDFLAGS) @libcrypto@
 
 $(builddir)/bin/crontab: $(srcdir)/bin/crontab.cpp $(common_headers)
