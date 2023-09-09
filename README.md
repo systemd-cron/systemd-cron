@@ -117,6 +117,8 @@ Other options include (`pkgconf` may be overridden with `$PKG_CONFIG`):
   Default: `/dev/null`.
 * `--with-crond2timer=file` Mapping from basename in /etc/cron.d to unit name.
   Default: `/dev/null`.
+* `--with-nometadata=file` List of basenames where `CRON_MAIL_FORMAT=nometadata` is assumed.
+  Default: `/dev/null`.
 * `--with-version=ver` Downstream version.
   Default: contents of `VERSION`.
 

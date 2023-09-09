@@ -49,6 +49,12 @@ static const constexpr std::pair<std::string_view, std::string_view> CROND2TIMER
     {"\xFF"sv, ""sv},  // we can't have an empty array (if no mapping set), so this sorts after everything
 };
 
+static const constexpr std::string_view NOMETADATA[] = {
+// kept sorted by Makefile
+#include "nometadata.hpp"
+    "\xFF"sv  // we can't have an empty array (if no mapping set), so this sorts after everything
+};
+
 static auto which(const std::string_view & exe, std::optional<std::string_view> paths = {}) -> std::optional<std::string> {
 	if(!paths)
 		paths = std::getenv("PATH") ?: "/usr/bin:/bin";
