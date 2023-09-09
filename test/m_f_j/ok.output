@@ -5,7 +5,7 @@ Content-Transfer-Encoding: binary
 Date: Fri, 01 Dec 2000 23:00:00 +0000
 From: root (systemd-cron)
 To: root
-Subject: [tarta] job ok.service output
+Subject: [tarta] Output: ok.service
 X-Mailer: systemd-cron @VERSION@
 Auto-Submitted: auto-generated
 

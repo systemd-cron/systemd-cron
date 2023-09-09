@@ -5,10 +5,11 @@ Content-Transfer-Encoding: binary
 Date: Fri, 01 Dec 2000 23:00:00 +0000
 From: henry@zbysiopatia.jpeg (systemd-cron)
 To: chlupsko@henry.jpeg
-Subject: [tarta] job bothMAIL.service failed
+Subject: [tarta] Failure: m_f_j/bothMAIL
 X-Mailer: systemd-cron @VERSION@
 Auto-Submitted: auto-generated
 
 User=
 Environment="PATH=żupan:/etc" MAILFROM=henry@zbysiopatia.jpeg TZ=UTC0 MAILTO=chlupsko@henry.jpeg
 ActiveState=failed
+SourcePath=m_f_j/bothMAIL

@@ -13,11 +13,11 @@ if [ -d "$STATEDIR" ]; then
 	mount -t tmpfs tmpfs "$STATEDIR" || exit
 fi
 command -v /usr/sbin/sendmail /usr/lib/sendmail > /dev/null || {
-	# s-c-g won't generate mail units if it doesn't have sendmail in one of these two locations: provide a fake one in this case
+	# s-c-g won't generate On{Success,Failure}= lines if it doesn't have sendmail in one of these two locations: provide a fake one in this case
 	mkdir -p /etc/sbin/sbin /etc/sbin/up /etc/sbin/work
 	ln -s /bin/true /etc/sbin/up/sendmail
 	mount --bind /usr/sbin /etc/sbin/sbin
-	mount -t overlay overlay -o 'lowerdir=/etc/sbin/sbin,upperdir=/etc/sbin/up,workdir=/etc/sbin/work' /usr/sbin
+	mount -t overlay -o 'lowerdir=/etc/sbin/sbin,upperdir=/etc/sbin/up,workdir=/etc/sbin/work' overlay /usr/sbin
 }
 
 
