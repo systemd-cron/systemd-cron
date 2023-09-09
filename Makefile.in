@@ -195,6 +195,7 @@ $(builddir)/include/crond2timer.hpp : $(crond2timer)
 	sort $< | awk '/^#/ || /^$$/ {next}  { print "{\"" $$1 "\"sv, \"" $$2 "\"sv}," }' > $@
 
 $(builddir)/include/configuration.hpp : $(srcdir)/include/configuration.hpp.in
+	mkdir -p $(builddir)/include
 	sed -e 's:\@use_loglevelmax\@:$(use_loglevelmax):' \
 	    -e 's:\@use_runparts\@:$(use_runparts):' \
 	    -e 's:\@version\@:$(version):' \
