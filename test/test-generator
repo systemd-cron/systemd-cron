@@ -12,6 +12,13 @@ STATEDIR="${2:-"/var/spool/cron"}"
 if [ -d "$STATEDIR" ]; then
 	mount -t tmpfs tmpfs "$STATEDIR" || exit
 fi
+command -v /usr/sbin/sendmail /usr/lib/sendmail > /dev/null || {
+	# s-c-g won't generate mail units if it doesn't have sendmail in one of these two locations: provide a fake one in this case
+	mkdir -p /etc/sbin/sbin /etc/sbin/up /etc/sbin/work
+	ln -s /bin/true /etc/sbin/up/sendmail
+	mount --bind /usr/sbin /etc/sbin/sbin
+	mount -t overlay overlay -o 'lowerdir=/etc/sbin/sbin,upperdir=/etc/sbin/up,workdir=/etc/sbin/work' /usr/sbin
+}
 
 
 err=0
@@ -106,7 +113,7 @@ assert_dat() {  # file content testname
 	              '* * * * * dummy !'                                         > /etc/cron.d/crondtab
 
 
-	"$S_C_G" /etc/out
+	"$S_C_G" /etc/out || { err=$?; echo "$S_C_G" /etc/out = $err >&2; exit $err; }
 	cd /etc/out || exit
 
 	assert_key cron-crontab-dummy-24edba7d1c50729bdba1f91f44e293f9.service 'ExecStart'  '/usr/bin/true' test_path_expansion
@@ -176,7 +183,7 @@ assert_dat() {  # file content testname
 	mkdir /etc/cron.daily
 	echo id > /etc/cron.daily/id
 
-	"$S_C_G" /etc/out2
+	"$S_C_G" /etc/out2 || { err=$?; echo "$S_C_G" /etc/out2 = $err >&2; exit $err; }
 	cd /etc/out2 || exit
 
 	assert_key cron-crontab-henry-0.service 'User'              'henry'                         henry-unknown-user
@@ -226,7 +233,7 @@ test_test_crontab_common
 	iconv() { command iconv -f utf-8 -t iso-8859-2; }
 	iconv < "${TESTDIR}crontab" > /etc/crontab
 
-	"$S_C_G" /etc/out3
+	"$S_C_G" /etc/out3 || { err=$?; echo "$S_C_G" /etc/out3 = $err >&2; exit $err; }
 	cd /etc/out3 || exit
 
 	# All the same except Description (escaped) and program (not escaped)
