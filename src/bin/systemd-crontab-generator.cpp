@@ -1181,6 +1181,8 @@ static auto realmain() -> int {
 				job.boot_delay = i * 5;
 				job.command    = {{&command, &command + 1}, {}};
 				job.jobid      = (std::string{period} += '-') += basename;
+				job.cron_mail_success = toplevel_cron_mail_success;
+				job.cron_mail_format  = toplevel_cron_mail_format;
 				job.decode();  // ensure clean jobid
 				job.generate_schedule();
 				if(fallback_mailto && job.environment.find("MAILTO"sv) == std::end(job.environment))
