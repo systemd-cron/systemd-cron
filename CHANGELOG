@@ -1,8 +1,10 @@
-v2.1.1 : 2023-09-08
+v2.1.1 : 2023-09-09
 
    [наб]
    Fix: use ':' instead of ' ' to marshall
-        OnSuccess/OnFailure unit names.
+        OnSuccess/OnFailure unit names;
+        distinguish them with :Success/:Failure.
+   Fix: forward CRON_MAIL_* to /etc/cron.{daily,...} units.
 
 v2.1.0 : 2023-09-08
 
