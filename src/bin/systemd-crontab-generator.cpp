@@ -135,6 +135,7 @@ struct Job {
 	std::string filename;
 	std::string_view basename;
 	std::string_view line;
+	off_t lineno;
 	std::vector<std::string_view> parts;
 	std::map<std::string_view, std::string_view> environment;
 	std::string environment_PATH_storage;  // borrowed into environment on expansion
@@ -206,10 +207,11 @@ struct Job {
 	std::string execstart;
 	bool valid;
 
-	Job(std::string_view filename, std::string_view line) {
+	Job(std::string_view filename, std::string_view line, off_t lineno = -1) {
 		this->filename = filename;
 		this->basename = vore::basename(filename);
 		this->line     = line;
+		this->lineno   = lineno;
 
 		vore::soft_tokenise tokens{line, " \t\n"sv};
 		std::copy(std::begin(tokens), std::end(tokens), std::back_inserter(this->parts));
@@ -913,7 +915,9 @@ static auto parse_crontab(std::string_view filename, withuser_t withuser, bool m
 	}
 
 	std::map<std::string_view, std::string_view> environment;
+	off_t lineno{};
 	for(auto && line : vore::soft_tokenise{map, "\n"sv}) {
+		++lineno;
 		while(!line.empty() && std::isspace(line[0]))
 			line.remove_prefix(1);
 		if(line.empty() || line[0] == '#')
@@ -938,7 +942,7 @@ static auto parse_crontab(std::string_view filename, withuser_t withuser, bool m
 			continue;
 		}
 
-		Job j{filename, line};
+		Job j{filename, line, lineno};
 		if(monotonic) {
 			j.decode_environment(environment, /*default_persistent=*/true, default_cron_mail_success, default_cron_mail_format);
 			j.parse_anacrontab();
