@@ -6,7 +6,9 @@ ConditionDirectoryNotEmpty=/etc/cron.@schedule@
 OnFailure=cron-mail@cron\x2d@schedule@.service
 
 [Service]
+User=root
 Type=oneshot
 IgnoreSIGPIPE=false
+SyslogFacility=cron
 LogLevelMax=@use_loglevelmax@
 ExecStart=/usr/bin/run-parts /etc/cron.@schedule@

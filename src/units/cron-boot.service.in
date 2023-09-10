@@ -7,7 +7,9 @@ ConditionPathExists=!/run/crond.bootdir
 OnFailure=cron-mail@cron\x2d@schedule@.service
 
 [Service]
+User=root
 Type=oneshot
 IgnoreSIGPIPE=false
+SyslogFacility=cron
 ExecStart=/usr/bin/run-parts /etc/cron.@schedule@
 ExecStartPost=/usr/bin/touch /run/crond.bootdir
