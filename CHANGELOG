@@ -1,5 +1,8 @@
 v2.1.2 : 2023-09-10
 
+   The 'run-parts' mode is now disabled by default;
+   this new default can be reverted with a configure flag.
+
    [наб]
    Fix: add 'SystemdFacility=cron' to generated services
    Fix: use this facility to more precisely filter

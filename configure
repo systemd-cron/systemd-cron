@@ -32,7 +32,7 @@ sysusersdir="$($pkgconf systemd --variable=sysusersdir)" 2>/dev/null || \
 sysusersdir='$(libdir)/sysusers.d'
 libcrypto="$($pkgconf --cflags --libs libcrypto)" 2>/dev/null || \
 libcrypto='-lcrypto'
-enable_runparts=yes
+enable_runparts=no
 use_loglevelmax=no
 part2timer=/dev/null
 crond2timer=/dev/null
