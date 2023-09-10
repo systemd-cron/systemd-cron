@@ -1,3 +1,17 @@
+v2.1.2 : 2023-09-10
+
+   [наб]
+   Fix: add 'SystemdFacility=cron' to generated services
+   Fix: use this facility to more precisely filter
+        filter from the journal
+
+   [adetiste]
+   Fix: add 'SystemdFacility=cron' to static services
+        used in run-parts mode
+   Fix: define 'User=root' in static services too,
+        without this systemd won't defines some usually
+        expected environment variables like LOGNAME...
+
 v2.1.1 : 2023-09-09
 
    [наб]
