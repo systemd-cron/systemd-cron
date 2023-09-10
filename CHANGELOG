@@ -4,12 +4,13 @@ v2.1.2 : 2023-09-10
    this new default can be reverted with a configure flag.
 
    [наб]
-   Fix: add 'SystemdFacility=cron' to generated services
+   Fix: add 'SyslogFacility=cron' to generated services
    Fix: use this facility to more precisely filter
-        filter from the journal
+        from the journal for CRON_MAIL_SUCCESS=nonempty
+                         and CRON_MAIL_FORMAT=nometadata
 
    [adetiste]
-   Fix: add 'SystemdFacility=cron' to static services
+   Fix: add 'SyslogFacility=cron' to static services
         used in run-parts mode
    Fix: define 'User=root' in static services too,
         without this systemd won't defines some usually
