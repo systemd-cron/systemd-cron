@@ -190,9 +190,9 @@ ifneq ($(schedules_not),)
 endif
 
 $(builddir)/include/part2timer.hpp : $(part2timer)
-	sort $< | awk '/^#/ || /^$$/ {next}  { print "{\"" $$1 "\"sv, \"" $$2 "\"sv}," }' > $@
+	LANG=C.UTF-8 sort $< | awk '/^#/ || /^$$/ {next}  { print "{\"" $$1 "\"sv, \"" $$2 "\"sv}," }' > $@
 $(builddir)/include/crond2timer.hpp : $(crond2timer)
-	sort $< | awk '/^#/ || /^$$/ {next}  { print "{\"" $$1 "\"sv, \"" $$2 "\"sv}," }' > $@
+	LANG=C.UTF-8 sort $< | awk '/^#/ || /^$$/ {next}  { print "{\"" $$1 "\"sv, \"" $$2 "\"sv}," }' > $@
 
 $(builddir)/include/configuration.hpp : $(srcdir)/include/configuration.hpp.in
 	mkdir -p $(builddir)/include
