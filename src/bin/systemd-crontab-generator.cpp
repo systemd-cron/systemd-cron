@@ -731,6 +731,7 @@ struct Job {
 		std::fputs("[Service]\n", into);
 		std::fputs("Type=oneshot\n", into);
 		std::fputs("IgnoreSIGPIPE=false\n", into);
+		std::fputs("SyslogFacility=cron\n", into);
 		std::fputs("KillMode=process\n", into);
 		if(USE_LOGLEVELMAX != "no"sv)
 			std::fprintf(into, "LogLevelMax=%.*s\n", FORMAT_SV(USE_LOGLEVELMAX));

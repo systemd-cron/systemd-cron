@@ -58,7 +58,7 @@ systemctl show --property=User --property=Environment --property=ActiveState --p
 	[ -n "$nonempty" ] && {
 		# INVOCATION_ID=          matches messages from systemd
 		# _SYSTEMD_INVOCATION_ID= matches messages from the service
-		journalctl -qu "$unit" _SYSTEMD_INVOCATION_ID="$invocation_id" | read -r _ || {
+		journalctl -qu "$unit" _SYSTEMD_INVOCATION_ID="$invocation_id" SYSLOG_FACILITY=9 | read -r _ || {  # 9=cron
 			[ -n "$verbose" ] && printf 'This cron job (%s) produced no output, therefore quitting\n' "$unit" >&2
 			exit 0
 		}
@@ -91,7 +91,7 @@ systemctl show --property=User --property=Environment --property=ActiveState --p
 			systemctl status -n0 "$unit"
 			journalctl -u "$unit" -o short-iso _SYSTEMD_INVOCATION_ID="$invocation_id" + INVOCATION_ID="$invocation_id"
 		else
-			journalctl -u "$unit" -o cat       _SYSTEMD_INVOCATION_ID="$invocation_id"
+			journalctl -u "$unit" -o cat       _SYSTEMD_INVOCATION_ID="$invocation_id"   SYSLOG_FACILITY=9  # 9=cron
 		fi
 	} 2>&1 | "$SENDMAIL" -i -B 8BITMIME "$mailto"
 }
