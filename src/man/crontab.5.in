@@ -187,7 +187,7 @@ only recognize @ keywords to be persistent
 force all further jobs not to be persistent
 
 .TP
-.B TZ
+.BR TZ ", " CRON_TZ
 The job is scheduled in this time-zone instead of in the system time-zone.
 Must be a full IANA time-zone name
 (as found under
