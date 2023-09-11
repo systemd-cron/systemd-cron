@@ -289,7 +289,7 @@ struct Job {
 				if(k == "SHELL"sv)
 					this->shell = v;
 
-				if(k == "TZ"sv)
+				if(k == "TZ"sv || k == "CRON_TZ"sv)
 					if(!v.empty() && !access(("/usr/share/zoneinfo/"s += v).c_str(), F_OK))
 						this->timezone = v;
 
