@@ -5,3 +5,5 @@ Documentation=man:systemd-crontab-generator(8)
 [Service]
 Type=oneshot
 ExecStart=@libexecdir@/systemd-cron/remove_stale_stamps
+CapabilityBoundingSet=
+RestrictAddressFamilies=
