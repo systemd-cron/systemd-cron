@@ -37,6 +37,7 @@ Dependencies history
 * systemd ≥ 212, persistent timers
 * systemd ≥ 217, minutely, quarterly & semi-annually timers
 * systemd ≥ 229, real random delay support with `RandomizedDelaySec` option [(bug)][90]
+* systemd ≥ 233, support for new `~` = 'last day of month' and '9..17/2' .timer syntax
 * systemd ≥ 235, support for timezones
 * systemd ≥ 236, `LogLevelMax` option
 * systemd ≥ 251, OnFailure handler receives $MONITOR_UNIT and more.
