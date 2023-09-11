@@ -1,3 +1,9 @@
+v2.2.0 : 2023-09-xx
+
+   [adetiste]
+   New feature: colorize output of 'crontab --list'
+
+
 v2.1.2 : 2023-09-10
 
    The 'run-parts' mode is now disabled by default;
