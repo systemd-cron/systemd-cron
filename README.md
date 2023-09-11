@@ -28,7 +28,7 @@ Dependencies
 * pkgconf (optional)
 * support for /usr/lib/sysusers.d/*.conf (optional)
 * [run-parts][3] (optional, disabled by default)
-* /usr/sbin/sendmail (optional, evaluated at runtime)
+* sendmail from $SENDMAIL or in $PATH or in /usr/sbin:/usr/lib (optional, evaluated at runtime)
 
 Dependencies history
 ------------------------

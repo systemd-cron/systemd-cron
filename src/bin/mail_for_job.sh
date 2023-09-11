@@ -21,7 +21,7 @@ done
 
 
 SENDMAIL="$(command -v "$SENDMAIL" || command -v sendmail || command -v /usr/sbin/sendmail || command -v /usr/lib/sendmail)" || {
-	printf '<3>can'\''t send mail for %s without a MTA\n' "$unit"
+	[ -n "$verbose" ] && printf '<3>can'\''t send mail for %s without a MTA\n' "$unit"
 	exit 0
 }
 
