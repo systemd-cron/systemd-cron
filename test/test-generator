@@ -3,6 +3,8 @@
 S_C_G="${S_C_G:-"$PWD/out/build/bin/systemd-crontab-generator"}"
 TESTDIR="$PWD/test/"
 PATH="/usr/bin:$PATH"
+SENDMAIL='/bin/true'
+export SENDMAIL  # s-c-g won't generate On{Success,Failure}= lines if it doesn't have sendmail
 
 USE_RUN_PARTS="${1:-no}"
 echo "USE_RUN_PARTS: $USE_RUN_PARTS"
@@ -12,13 +14,6 @@ STATEDIR="${2:-"/var/spool/cron"}"
 if [ -d "$STATEDIR" ]; then
 	mount -t tmpfs tmpfs "$STATEDIR" || exit
 fi
-command -v /usr/sbin/sendmail /usr/lib/sendmail > /dev/null || {
-	# s-c-g won't generate On{Success,Failure}= lines if it doesn't have sendmail in one of these two locations: provide a fake one in this case
-	mkdir -p /etc/sbin/sbin /etc/sbin/up /etc/sbin/work
-	ln -s /bin/true /etc/sbin/up/sendmail
-	mount --bind /usr/sbin /etc/sbin/sbin
-	mount -t overlay -o 'lowerdir=/etc/sbin/sbin,upperdir=/etc/sbin/up,workdir=/etc/sbin/work' overlay /usr/sbin
-}
 
 
 err=0

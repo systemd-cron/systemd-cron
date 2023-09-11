@@ -60,7 +60,12 @@ static auto which(const std::string_view & exe, std::optional<std::string_view> 
 	return {};
 }
 
-static const bool HAS_SENDMAIL = static_cast<bool>(which("sendmail", "/usr/sbin:/usr/lib"sv));
+static const bool HAS_SENDMAIL = [] {
+	if(auto sendmail = std::getenv("SENDMAIL"))
+		if(!access(sendmail, X_OK))
+			return true;
+	return which("sendmail"sv) || which("sendmail"sv, "/usr/sbin:/usr/lib"sv);
+}();
 static std::string_view TARGET_DIR;
 static std::string TIMERS_DIR;
 static std::optional<std::uint64_t> UPTIME;
