@@ -737,6 +737,7 @@ struct Job {
 		std::fputc('\n', into);
 
 		std::fputs("[Service]\n", into);
+		std::fprintf(into, "User=%.*s\n", FORMAT_SV(this->user));
 		std::fputs("Type=oneshot\n", into);
 		std::fputs("IgnoreSIGPIPE=false\n", into);
 		std::fputs("SyslogFacility=cron\n", into);
@@ -752,7 +753,6 @@ struct Job {
 			environment_write(this->environment, into);
 			std::fputc('\n', into);
 		}
-		std::fprintf(into, "User=%.*s\n", FORMAT_SV(this->user));
 		if(this->batch) {
 			std::fputs("CPUSchedulingPolicy=idle\n", into);
 			std::fputs("IOSchedulingClass=idle\n", into);
