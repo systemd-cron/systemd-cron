@@ -3,11 +3,18 @@ v2.2.0 : 2023-09-1x
    [наб]
    Fix: tweak again the integration tests to equally work
         on distribution's various isolation environments.
+   Fix: one-word lines depending unduly on system state:
+        putting/removing executables in/from $PATH,
+        reloading, then reverting the change,
+        would leave the cron units broken.
+        Scriptlets are now always generated.
+        See https://bugs.debian.org/1051805#17
+   Fix: the generator no longer damages crontab lines
+        by stripping >/dev/null and > /dev/null from the end.
+        This is Debian#1051805.
 
    [adetiste]
    New: consider CRON_TZ= the same as TZ=.
-   Fix: do not chomp '> /dev/null' a the end of crontabs
-        when a OnSuccess handler is generated.
 
 v2.1.2 : 2023-09-10
 
