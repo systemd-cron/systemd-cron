@@ -1,12 +1,16 @@
 #!/bin/bash
 #
 # this is a sample script that show a desktop notification
-# when your cron.daily job is done
+# when your system upgrades are done
 #
 # a better GUI to systemd timers (like the KDE Weather/Calendar applet)
 # would be better
 #
-# you should put this in /etc/cron.daily/
+# in run-parts mode this would have gone to /etc/cron.daily/
+# with a splitted cron-daily, it should be appended
+# to apt-daily-{upgrade}.service like this:
+#    ExecStartPost=/etc/site/zz_desktop_notification
+#
 
 set -e
 [ -e /var/log/unattended-upgrades/unattended-upgrades.log ] || exit 0
@@ -25,19 +29,17 @@ updated=$(echo "$line" | grep ^$(date +%Y-%m-%d) | cut -d: -f4)
 for a in $updated; do
 	if [[ $a == *grub* ]]; then grub="$grub $a"; fi
 	if [[ $a == *systemd* ]]; then systemd="$systemd $a"; fi
-	if [[ $a == *kdm* ]]; then kdm="$radeon $a"; fi
 	if [[ $a == *radeon* ]]; then radeon="$radeon $a"; fi
 	if [[ $a == *mesa* ]]; then mesa="$mesa $a"; fi
 done;
 
-if [ -e /var/run/reboot-required -o -n "$grub" -o -n "$systemd" -o -n "$kdm" -o -n "$radeon" -o -n "$mesa" ]
+if [ -e /var/run/reboot-required -o -n "$grub" -o -n "$systemd" -o -n "$radeon" -o -n "$mesa" ]
 then
 	# check if user is active
 	if [ -n "$(users)" ]
 	then
 		echo "grub:$grub"
 		echo "systemd:$systemd"
-		echo "kdm:$kdm"
 		echo "radeon:$radeon"
 		echo "mesa:$mesa"
 		echo "user(s) active:"
