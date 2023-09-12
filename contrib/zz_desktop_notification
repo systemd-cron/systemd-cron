@@ -11,13 +11,13 @@
 set -e
 [ -e /var/log/unattended-upgrades/unattended-upgrades.log ] || exit 0
 
-line=$(cat /var/log/unattended-upgrades/unattended-upgrades.log | grep "will be upgraded" | tail -n 1)
+line=$(grep "will be upgrade" /var/log/unattended-upgrades/unattended-upgrades.log | tail -n 1)
 if [ -z "$line" -a -e /var/log/unattended-upgrades/unattended-upgrades.log.1.gz ]
 then
-	line=$(zcat /var/log/unattended-upgrades/unattended-upgrades.log.1.gz | grep "will be upgraded" | tail -n 1)
+	line=$(zgrep "will be upgraded" /var/log/unattended-upgrades/unattended-upgrades.log.1.gz | tail -n 1)
 fi
 
-updated=$(echo $line | grep ^$(date +%Y-%m-%d) | cut -d: -f4)
+updated=$(echo "$line" | grep ^$(date +%Y-%m-%d) | cut -d: -f4)
 
 # reboot-required isn't broad enough to my taste (mostly only kernel);
 # these are the usual suspects that might make a system
@@ -35,11 +35,11 @@ then
 	# check if user is active
 	if [ -n "$(users)" ]
 	then
-		echo grub:$grub
-		echo systemd:$systemd
-		echo kdm:$kdm
-		echo radeon:$radeon
-		echo mesa:$mesa
+		echo "grub:$grub"
+		echo "systemd:$systemd"
+		echo "kdm:$kdm"
+		echo "radeon:$radeon"
+		echo "mesa:$mesa"
 		echo "user(s) active:"
 		who
 		users=$(loginctl list-sessions | grep seat0 | awk '{print $3}')
@@ -48,7 +48,7 @@ then
 			for user in $users
 			do
 				export DISPLAY=:0
-				su $user -c "notify-send 'REBOOT NEEDED' -i dialog-warning \"$updated\" "
+				su "$user" -c "notify-send 'REBOOT NEEDED' -i dialog-warning \"$updated\" "
 			done
 		else
 			echo "REBOOT NEEDED: $updated" | wall
@@ -67,13 +67,13 @@ else
             then
 		for user in $users
 		do
-			echo $user
-			su $user -c "notify-send 'daily upgrade completed' -i dialog-information \"$updated\" "
+			echo "$user"
+			su "$user" -c "notify-send 'daily upgrade completed' -i dialog-information \"$updated\" "
 		done
 	    else
 		for user in $users
 		do
-			su $user -c "notify-send 'cron-daily finished' -i dialog-information 'nothing to update today'"
+			su "$user" -c "notify-send 'cron-daily finished' -i dialog-information 'nothing to update today'"
 		done
 	    fi
 	fi
