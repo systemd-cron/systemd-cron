@@ -1,8 +1,13 @@
-v2.2.0 : 2023-09-xx
+v2.2.0 : 2023-09-1x
+
+   [наб]
+   Fix: tweak again the integration tests to equally work
+        on distribution's various isolation environments.
 
    [adetiste]
-   New feature: colorize output of 'crontab --list'
-
+   New: consider CRON_TZ= the same as TZ=.
+   Fix: do not chomp '> /dev/null' a the end of crontabs
+        when a OnSuccess handler is generated.
 
 v2.1.2 : 2023-09-10
 
