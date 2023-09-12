@@ -491,12 +491,6 @@ struct Job {
 		if(!std::binary_search(std::begin(KSH_SHELLS), std::end(KSH_SHELLS), vore::basename(this->shell)))
 			return;
 
-		if(auto pgm = this->which(this->command[0]); pgm && *pgm != this->command[0]) {
-			if(!this->command.command0)
-				++this->command.command.b;
-			this->command.command0 = std::move(pgm);
-		}
-
 		// systemd-cron 1.x would consider the stdout output of jobs as merely debug info
 		if(this->cron_mail_success != cron_mail_success_t::never)
 			return;
@@ -641,22 +635,6 @@ struct Job {
 		this->schedule += ':';
 		timespec_comma(this->timespec_minute);
 		this->schedule += ":00"sv;
-	}
-
-	auto generate_scriptlet() -> std::optional<std::string> {
-		// ...only if needed
-		assert(!this->unit_name.empty());
-		if(this->command.size() == 1) {
-			struct stat sb;
-			if(!stat(MAYBE_DUPA(this->command[0]), &sb) && S_ISREG(sb.st_mode)) {
-				this->execstart = this->command[0];
-				return {};
-			}
-		}
-
-		auto scriptlet  = ((std::string{TARGET_DIR} += '/') += this->unit_name) += ".sh"sv;
-		this->execstart = (std::string{this->shell} += ' ') += scriptlet;
-		return scriptlet;
 	}
 
 	auto generate_unit_header(FILE * into, const char * tp) -> void {
@@ -824,10 +802,12 @@ struct Job {
 		};
 		assert(!this->unit_name.empty());
 
-		if(auto scriptlet = this->generate_scriptlet()) {  // as a side-effect also changes this->execstart
-			vore::file::FILE<false> f{scriptlet->c_str(), "we"};
+		auto scriptlet  = ((std::string{TARGET_DIR} += '/') += this->unit_name) += ".sh"sv;
+		this->execstart = (std::string{this->shell} += ' ') += scriptlet;
+		{
+			vore::file::FILE<false> f{scriptlet.c_str(), "we"};
 			if(!f)
-				return output_err(*scriptlet, "create"), false;
+				return output_err(scriptlet, "create"), false;
 			auto first = true;
 			for(auto && hunk : this->command) {
 				if(hunk.empty())
@@ -839,7 +819,7 @@ struct Job {
 			if(!first)
 				std::fputc('\n', f);
 			if(std::ferror(f) || std::fflush(f))
-				return output_err(*scriptlet, "write"), false;
+				return output_err(scriptlet, "write"), false;
 		}
 
 		auto timer = ((std::string{TARGET_DIR} += '/') += this->unit_name) += ".timer"sv;
@@ -1188,12 +1168,12 @@ static auto realmain() -> int {
 				auto filename            = (directory + '/') += basename;
 				std::string_view command = filename;
 				Job job{filename, filename};
-				job.persistent = true;
-				job.period     = period;
-				job.start_hour = distro_start_hour[period];  // default 0
-				job.boot_delay = i * 5;
-				job.command    = {{&command, &command + 1}, {}};
-				job.jobid      = (std::string{period} += '-') += basename;
+				job.persistent        = true;
+				job.period            = period;
+				job.start_hour        = distro_start_hour[period];  // default 0
+				job.boot_delay        = i * 5;
+				job.command           = {{&command, &command + 1}, {}};
+				job.jobid             = (std::string{period} += '-') += basename;
 				job.cron_mail_success = toplevel_cron_mail_success;
 				job.cron_mail_format  = toplevel_cron_mail_format;
 				job.decode();  // ensure clean jobid
