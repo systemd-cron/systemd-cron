@@ -50,10 +50,12 @@ assert_dat() {  # file content testname
 	              '1 * * * mon-wed dummy true'                                \
 	                                                                          \
 	              '# test_substitutions'                                      \
+	              'CRON_MAIL_SUCCESS=never'                                   \
 	              'BATCH=1'                                                   \
 	              '1 * * * mon-wed dummy echo dev null > /dev/null'           \
 	              'BATCH=0'                                                   \
 	              '1 * * * mon-wed dummy echo devnull  >/dev/null'            \
+	              'CRON_MAIL_SUCCESS=non-empty'                               \
 	                                                                          \
 	              '# test_tz'                                                 \
 	              'TZ=Europe/Warsaw'                                          \

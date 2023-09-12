@@ -497,6 +497,9 @@ struct Job {
 			this->command.command0 = std::move(pgm);
 		}
 
+		// systemd-cron 1.x would consider the stdout output of jobs as merely debug info
+		if(this->cron_mail_success != cron_mail_success_t::never)
+			return;
 		if(this->command.size() > 2 && this->command.command.e[-2] == ">"sv && this->command.command.e[-1] == "/dev/null"sv)
 			this->command.command.e -= 2;
 		if(this->command.size() > 1 && this->command.command.e[-1] == ">/dev/null"sv)
