@@ -88,7 +88,7 @@ follow the standard GNU [installation directories][4]:
 Other options include (`pkgconf` may be overridden with `$PKG_CONFIG`):
 
 * `--enable-runparts[=yes|no]` Use static units for /etc/cron.{hourly,daily,...}
-  Default: `yes`.
+  Default: `no`.
 * `--unitdir=<path>` Path to systemd unit files.
   Default: `pkgconf systemd --variable=systemdsystemunitdir` or `<libdir>/systemd/system`.
 * `--generatordir=<path>` Path to systemd generators.
@@ -128,10 +128,10 @@ A typical configuration for the latest systemd would be:
 
 (the default settings are a common ground between what is seen on current Arch/Debian/Gentoo packaging)
 
-Alternatively you can also generate individual .timer/.service for all the jobs
-in /etc/cron.{hourly,daily,weekly,monthly,...}:
+Alternatively you can also generate static .timer/.service to serialize
+the jobs in /etc/cron.{hourly,daily,weekly,monthly,...} through run-parts:
 
-    $ ./configure --enable-runparts=no
+    $ ./configure --enable-runparts=yes
 
 
 `part2timer` and `crond2timer` are in the format
