@@ -1,5 +1,6 @@
 #include "libvoreutils.hpp"
 #include "util.hpp"
+#include <sys/wait.h>
 #include <openssl/evp.h>
 static const constexpr auto key_or_plain = [](auto && lhs, auto && rhs) {
 	static const constexpr auto key =
@@ -1248,6 +1249,30 @@ static auto blue(const char * line) -> void {
 	else
 		std::fputs(line, stdout);
 }
+
+template <class... A>
+static auto exec(const char * prog, A... args) -> void {
+        execl(prog, prog, static_cast<const char *>(args)..., static_cast<const char *>(nullptr));
+
+        auto exec_err = errno;
+        std::fprintf(stderr, "%s: %s\n", prog, std::strerror(exec_err)); // removed 'self' parameter
+}
+static auto run_systemd_analyse(const char * arg) -> void {
+        switch(pid_t child = vfork()) {
+                case -1:
+                        std::fprintf(stderr, "couldn't create child: %s\n", std::strerror(errno));
+			return;
+                case 0:  // child
+                        exec("/usr/bin/systemd-analyze", "calendar", arg);
+			return;
+                default: {  // parent
+                        int childret;
+                        while(waitpid(child, &childret, 0) == -1 && errno == EINTR)  // no other errors possible
+                                ;
+                }
+        }
+}
+
 static auto translate(const char * line) -> int {
 	std::puts(line);
 
@@ -1264,6 +1289,11 @@ static auto translate(const char * line) -> int {
 
 	blue("# /run/systemd/generator/<unit>.service\n");
 	job.generate_service(stdout);
+
+	if (job.schedule != "") {
+		std::fputc('\n', stdout);
+		run_systemd_analyse(job.schedule.c_str());
+	}
 	return !job.valid;
 }
 
