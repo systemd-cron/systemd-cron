@@ -24,8 +24,6 @@ static const constexpr std::uint8_t DAYS_SET[]     = {1,  2,  3,  4,  5,  6,  7,
 static const constexpr std::string_view DOWS_SET[] = {"Sun"sv, "Mon"sv, "Tue"sv, "Wed"sv, "Thu"sv, "Fri"sv, "Sat"sv, "Sun"sv};
 static const constexpr std::uint8_t MONTHS_SET[]   = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
 
-static const constexpr std::string_view KSH_SHELLS[] = {"bash"sv, "dash"sv, "ksh"sv, "sh"sv, "zsh"sv};  // keep sorted
-
 #include "configuration.hpp"
 
 static const char * SELF;
@@ -487,23 +485,6 @@ struct Job {
 					this->environment["PATH"sv] = this->environment_PATH_storage;
 				}
 		}
-
-		if(!std::binary_search(std::begin(KSH_SHELLS), std::end(KSH_SHELLS), vore::basename(this->shell)))
-			return;
-
-		if(auto pgm = this->which(this->command[0]); pgm && *pgm != this->command[0]) {
-			if(!this->command.command0)
-				++this->command.command.b;
-			this->command.command0 = std::move(pgm);
-		}
-
-		// systemd-cron 1.x would consider the stdout output of jobs as merely debug info
-		if(this->cron_mail_success != cron_mail_success_t::never)
-			return;
-		if(this->command.size() > 2 && this->command.command.e[-2] == ">"sv && this->command.command.e[-1] == "/dev/null"sv)
-			this->command.command.e -= 2;
-		if(this->command.size() > 1 && this->command.command.e[-1] == ">/dev/null"sv)
-			this->command.command.e -= 1;
 	}
 
 	auto is_active() -> bool {

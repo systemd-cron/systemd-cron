@@ -1,13 +1,20 @@
-v2.2.0 : 2023-09-1x
+v2.2.0 : 2023-09-13
 
    [наб]
    Fix: tweak again the integration tests to equally work
         on distribution's various isolation environments.
+   Fix: one-word lines depending unduly on system state:
+        putting/removing executables in/from $PATH,
+        reloading, then reverting the change,
+        would leave the cron units broken.
+
+        systemd-cron won't expand these paths
+        anymore a boot/refresh time; the expansion
+        will be done by the shell/kernel at runtime.
+   Fix: never chomp '> /dev/null' a the end of crontabs.
 
    [adetiste]
    New: consider CRON_TZ= the same as TZ=.
-   Fix: do not chomp '> /dev/null' a the end of crontabs
-        when a OnSuccess handler is generated.
 
 v2.1.2 : 2023-09-10
 
