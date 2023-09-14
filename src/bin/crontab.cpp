@@ -60,7 +60,7 @@ static auto copy_FILE(FILE * from, FILE * to) -> void {
 
 static const char * const generator_path = std::getenv("SYSTEMD_CRON_GENERATOR") ?: "/usr/lib/systemd/system-generators/systemd-crontab-generator";
 
-static auto run_generator(const char * op, const char * file_or_line, bool file_is_file, bool fork) -> int {
+static auto run_generator(const char * op, const char * file_or_line, bool file_is_file) -> int {
 	vore::file::FILE<false> copy;
 	if(file_is_file)
 		if(struct stat sb; file_or_line == "-"sv && (fstat(0, &sb) || !S_ISREG(sb.st_mode))) {
@@ -71,7 +71,7 @@ static auto run_generator(const char * op, const char * file_or_line, bool file_
 			std::rewind(copy);
 		}
 
-	switch(pid_t child = fork ? vfork() : 0) {
+	switch(pid_t child = vfork()) {
 		case -1:
 			return std::fprintf(stderr, "%s: couldn't create child: %s\n", self, std::strerror(errno)), 125;
 		case 0:  // child
@@ -87,13 +87,52 @@ static auto run_generator(const char * op, const char * file_or_line, bool file_
 	}
 }
 
+static const bool want_colour = !*(std::getenv("NO_COLOR") ?: "") && (std::getenv("TERM") ?: ""sv).find("color"sv) != std::string_view::npos && isatty(1);
+static void blue(const char * line) {
+	if(want_colour)
+		std::fputs("\033[1;34m", stdout);
+	std::fputs(line, stdout);
+	if(want_colour)
+		std::fputs("\033[0m", stdout);
+}
+
 static auto translate(const char * line) -> int {
-	return run_generator("--translate", line, false, false);
+	close(3);
+	auto timer = vore::file::FILE<false>::tmpfile();
+	if(!timer)
+		return std::fprintf(stderr, "%s: %s\n", self, std::strerror(errno)), 1;
+	assert(fileno(timer) == 3);
+
+	close(4);
+	auto service = vore::file::FILE<false>::tmpfile();
+	if(!service)
+		return std::fprintf(stderr, "%s: %s\n", self, std::strerror(errno)), 1;
+	assert(fileno(service) == 4);
+
+	auto err = run_generator("--translate", line, false);
+	if(err)
+		return err;
+
+	blue("# /etc/systemd/system/$unit.timer\n");
+	std::rewind(timer);
+	copy_FILE(timer, stdout);
+	std::fputc('\n', stdout);
+
+	blue("# /etc/systemd/system/$unit.service\n");
+	std::rewind(service);
+	copy_FILE(service, stdout);
+	std::fflush(stdout);
+
+	std::rewind(timer);
+	std::rewind(service);
+	execlp("systemd-analyze", "systemd-analyze", "verify", "/dev/fd/3:input.timer", "/dev/fd/4:input.service", static_cast<const char *>(nullptr));
+	// ignore error, optional analysis
+	return 0;
 }
 
 
 static auto check(const char * file) -> bool {
-	return run_generator("--check", file, true, true) == 0;
+	return run_generator("--check", file, true) == 0;
 }
 
 static auto test(const char * file) -> bool {
