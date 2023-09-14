@@ -156,7 +156,70 @@ static auto try_chmod(const char * cron_file = nullptr, const char * user = null
 				(void)chmod(cron_file, 00600);  // rw-------
 }
 
+namespace {
+	struct autodeleting_path {
+		char buf[PATH_MAX];
+		bool armed = true;
+
+		~autodeleting_path() {
+			if(this->armed)
+				unlink(this->buf);
+		}
+		operator char *() noexcept { return this->buf; }
+	};
+}
+
+static auto read(const char * cron_file, const char * user, autodeleting_path tmp_path, FILE * tmp) -> int {
+	// lowel level function shared by edit() and list()
+	// file is always buffered
+	std::snprintf(tmp_path, sizeof(tmp_path.buf), "%s/crontab_XXXXXX", std::getenv("TMPDIR") ?: "/tmp");
+	int tmp_fd = mkostemp(tmp_path, O_CLOEXEC);
+	if(tmp_fd == -1 || !(tmp = {tmp_fd, "w+"}))
+		return std::fprintf(stderr, "%s\n", std::strerror(errno)), 1;
+
+	if(vore::file::FILE<false> crontab{cron_file, "re"})
+		copy_FILE(crontab, tmp);
+	else {
+		int err = errno;
+
+		if(err == ENOENT)
+			std::fputs("# min hour dom month dow command\n", tmp); // XXX
+		else if(user != current_user)
+			return std::fprintf(stderr, "you can not edit %s's crontab\n", user), 1; // XXX
+		else if(HAVE_SETGID)
+			switch(pid_t child = vfork()) {
+				case -1:
+					return std::fprintf(stderr, "%s: couldn't create child: %s\n", self, std::strerror(errno)), 125;
+				case 0:  // child
+					dup2(tmp_fd, 1);
+					_exit(exec(SETGID_HELPER, "r"));
+				default: {  // parent
+					int childret;
+					while(waitpid(child, &childret, 0) == -1 && errno == EINTR)  // no other errors possible
+						;
+					childret = WIFSIGNALED(childret) ? 128 + WTERMSIG(childret) : WEXITSTATUS(childret);
+						if(childret) {
+						if(childret == 127 || childret == ENOENT)  // ENOENT || helper returned ENOENT
+							std::fputs("# min hour dom month dow command\n", tmp); // XXX
+						else {
+							// helper will send error to stderr
+							std::fprintf(stderr, "failed to read %s\n", cron_file);
+							return childret;
+						}
+					}
+				}
+			}
+		else
+			return std::fprintf(stderr, "%s: %s: %s\n", self, cron_file, std::strerror(err)), 1;
+	}
+	std::fflush(tmp);
+	return 0;
+}
+
 static auto list(const char * cron_file, const char * user) -> int {
+	// use read()
+	// + colorize
+
 	if(vore::file::FILE<false> f{cron_file, "r"}) {
 		copy_FILE(f, stdout);
 		check(cron_file);
@@ -205,20 +268,6 @@ static auto remove(const char * cron_file, const char * user, bool ask) -> int {
 	return std::fprintf(stderr, "%s\n", std::strerror(err)), 1;
 }
 
-
-namespace {
-	struct autodeleting_path {
-		char buf[PATH_MAX];
-		bool armed = true;
-
-		~autodeleting_path() {
-			if(this->armed)
-				unlink(this->buf);
-		}
-		operator char *() noexcept { return this->buf; }
-	};
-}
-
 static auto replace_crontab(const char * cron_file, const char * user, FILE * from) -> bool {
 	autodeleting_path final_tmp_path{.buf = {}, .armed = false};
 	std::snprintf(final_tmp_path, sizeof(final_tmp_path.buf), "" CRONTAB_DIR "/%s.XXXXXX", user);
@@ -244,48 +293,7 @@ static auto edit(const char * cron_file, const char * user) -> int {
 	autodeleting_path tmp_path;
 	vore::file::FILE<false> tmp;
 	{
-		std::snprintf(tmp_path, sizeof(tmp_path.buf), "%s/crontab_XXXXXX", std::getenv("TMPDIR") ?: "/tmp");
-		int tmp_fd = mkostemp(tmp_path, O_CLOEXEC);
-		if(tmp_fd == -1 || !(tmp = {tmp_fd, "w+"}))
-			return std::fprintf(stderr, "%s\n", std::strerror(errno)), 1;
-
-		if(vore::file::FILE<false> crontab{cron_file, "re"})
-			copy_FILE(crontab, tmp);
-		else {
-			int err = errno;
-
-			if(err == ENOENT)
-				std::fputs("# min hour dom month dow command\n", tmp);
-			else if(user != current_user)
-				return std::fprintf(stderr, "you can not edit %s's crontab\n", user), 1;
-			else if(HAVE_SETGID)
-				switch(pid_t child = vfork()) {
-					case -1:
-						return std::fprintf(stderr, "%s: couldn't create child: %s\n", self, std::strerror(errno)), 125;
-					case 0:  // child
-						dup2(tmp_fd, 1);
-						_exit(exec(SETGID_HELPER, "r"));
-					default: {  // parent
-						int childret;
-						while(waitpid(child, &childret, 0) == -1 && errno == EINTR)  // no other errors possible
-							;
-						childret = WIFSIGNALED(childret) ? 128 + WTERMSIG(childret) : WEXITSTATUS(childret);
-
-						if(childret) {
-							if(childret == 127 || childret == ENOENT)  // ENOENT || helper returned ENOENT
-								std::fputs("# min hour dom month dow command\n", tmp);
-							else {
-								// helper will send error to stderr
-								std::fprintf(stderr, "failed to read %s\n", cron_file);
-								return childret;
-							}
-						}
-					}
-				}
-			else
-				return std::fprintf(stderr, "%s: %s: %s\n", self, cron_file, std::strerror(err)), 1;
-		}
-		std::fflush(tmp);
+		read(cron_file, user, tmp_path, tmp);
 	}
 
 
