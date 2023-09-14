@@ -1169,12 +1169,12 @@ static auto realmain() -> int {
 				auto filename            = (directory + '/') += basename;
 				std::string_view command = filename;
 				Job job{filename, filename};
-				job.persistent = true;
-				job.period     = period;
-				job.start_hour = distro_start_hour[period];  // default 0
-				job.boot_delay = i * 5;
-				job.command    = {{&command, &command + 1}, {}};
-				job.jobid      = (std::string{period} += '-') += basename;
+				job.persistent        = true;
+				job.period            = period;
+				job.start_hour        = distro_start_hour[period];  // default 0
+				job.boot_delay        = i * 5;
+				job.command           = {{&command, &command + 1}, {}};
+				job.jobid             = (std::string{period} += '-') += basename;
 				job.cron_mail_success = toplevel_cron_mail_success;
 				job.cron_mail_format  = toplevel_cron_mail_format;
 				job.decode();  // ensure clean jobid
@@ -1242,28 +1242,26 @@ static auto check(const char * cron_file) -> int {
 }
 
 
-static auto blue(const char * line) -> void {
-	if(isatty(0))
-		std::fprintf(stdout, "\033[1;34m%s\033[0m", line);
-	else
-		std::fputs(line, stdout);
-}
 static auto translate(const char * line) -> int {
-	std::puts(line);
-
 	Job job{"-"sv, line};
 	job.parse_crontab_auto();
 	job.decode();
 	job.decode_command();
 	job.generate_schedule();
 
-	blue("# /run/systemd/generator/<unit>.timer\n");
-	job.generate_timer(stdout);
-	std::fputs("#Persistent=true\n", stdout);
-	std::fputc('\n', stdout);
 
-	blue("# /run/systemd/generator/<unit>.service\n");
-	job.generate_service(stdout);
+	vore::file::FILE<false> timer{3, "w"};
+	if(!timer)
+		return log(Log::ERR, "%s", std::strerror(errno)), 3;
+	job.generate_timer(timer);
+	std::fputs("#Persistent=true\n", timer);
+
+
+	vore::file::FILE<false> service{4, "w"};
+	if(!service)
+		return log(Log::ERR, "%s", std::strerror(errno)), 4;
+	job.generate_service(service);
+
 	return !job.valid;
 }
 
