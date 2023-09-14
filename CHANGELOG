@@ -1,3 +1,13 @@
+v2.2.0 : 2023-10-xx
+
+   [наб]
+   Improvements to the crontab tool:
+   * colour handling will now obey TERM= & NO_COLOR=
+     environment variables.
+   * `crontab --translate` will have it's output checked by
+     `systemd-analyze verify` to ensure the generated units
+     match running systemd expected syntax.
+
 v2.1.3 : 2023-09-13
 
    [наб]
