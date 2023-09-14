@@ -333,7 +333,7 @@ struct Job {
 				this->user = this->command[0];
 				++this->command.command.b;
 			} else
-				this->user = getlogin();
+				this->user = getpass_getlogin();
 
 			this->decode_command();
 			auto first = true;

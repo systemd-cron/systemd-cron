@@ -24,18 +24,7 @@ static auto exec(const char * prog, A... args) -> int {
 }
 
 
-// Matches https://github.com/python/cpython/blob/3.11/Lib/getpass.py
-static const std::string_view current_user = []() -> std::string_view {
-	for(auto var : {"LOGNAME", "USER", "LNAME", "USERNAME"})
-		if(auto val = std::getenv(var))
-			return val;
-
-	static char pwusername[LOGIN_NAME_MAX + 1];
-	if(auto ent = getpwuid(getuid()))
-		return std::strncpy(pwusername, ent->pw_name, LOGIN_NAME_MAX);
-
-	return {};
-}();
+static const std::string_view current_user = getpass_getlogin();
 
 
 static __attribute__((format(printf, 1, 2))) auto confirm(const char * fmt, ...) -> bool {
