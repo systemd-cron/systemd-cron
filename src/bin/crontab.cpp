@@ -77,12 +77,14 @@ static auto run_generator(const char * op, const char * file_or_line, bool file_
 }
 
 static const bool want_colour = !*(std::getenv("NO_COLOR") ?: "") && (std::getenv("TERM") ?: ""sv).find("color"sv) != std::string_view::npos && isatty(1);
+#define COLOUR_BLUE "\033[1;34m"
+#define COLOUR_RESET "\033[0m"
 static void blue(const char * line) {
 	if(want_colour)
-		std::fputs("\033[1;34m", stdout);
+		std::fputs(COLOUR_BLUE, stdout);
 	std::fputs(line, stdout);
 	if(want_colour)
-		std::fputs("\033[0m", stdout);
+		std::fputs(COLOUR_RESET, stdout);
 }
 
 static auto translate(const char * line) -> int {
@@ -156,9 +158,31 @@ static auto try_chmod(const char * cron_file = nullptr, const char * user = null
 				(void)chmod(cron_file, 00600);  // rw-------
 }
 
+static auto colour_crontab(FILE * f) -> void {
+	char * line_raw{};
+	std::size_t linecap{};
+	for(ssize_t len; (len = getline(&line_raw, &linecap, f)) != -1;) {
+		std::string_view line{line_raw, static_cast<std::size_t>(len)};
+
+		const char * colour{};
+		if(line[0] == '#')
+			colour = COLOUR_BLUE;
+		// other matchers
+
+		if(colour)
+			std::fputs(colour, stdout);
+		std::fwrite(line.data(), 1, line.size(), stdout);
+		if(colour)
+			std::fputs(COLOUR_RESET, stdout);
+	}
+}
+
 static auto list(const char * cron_file, const char * user) -> int {
 	if(vore::file::FILE<false> f{cron_file, "r"}) {
-		copy_FILE(f, stdout);
+		if(!want_colour)
+			copy_FILE(f, stdout);
+		else
+			colour_crontab(f);
 		check(cron_file);
 		try_chmod(cron_file, user);
 		return 0;
@@ -171,8 +195,32 @@ static auto list(const char * cron_file, const char * user) -> int {
 	if(user != current_user)
 		return std::fprintf(stderr, "you can not display %s's crontab\n", user), 1;
 
-	if(HAVE_SETGID)
-		return exec(SETGID_HELPER, "r");
+	if(HAVE_SETGID) {
+		if(!want_colour)
+			return exec(SETGID_HELPER, "r");
+
+		int pipe[2];
+		pipe2(pipe, O_CLOEXEC);
+		switch(pid_t child = vfork()) {
+			case -1:
+				return std::fprintf(stderr, "%s: couldn't create child: %s\n", self, std::strerror(errno)), 125;
+			case 0:  // child
+				dup2(pipe[1], 1);
+				_exit(exec(SETGID_HELPER, "r"));
+			default: {  // parent
+				close(pipe[1]);
+				vore::file::FILE<false> f{pipe[0], "r"};
+				if(!f)
+					return std::fprintf(stderr, "%s\n", std::strerror(err)), 1;
+				colour_crontab(f);
+
+				int childret;
+				while(waitpid(child, &childret, 0) == -1 && errno == EINTR)  // no other errors possible
+					;
+				return WIFSIGNALED(childret) ? 128 + WTERMSIG(childret) : WEXITSTATUS(childret);
+			}
+		}
+	}
 
 	return std::fprintf(stderr, "%s\n", std::strerror(err)), 1;
 }
