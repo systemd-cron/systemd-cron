@@ -329,6 +329,7 @@ namespace vore {
 			constexpr bool operator!=(const soft_tokenise_iter & rhs) const noexcept { return !(*this == rhs); }
 
 			constexpr std::string_view operator*() const noexcept { return this->token; }
+			constexpr const std::string_view * operator->() const noexcept { return &this->token; }
 		};
 
 
