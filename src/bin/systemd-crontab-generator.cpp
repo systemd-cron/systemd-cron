@@ -879,7 +879,7 @@ static auto environment_write(const std::map<std::string_view, std::string_view>
 
 
 template <class F>
-static auto parse_crontab(std::string_view filename, withuser_t withuser, bool monotonic /*=false*/, cron_mail_success_t default_cron_mail_success,
+static auto parse_crontab(std::string_view filename, withuser_t withuser, bool anacrontab, cron_mail_success_t default_cron_mail_success,
                           cron_mail_format_t default_cron_mail_format, F && cbk) -> bool {
 	vore::file::mapping map;
 	{
@@ -928,7 +928,7 @@ static auto parse_crontab(std::string_view filename, withuser_t withuser, bool m
 		}
 
 		Job j{filename, line};
-		if(monotonic) {
+		if(anacrontab) {
 			j.decode_environment(environment, /*default_persistent=*/true, default_cron_mail_success, default_cron_mail_format);
 			j.parse_anacrontab();
 		} else if(line[0] == '@') {
@@ -1108,7 +1108,7 @@ static auto realmain() -> int {
 	cron_mail_success_t toplevel_cron_mail_success = cron_mail_success_t::dflt;
 	cron_mail_format_t toplevel_cron_mail_format   = cron_mail_format_t::dflt;
 
-	if(!parse_crontab("/etc/crontab", withuser_t::from_cmd0, /*monotonic=*/false, cron_mail_success_t::dflt, cron_mail_format_t::dflt, [&](auto && job) {
+	if(!parse_crontab("/etc/crontab", withuser_t::from_cmd0, /*anacrontab=*/false, cron_mail_success_t::dflt, cron_mail_format_t::dflt, [&](auto && job) {
 		   if(auto itr = job.environment.find("MAILTO"sv); itr != std::end(job.environment))
 			   fallback_mailto = itr->second;
 		   if(!job.valid) {
@@ -1142,7 +1142,7 @@ static auto realmain() -> int {
 		if(is_backup("/etc/cron.d", basename))
 			return;
 		auto filename = "/etc/cron.d/"s += basename;
-		if(!parse_crontab(filename, withuser_t::from_cmd0, /*monotonic=*/false, toplevel_cron_mail_success, toplevel_cron_mail_format, [&](auto && job) {
+		if(!parse_crontab(filename, withuser_t::from_cmd0, /*anacrontab=*/false, toplevel_cron_mail_success, toplevel_cron_mail_format, [&](auto && job) {
 			   if(!job.valid) {
 				   log(Log::ERR, "truncated line in %.*s: %.*s", FORMAT_SV(filename), FORMAT_SV(job.line));
 				   return;
@@ -1187,7 +1187,7 @@ static auto realmain() -> int {
 		}
 	}
 
-	if(!parse_crontab("/etc/anacrontab", withuser_t::from_basename, /*monotonic=*/true, toplevel_cron_mail_success, toplevel_cron_mail_format, [&](auto && job) {
+	if(!parse_crontab("/etc/anacrontab", withuser_t::from_basename, /*anacrontab=*/true, toplevel_cron_mail_success, toplevel_cron_mail_format, [&](auto && job) {
 		   if(!job.valid) {
 			   log(Log::ERR, "truncated line in /etc/anacrontab: %.*s", FORMAT_SV(job.line));
 			   return;
@@ -1203,7 +1203,7 @@ static auto realmain() -> int {
 				return;
 
 			auto filename = (std::string{STATEDIR} += '/') += basename;
-			if(!parse_crontab(filename, withuser_t::from_basename, /*monotonic=*/false, toplevel_cron_mail_success, toplevel_cron_mail_format,
+			if(!parse_crontab(filename, withuser_t::from_basename, /*anacrontab=*/false, toplevel_cron_mail_success, toplevel_cron_mail_format,
 			                  [&](auto && job) { generate_timer_unit(job); }))
 				log(Log::ERR, "%s: %s", filename.c_str(), std::strerror(errno));
 		});
@@ -1220,7 +1220,7 @@ static auto realmain() -> int {
 
 static auto check(const char * cron_file) -> int {
 	bool err{};
-	if(!parse_crontab(cron_file, withuser_t::initial, /*monotonic=*/false, cron_mail_success_t::dflt, cron_mail_format_t::dflt, [&](auto && job) {
+	if(!parse_crontab(cron_file, withuser_t::initial, /*anacrontab=*/false, cron_mail_success_t::dflt, cron_mail_format_t::dflt, [&](auto && job) {
 		   if(!job.valid) {
 			   err = true;
 			   job.log(Log::ERR, "truncated line");
