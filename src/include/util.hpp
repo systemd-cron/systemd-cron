@@ -24,3 +24,11 @@ static auto getpass_getlogin() -> std::string_view {
 
 	return {};
 }
+
+
+static const regex_t ENVVAR_RE = [] {
+	regex_t ret;
+	assert(!regcomp(&ret, R"regex(^([A-Za-z_0-9]+)[[:space:]]*=[[:space:]]*(.*)$)regex", REG_EXTENDED | REG_NEWLINE));
+	assert(ret.re_nsub == 2);
+	return ret;
+}();

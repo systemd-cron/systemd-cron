@@ -77,13 +77,14 @@ static auto run_generator(const char * op, const char * file_or_line, bool file_
 }
 
 static const bool want_colour = !*(std::getenv("NO_COLOR") ?: "") && (std::getenv("TERM") ?: ""sv).find("color"sv) != std::string_view::npos && isatty(1);
+#define COLOUR_GREEN "\033[1;32m"
 #define COLOUR_BLUE "\033[1;34m"
 #define COLOUR_RESET "\033[0m"
-static void blue(const char * line) {
-	if(want_colour)
-		std::fputs(COLOUR_BLUE, stdout);
-	std::fputs(line, stdout);
-	if(want_colour)
+static auto coloured(const std::string_view & data, const char * colour) -> void {
+	if(colour)
+		std::fputs(colour, stdout);
+	std::fwrite(data.data(), 1, data.size(), stdout);
+	if(colour)
 		std::fputs(COLOUR_RESET, stdout);
 }
 
@@ -104,12 +105,12 @@ static auto translate(const char * line) -> int {
 	if(err)
 		return err;
 
-	blue("# /etc/systemd/system/$unit.timer\n");
+	coloured("# /etc/systemd/system/$unit.timer\n"sv, want_colour ? COLOUR_BLUE : nullptr);
 	std::rewind(timer);
 	copy_FILE(timer, stdout);
 	std::fputc('\n', stdout);
 
-	blue("# /etc/systemd/system/$unit.service\n");
+	coloured("# /etc/systemd/system/$unit.service\n"sv, want_colour ? COLOUR_BLUE : nullptr);
 	std::rewind(service);
 	copy_FILE(service, stdout);
 	std::fflush(stdout);
@@ -158,6 +159,10 @@ static auto try_chmod(const char * cron_file = nullptr, const char * user = null
 				(void)chmod(cron_file, 00600);  // rw-------
 }
 
+// Divide the crontab into three colour-coded sexions:
+//   blue    for comments        (metadata for the user)
+//   green   for time specs      (metadata for cron)
+//   default for everything else (actual data)
 static auto colour_crontab(FILE * f) -> void {
 	char * line_raw{};
 	std::size_t linecap{};
@@ -167,13 +172,26 @@ static auto colour_crontab(FILE * f) -> void {
 		const char * colour{};
 		if(line[0] == '#')
 			colour = COLOUR_BLUE;
-		// other matchers
+		else if(regmatch_t bound{.rm_so = 0, .rm_eo = static_cast<regoff_t>(line.size())}; regexec(&ENVVAR_RE, line.data(), 1, &bound, REG_STARTEND)) {
+			vore::soft_tokenise tokens{line, " \t\n"sv};
+			auto cur = std::begin(tokens);
+			if(cur != std::end(tokens) && (*cur)[0] == '@') {  // @daily echo dupa
+				coloured(*cur, COLOUR_GREEN);
+				line.remove_prefix(cur->size());
+			} else {  //   0   *    *   *     *   echo dupa
+				for(auto i = 0u; i < 5; ++i) {
+					if(cur != std::end(tokens))
+						++cur;
+				}
+				if(cur != std::end(tokens)) {
+					std::string_view timespec{line.data(), cur->data()};
+					coloured(timespec, COLOUR_GREEN);
+					line.remove_prefix(timespec.size());
+				}
+			}
+		}
 
-		if(colour)
-			std::fputs(colour, stdout);
-		std::fwrite(line.data(), 1, line.size(), stdout);
-		if(colour)
-			std::fputs(COLOUR_RESET, stdout);
+		coloured(line, colour);
 	}
 }
 
