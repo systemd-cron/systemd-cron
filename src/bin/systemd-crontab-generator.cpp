@@ -439,7 +439,7 @@ struct Job {
 			base = *std::min_element(std::begin(values), std::end(values));
 
 		std::set<T> result;
-		for(auto && subval : vore::soft_tokenise{value, ","sv}) {  // NOTE: this glides over consecutive commas so "0,,3" is accepted as-if "0,3"
+		for(auto && subval : vore::soft_tokenise{value, ","sv})  // NOTE: this glides over consecutive commas so "0,,3" is accepted as-if "0,3"
 			if(auto err = parse_period(subval, values, result, mapping, base)) {
 				if(*err)
 					this->log(Log::ERR, "field %s=%.*s (%.*s): %s", field, FORMAT_SV(value), FORMAT_SV(subval), *err);
@@ -451,7 +451,6 @@ struct Job {
 				this->valid = false;
 				return {};
 			}
-		}
 		return result;
 	}
 
