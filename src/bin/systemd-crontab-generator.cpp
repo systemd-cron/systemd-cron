@@ -358,6 +358,8 @@ struct Job {
 	// @daily (user) do something
 	auto parse_crontab_at(withuser_t withuser) -> void {
 		if(this->parts.size() < (2 + (withuser == withuser_t::from_cmd0))) {
+			this->log(Log::ERR, "have %zu field%s, need ≥%d (@timespec%s program)", this->parts.size(), this->parts.size() == 1 ? "" : "s",
+			          2 + (withuser == withuser_t::from_cmd0), (withuser == withuser_t::from_cmd0) ? " user" : "");
 			this->valid = false;
 			return;
 		}
@@ -382,6 +384,8 @@ struct Job {
 	// 6 2 * * * (user) do something
 	auto parse_crontab_timespec(withuser_t withuser) -> void {
 		if(this->parts.size() < (6 + (withuser == withuser_t::from_cmd0))) {
+			this->log(Log::ERR, "have %zu field%s, need ≥%d (minute hour day dow month%s program)", this->parts.size(), this->parts.size() == 1 ? "" : "s",
+			          6 + (withuser == withuser_t::from_cmd0), (withuser == withuser_t::from_cmd0) ? " user" : "");
 			this->valid = false;
 			return;
 		}
