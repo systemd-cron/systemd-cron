@@ -208,7 +208,7 @@ $(builddir)/include/%.hpp: $(srcdir)/include/%.hpp
 CXXVER := $(shell $(CXX) --version | { read -r l; echo "$$l"; })
 ifneq "$(findstring clang,$(CXXVER))" ""
 	# clang doesn't use PCHs automatically
-	PCH_ARG := -include-pch $(builddir)/include/libvoreutils.hpp.gch
+	PCH_ARG := -include-pch $(builddir)/include/libvoreutils.hpp.gch -Wno-gcc-compat
 else
 	PCH_ARG :=
 endif
