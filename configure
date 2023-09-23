@@ -83,7 +83,7 @@ with-version:,
 
 usage()
 {
-    grep ^'### Configuration' README.md -A 48
+    grep ^'### Configuration' README.md -A 50
 }
 
 # shellcheck disable=SC2181
