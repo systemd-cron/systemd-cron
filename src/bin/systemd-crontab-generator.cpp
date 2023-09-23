@@ -1254,8 +1254,10 @@ static auto check(const char * cron_file) -> int {
 			   err = true;
 			   job.log(Log::ERR, "month and day can't be 0");
 		   }
-	   }))
+	   })) {
+		err = true;
 		log(Log::ERR, "%s: %s", cron_file, std::strerror(errno));
+	}
 	return err;
 }
 
