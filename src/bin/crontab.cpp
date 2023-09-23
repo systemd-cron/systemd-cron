@@ -116,13 +116,17 @@ static auto translate(const char * line) -> int {
 	copy_FILE(service, stdout);
 	std::fflush(stdout);
 
-	// optional analysis: don't run if /dev/fd/3 doesn't exist (<=> /proc not mounted on Linux) and ignore execlp() return if sd-analyze unavailable
+	// further optional analysis:
+
+	// don't run if /dev/fd/3 doesn't exist (<=> /proc not mounted on Linux)
+	if(access("/dev/fd/3", R_OK))
+		return 0;
+
+	// ignore execlp() return if sd-analyze unavailable
 	// oddly, missing /run/systemd is perfectly okay
-	if(!access("/dev/fd/3", R_OK)) {
-		std::rewind(timer);
-		std::rewind(service);
-		execlp("systemd-analyze", "systemd-analyze", "verify", "/dev/fd/3:input.timer", "/dev/fd/4:input.service", static_cast<const char *>(nullptr));
-	}
+	std::rewind(timer);
+	std::rewind(service);
+	execlp("systemd-analyze", "systemd-analyze", "verify", "/dev/fd/3:input.timer", "/dev/fd/4:input.service", static_cast<const char *>(nullptr));
 	return 0;
 }
 
