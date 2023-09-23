@@ -361,10 +361,10 @@ namespace vore {
 #endif
 
 
-#define MAYBE_DUPA(strv)                                                       \
-	__extension__({                                                              \
-		auto && _strv = strv;                                                      \
-		_strv[_strv.size()] ? strndupa(_strv.data(), _strv.size()) : _strv.data(); \
+#define MAYBE_DUPA(strv)                                                              \
+	__extension__({                                                                     \
+		auto && _strv = strv;                                                             \
+		_strv.data()[_strv.size()] ? strndupa(_strv.data(), _strv.size()) : _strv.data(); \
 	})
 
 
