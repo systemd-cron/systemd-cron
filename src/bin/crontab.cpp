@@ -78,6 +78,7 @@ static auto run_generator(const char * op, const char * file_or_line, bool file_
 
 static const bool want_colour = !*(std::getenv("NO_COLOR") ?: "") && (std::getenv("TERM") ?: ""sv).find("color"sv) != std::string_view::npos && isatty(1);
 #define COLOUR_GREEN "\033[1;32m"
+#define COLOUR_YELLOW "\033[1;33m"
 #define COLOUR_BLUE "\033[1;34m"
 #define COLOUR_RESET "\033[0m"
 static auto coloured(const std::string_view & data, const char * colour) -> void {
@@ -162,6 +163,7 @@ static auto try_chmod(const char * cron_file = nullptr, const char * user = null
 // Divide the crontab into three colour-coded sexions:
 //   blue    for comments        (metadata for the user)
 //   green   for time specs      (metadata for cron)
+//   yellow  for variable names
 //   default for everything else (actual data)
 static auto colour_crontab(FILE * f) -> void {
 	char * line_raw{};
@@ -172,7 +174,11 @@ static auto colour_crontab(FILE * f) -> void {
 		const char * colour{};
 		if(line[0] == '#')
 			colour = COLOUR_BLUE;
-		else if(regmatch_t bound{.rm_so = 0, .rm_eo = static_cast<regoff_t>(line.size())}; regexec(&ENVVAR_RE, line.data(), 1, &bound, REG_STARTEND)) {
+		else if(regmatch_t matches[2]{{.rm_so = 0, .rm_eo = static_cast<regoff_t>(line.size())}};
+		        !regexec(&ENVVAR_RE, line.data(), sizeof(matches) / sizeof(*matches), matches, REG_STARTEND)) {
+			coloured({&line[matches[1].rm_so], &line[matches[1].rm_eo]}, COLOUR_YELLOW);
+			line.remove_prefix(matches[1].rm_eo);
+		} else {
 			vore::soft_tokenise tokens{line, " \t\n"sv};
 			auto cur = std::begin(tokens);
 			if(cur != std::end(tokens) && (*cur)[0] == '@') {  // @daily echo dupa
