@@ -16,6 +16,11 @@ static const constexpr std::uint8_t DAYS_SET[]     = {1,  2,  3,  4,  5,  6,  7,
                                                       17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
 static const constexpr std::string_view DOWS_SET[] = {"Sun"sv, "Mon"sv, "Tue"sv, "Wed"sv, "Thu"sv, "Fri"sv, "Sat"sv, "Sun"sv};
 static const constexpr std::uint8_t MONTHS_SET[]   = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+static const char * const MINUTES_RANGE            = "[0, 59]";
+static const char * const HOURS_RANGE              = "[0, 23]";
+static const char * const DAYS_RANGE               = "[1, 31]";
+static const char * const DOWS_RANGE               = "[mon, sun] or [1, 7]";
+static const char * const MONTHS_RANGE             = "[jan, dec] or [1, 12]";
 
 #include "configuration.hpp"
 
@@ -101,7 +106,7 @@ static auto month_map(const std::string_view & month, bool & err) -> std::size_t
 static auto dow_map(const std::string_view & dow_full, bool & err) -> std::size_t;
 template <class T, class V>
 static auto parse_period(const std::string_view & value, const V & values, std::set<T> & into, std::size_t (*mapping)(const std::string_view &, bool &),
-                         std::size_t base) -> bool;
+                         std::size_t base) -> std::optional<const char *>;
 static auto environment_write(const std::map<std::string_view, std::string_view> & env, FILE * into) -> void;
 
 
@@ -225,7 +230,17 @@ struct Job {
 		this->cron_mail_format  = cron_mail_format_t::dflt;
 	}
 
-	auto log(Log priority, const char * message) -> void { ::log(priority, "%s in %.*s: %.*s", message, FORMAT_SV(this->filename), FORMAT_SV(this->line)); }
+	auto log(Log priority, const char * message) -> void { ::log(priority, "%.*s: %.*s: %s", FORMAT_SV(this->filename), FORMAT_SV(this->line), message); }
+	template <class... T>
+#ifdef __clang__
+	__attribute__((format(printf, 3, 4)))
+#endif
+	auto
+	log(Log priority, const char * fmt, const T &... args) -> void {
+		char buf[128];
+		std::string_view msg{buf, static_cast<std::size_t>(std::snprintf(buf, sizeof(buf), fmt, args...))};
+		::log(priority, "%.*s: %.*s: %.*s", FORMAT_SV(this->filename), FORMAT_SV(this->line), FORMAT_SV(msg));
+	}
 
 	auto which(const std::string_view & pgm) -> std::optional<std::string> {
 		auto itr = this->environment.find("PATH"sv);
@@ -376,11 +391,11 @@ struct Job {
 		auto && days          = this->parts[2];
 		auto && months        = this->parts[3];
 		auto && dows          = this->parts[4];
-		this->timespec_minute = this->parse_time_unit<false, std::uint8_t>(minutes, MINUTES_SET, int_map);
-		this->timespec_hour   = this->parse_time_unit<false, std::uint8_t>(hours, HOURS_SET, int_map);
-		this->timespec_dom    = this->parse_time_unit<false, std::uint8_t>(days, DAYS_SET, int_map);
-		this->timespec_dow    = this->parse_time_unit<true, std::string_view>(dows, DOWS_SET, dow_map);
-		this->timespec_month  = this->parse_time_unit<false, std::uint8_t>(months, MONTHS_SET, month_map);
+		this->timespec_minute = this->parse_time_unit<false, std::uint8_t>(minutes, "minute", MINUTES_SET, MINUTES_RANGE, int_map);
+		this->timespec_hour   = this->parse_time_unit<false, std::uint8_t>(hours, "hour", HOURS_SET, HOURS_RANGE, int_map);
+		this->timespec_dom    = this->parse_time_unit<false, std::uint8_t>(days, "day", DAYS_SET, DAYS_RANGE, int_map);
+		this->timespec_dow    = this->parse_time_unit<true, std::string_view>(dows, "dow", DOWS_SET, DOWS_RANGE, dow_map);
+		this->timespec_month  = this->parse_time_unit<false, std::uint8_t>(months, "month", MONTHS_SET, MONTHS_RANGE, month_map);
 
 		this->sunday_is_seven = dows.back() == '7' || [&] {
 			if(dows.size() < 3)
@@ -408,7 +423,8 @@ struct Job {
 
 	static const constexpr std::uint8_t TIMESPEC_ASTERISK = -1;
 	template <bool DOW, class T, class V>
-	auto parse_time_unit(const std::string_view & value, const V & values, std::size_t (*mapping)(const std::string_view &, bool &)) -> std::set<T> {
+	auto parse_time_unit(const std::string_view & value, const char * field, const V & values, const char * range,
+	                     std::size_t (*mapping)(const std::string_view &, bool &)) -> std::set<T> {
 		if(value == "*"sv) {
 			if constexpr(DOW)
 				return {"*"sv};
@@ -423,12 +439,19 @@ struct Job {
 			base = *std::min_element(std::begin(values), std::end(values));
 
 		std::set<T> result;
-		for(auto && subval : vore::soft_tokenise{value, ","sv})  // NOTE: this glides over consecutive commas so "0,,3" is accepted as-if "0,3"
-			if(!parse_period(subval, values, result, mapping, base)) {
-				this->log(Log::ERR, "garbled time");
+		for(auto && subval : vore::soft_tokenise{value, ","sv}) {  // NOTE: this glides over consecutive commas so "0,,3" is accepted as-if "0,3"
+			if(auto err = parse_period(subval, values, result, mapping, base)) {
+				if(*err)
+					this->log(Log::ERR, "field %s=%.*s (%.*s): %s", field, FORMAT_SV(value), FORMAT_SV(subval), *err);
+				else {
+					if(auto slash = subval.find('/'); slash != std::string_view::npos)
+						subval.remove_suffix(subval.size() - slash);
+					this->log(Log::ERR, "field %s=%.*s (%.*s), may be * or %s", field, FORMAT_SV(value), FORMAT_SV(subval), range);
+				}
 				this->valid = false;
 				return {};
 			}
+		}
 		return result;
 	}
 
@@ -588,7 +611,7 @@ struct Job {
 
 		if(this->timespec_month.empty() || this->timespec_dom.empty() || this->timespec_hour.empty() || this->timespec_minute.empty()) {
 			this->valid = false;
-			this->log(Log::ERR, "unknown schedule");
+			// errors already dumped by the parser
 			return;
 		}
 
@@ -978,7 +1001,7 @@ static auto dow_map(const std::string_view & dow_full, bool & err) -> std::size_
 
 template <class T, class V>
 static auto parse_period(const std::string_view & value, const V & values, std::set<T> & into, std::size_t (*mapping)(const std::string_view &, bool &),
-                         std::size_t base) -> bool {
+                         std::size_t base) -> std::optional<const char *> {
 	std::string_view range = value;
 	std::size_t step       = 1;
 	bool err{};
@@ -986,16 +1009,16 @@ static auto parse_period(const std::string_view & value, const V & values, std::
 		range     = value.substr(0, idx);
 		auto rest = value.substr(idx + 1);
 		if(rest.find('/') != std::string_view::npos)
-			return false;
+			return "doubled /";
 		step = int_map(rest, err);
 		if(err)
-			return false;
+			return "/-skip not an integer";
 	}
 
 	if(range == "*"sv) {
 		for(ssize_t i = 0; i < std::distance(std::begin(values), std::end(values)); i += step)
 			into.emplace(values[i]);
-		return true;
+		return {};
 	}
 
 
@@ -1004,15 +1027,18 @@ static auto parse_period(const std::string_view & value, const V & values, std::
 		start = range.substr(0, idx);
 		end   = range.substr(idx + 1);
 		if(end.find('-') != std::string_view::npos)
-			return false;
+			return "doubled -";
 	}
 
 
 	auto i_start = mapping(start, err) - 1 + !base;
 	auto i_end   = std::min(mapping(end, err) + !base, static_cast<std::size_t>(std::distance(std::begin(values), std::end(values))));
-	for(std::size_t i = i_start; i < i_end; i += step)
+	bool any{};
+	for(std::size_t i = i_start; i < i_end; i += step) {
 		into.emplace(values[i]);
-	return true;
+		any = true;
+	}
+	return any ? std::nullopt : std::optional{nullptr};
 }
 
 static auto generate_timer_unit(Job & job) -> void {
