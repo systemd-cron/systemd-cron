@@ -26,9 +26,9 @@ SENDMAIL="$(command -v "$SENDMAIL" || command -v sendmail || command -v /usr/sbi
 }
 
 systemctl show --property=User --property=Environment --property=SourcePath --property=Description --property=ActiveState --property=InvocationID "$unit" | {
-	user=
+	user='root'
 	job_env=
-	source_path=
+	source_path="$unit"
 	description=
 	active_state=
 	invocation_id=
@@ -42,8 +42,6 @@ systemctl show --property=User --property=Environment --property=SourcePath --pr
 			'InvocationID')	invocation_id="$v" ;;
 		esac
 	done
-	[ -z "$user" ] && user='root'
-	[ -z "$source_path" ] && source_path="$unit"
 	[ "${source_path#'@statedir@/'}" != "$source_path" ] && source_path="${source_path#'@statedir@/'}'s crontab"
 	# Description is either »[Cron] "0 * * * * program"« or »[Cron] /etc/crontab«; we don't care about the latter
 	[ "${description#'[Cron] "'}" != "$description" ] && source_path="$source_path ${description#'[Cron] '}"
