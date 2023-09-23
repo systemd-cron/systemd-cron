@@ -2,6 +2,7 @@ v2.2.0 : 2023-10-xx
 
    [наб]
    Improvements to the crontab tool:
+   * syntax highlighting for `crontab --list`.
    * colour handling will now obey TERM= & NO_COLOR=
      environment variables.
    * `crontab --translate` will have it's output checked by
