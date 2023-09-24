@@ -415,7 +415,7 @@ struct Job {
 			days = "1"sv;
 		else if(this->last_dow) {
 			// TODO: "#L", cannot be "L" alone
-			days = "7"sv;
+			days = "7/1"sv;
 			dows = dows.substr(0, dows.size() - 1);
 		}
 		this->timespec_dom    = this->parse_time_unit<false, std::uint8_t>(days, "day", DAYS_SET, DAYS_RANGE, int_map, this->timespec_dom_raw);
