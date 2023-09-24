@@ -209,10 +209,12 @@ test_test_crontab_common() {
 	assert_key cron-crontab-root-2.timer    'Description'       '[Timer] "0 0 * * 4-7 root echo test EU mode"'   root-EU-mode-timer
 	assert_key cron-crontab-root-2.timer    'OnCalendar'        'Thu,Fri,Sat,Sun *-*-* 0:0:00'                   root-EU-mode-timer
 
-	MD5='e78207bda09f301009747d39e25432fa'
-	assert_key "cron-crontab-root-$MD5.timer" 'Description' '[Timer] "@daily root ls"' root-@daily
-	assert_key "cron-crontab-root-$MD5.timer" 'OnCalendar'  '*-*-* 3:0:0'              root-@daily
-	assert_key "cron-crontab-root-$MD5.timer" 'Persistent'  'true'                     root-@daily
+	assert_key 'cron-crontab-root-e78207bda09f301009747d39e25432fa.timer' 'Description' '[Timer] "@daily root ls"' root-@daily
+	assert_key 'cron-crontab-root-e78207bda09f301009747d39e25432fa.timer' 'OnCalendar'  '*-*-* 3:0:0'              root-@daily
+	assert_key 'cron-crontab-root-e78207bda09f301009747d39e25432fa.timer' 'Persistent'  'true'                     root-@daily
+
+	assert_key 'cron-crontab-root-68d29d8cf7f485d7c7821ca686d61ffd.timer' 'Description' '[Timer] "~ ~ ~ ~ ~ root echo ~"' root-\~
+	assert_key 'cron-crontab-root-68d29d8cf7f485d7c7821ca686d61ffd.timer' 'Persistent'  'true'                            root-\~
 
 if [ "$USE_RUN_PARTS" = 'no' ]
 then

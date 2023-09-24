@@ -22,3 +22,5 @@ START_HOURS_RANGE=3-22
 00  0 * * 0-3 root echo test US mode
 0 0 * * 4-7 root echo test EU mode
 @daily root ls
+PERSISTENT=true
+~ ~ ~ ~ ~ root echo ~
