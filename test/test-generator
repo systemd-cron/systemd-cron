@@ -55,7 +55,7 @@ assert_dat() {  # file content testname
 	              '1 * * * mon-wed dummy true'                                \
 	                                                                          \
 	              '# test_tz'                                                 \
-	              'TZ=Europe/Warsaw'                                          \
+	              'TZ=:Europe/Warsaw'                                         \
 	              'BATCH=1'                                                   \
 	              '1 * * * mon-wed dummy echo in zoneinfo'                    \
 	              'TZ=UTC0'                                                   \
