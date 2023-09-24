@@ -19,7 +19,7 @@ static const constexpr std::string_view DOWS_SET[] = {"Sun"sv, "Mon"sv, "Tue"sv,
 static const constexpr std::uint8_t MONTHS_SET[]   = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
 static const char * const MINUTES_RANGE            = "[0, 59]";
 static const char * const HOURS_RANGE              = "[0, 23]";
-static const char * const DAYS_RANGE               = "[1, 31]";
+static const char * const DAYS_RANGE               = "[1, 31] or 'L'";
 static const char * const DOWS_RANGE               = "[mon, sun] or [1, 7]";
 static const char * const MONTHS_RANGE             = "[jan, dec] or [1, 12]";
 
@@ -151,6 +151,7 @@ struct Job {
 	std::set<std::uint8_t> timespec_month;    // 0-12                           or TIMESPEC_ASTERISK
 	std::optional<std::string_view> timespec_minute_raw, timespec_hour_raw, timespec_dom_raw, timespec_dow_raw, timespec_month_raw;  // for schedule for hashing
 	bool sunday_is_seven;
+	bool last_dom;
 	std::string schedule, schedule_raw;  // first for systemd, second for hashing
 	std::size_t boot_delay;
 	std::size_t start_hour;
@@ -227,6 +228,7 @@ struct Job {
 		this->valid           = true;
 		this->batch           = false;
 		this->sunday_is_seven = false;
+		this->last_dom        = false;
 
 		this->cron_mail_success = cron_mail_success_t::dflt;
 		this->cron_mail_format  = cron_mail_format_t::dflt;
@@ -405,6 +407,9 @@ struct Job {
 		auto && dows          = this->parts[4];
 		this->timespec_minute = this->parse_time_unit<false, std::uint8_t>(minutes, "minute", MINUTES_SET, MINUTES_RANGE, int_map, this->timespec_minute_raw);
 		this->timespec_hour   = this->parse_time_unit<false, std::uint8_t>(hours, "hour", HOURS_SET, HOURS_RANGE, int_map, this->timespec_hour_raw);
+		this->last_dom        = days == "L"sv;
+		if(this->last_dom)
+			days = "1"sv;
 		this->timespec_dom    = this->parse_time_unit<false, std::uint8_t>(days, "day", DAYS_SET, DAYS_RANGE, int_map, this->timespec_dom_raw);
 		this->timespec_dow    = this->parse_time_unit<true, std::string_view>(dows, "dow", DOWS_SET, DOWS_RANGE, dow_map, this->timespec_dow_raw);
 		this->timespec_month  = this->parse_time_unit<false, std::uint8_t>(months, "month", MONTHS_SET, MONTHS_RANGE, month_map, this->timespec_month_raw);
@@ -675,7 +680,11 @@ struct Job {
 	if(this->persistent)    \
 	this->schedule_raw += what
 		timespec_comma(this->timespec_month, this->timespec_month_raw);
-		ADDBOTH('-');
+		if(this->last_dom) {
+			ADDBOTH('~');
+		} else {
+			ADDBOTH('-');
+		}
 		timespec_comma(this->timespec_dom, this->timespec_dom_raw);
 		ADDBOTH(' ');
 		timespec_comma(this->timespec_hour, this->timespec_hour_raw);
