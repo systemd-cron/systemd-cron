@@ -303,8 +303,11 @@ struct Job {
 					this->shell = v;
 
 				if(k == "TZ"sv || k == "CRON_TZ"sv)
-					if(!v.empty() && !access(("/usr/share/zoneinfo/"s += v).c_str(), F_OK))
-						this->timezone = v;
+					if(!v.empty()) {
+						auto offset = v.front() == ':' ? 1 : 0;
+						if(!access(("/usr/share/zoneinfo/"s += v.substr(offset)).c_str(), F_OK))
+							this->timezone = v.substr(offset);
+					}
 
 				if(k == "MAILTO"sv && !v.empty())
 					if(!HAS_SENDMAIL)
