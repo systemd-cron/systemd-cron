@@ -152,6 +152,7 @@ struct Job {
 	std::optional<std::string_view> timespec_minute_raw, timespec_hour_raw, timespec_dom_raw, timespec_dow_raw, timespec_month_raw;  // for schedule for hashing
 	bool sunday_is_seven;
 	bool last_dom;
+	bool last_dow;
 	std::string schedule, schedule_raw;  // first for systemd, second for hashing
 	std::size_t boot_delay;
 	std::size_t start_hour;
@@ -229,6 +230,7 @@ struct Job {
 		this->batch           = false;
 		this->sunday_is_seven = false;
 		this->last_dom        = false;
+		this->last_dow        = false;
 
 		this->cron_mail_success = cron_mail_success_t::dflt;
 		this->cron_mail_format  = cron_mail_format_t::dflt;
@@ -408,8 +410,14 @@ struct Job {
 		this->timespec_minute = this->parse_time_unit<false, std::uint8_t>(minutes, "minute", MINUTES_SET, MINUTES_RANGE, int_map, this->timespec_minute_raw);
 		this->timespec_hour   = this->parse_time_unit<false, std::uint8_t>(hours, "hour", HOURS_SET, HOURS_RANGE, int_map, this->timespec_hour_raw);
 		this->last_dom        = days == "L"sv;
+		this->last_dow        = dows.back() == 'L';
 		if(this->last_dom)
 			days = "1"sv;
+		else if(this->last_dow) {
+			// TODO: "#L", cannot be "L" alone
+			days = "7"sv;
+			dows = dows.substr(0, dows.size() - 1);
+		}
 		this->timespec_dom    = this->parse_time_unit<false, std::uint8_t>(days, "day", DAYS_SET, DAYS_RANGE, int_map, this->timespec_dom_raw);
 		this->timespec_dow    = this->parse_time_unit<true, std::string_view>(dows, "dow", DOWS_SET, DOWS_RANGE, dow_map, this->timespec_dow_raw);
 		this->timespec_month  = this->parse_time_unit<false, std::uint8_t>(months, "month", MONTHS_SET, MONTHS_RANGE, month_map, this->timespec_month_raw);
@@ -680,7 +688,7 @@ struct Job {
 	if(this->persistent)    \
 	this->schedule_raw += what
 		timespec_comma(this->timespec_month, this->timespec_month_raw);
-		if(this->last_dom) {
+		if(this->last_dow || this->last_dom) {
 			ADDBOTH('~');
 		} else {
 			ADDBOTH('-');
