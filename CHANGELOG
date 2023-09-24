@@ -1,7 +1,13 @@
-v2.2.0 : 2023-10-xx
+v2.2.0 : 2023-09-24
 
    [наб]
-   Improvements to the crontab tool:
+   Fix: fix an assertion in the generator that happens
+        on hardened toolchain systems.
+
+   * helpfull error messages when an incorrect crontab
+     is supplied, both in crontab and in the journal.
+
+   Other improvements to the crontab tool:
    * syntax highlighting for `crontab --list`.
    * colour handling will now obey TERM= & NO_COLOR=
      environment variables.
