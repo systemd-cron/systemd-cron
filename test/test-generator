@@ -106,7 +106,10 @@ assert_dat() {  # file content testname
 	              '* * * * * dummy !'                                         \
 	              '# test_MAIL_inherit_explicit'                              \
 	              'CRON_MAIL_SUCCESS=inherit'                                 \
-	              '* * * * * dummy !'                                         > /etc/cron.d/crondtab
+	              '* * * * * dummy !'                                         \
+	              ''                                                          \
+	              '# test_fri-sun'                                            \
+	              '* * * * fri-sun dummy !'                                   > /etc/cron.d/crondtab
 
 
 	"$S_C_G" /etc/out || { err=$?; echo "$S_C_G" /etc/out = $err >&2; exit $err; }
@@ -169,6 +172,8 @@ assert_dat() {  # file content testname
 	assert_key cron-crondtab-dummy-1.service 'OnFailure' 'cron-mail@%n:Failure:nometadata.service'          test_MAIL_inherit_partial
 	assert_key cron-crondtab-dummy-2.service 'OnSuccess' 'cron-mail@%n:Success:nonempty:nometadata.service' test_MAIL_inherit_explicit
 	assert_key cron-crondtab-dummy-2.service 'OnFailure' 'cron-mail@%n:Failure:nometadata.service'          test_MAIL_inherit_explicit
+
+	assert_key cron-crondtab-dummy-3.timer   'OnCalendar' 'Fri,Sat,Sun *-*-* *:*:00'                        test_fri-sun
 }
 
 

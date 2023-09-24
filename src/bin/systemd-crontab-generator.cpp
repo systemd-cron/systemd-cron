@@ -102,12 +102,12 @@ static __attribute__((format(printf, 2, 3))) void log(Log level, const char * fm
 #define FORMAT_SV(sv) (int)(sv).size(), (sv).data()
 
 
-static auto int_map(const std::string_view & str, bool & err) -> std::size_t;
-static auto month_map(const std::string_view & month, bool & err) -> std::size_t;
-static auto dow_map(const std::string_view & dow_full, bool & err) -> std::size_t;
+static auto int_map(const std::string_view & str, bool & err, bool = false) -> std::size_t;
+static auto month_map(const std::string_view & month, bool & err, bool = false) -> std::size_t;
+static auto dow_map(const std::string_view & dow_full, bool & err, bool to) -> std::size_t;
 template <class T, class V>
 static auto parse_period(const std::string_view & value, const V & values, std::set<T> & into, bool & raw_for_schedule,
-                         std::size_t (*mapping)(const std::string_view &, bool &), std::size_t base) -> std::optional<const char *>;
+                         std::size_t (*mapping)(const std::string_view &, bool &, bool), std::size_t base) -> std::optional<const char *>;
 static auto environment_write(const std::map<std::string_view, std::string_view> & env, FILE * into) -> void;
 
 
@@ -430,7 +430,7 @@ struct Job {
 	static const constexpr std::uint8_t TIMESPEC_ASTERISK = -1;
 	template <bool DOW, class T, class V>
 	auto parse_time_unit(const std::string_view & value, const char * field, const V & values, const char * range,
-	                     std::size_t (*mapping)(const std::string_view &, bool &), std::optional<std::string_view> & raw_for_schedule) -> std::set<T> {
+	                     std::size_t (*mapping)(const std::string_view &, bool &, bool), std::optional<std::string_view> & raw_for_schedule) -> std::set<T> {
 		if(value == "*"sv) {
 			if constexpr(DOW)
 				return {"*"sv};
@@ -1000,14 +1000,14 @@ static auto parse_crontab(std::string_view filename, withuser_t withuser, bool a
 }
 
 
-static auto int_map(const std::string_view & str, bool & err) -> std::size_t {
+static auto int_map(const std::string_view & str, bool & err, bool) -> std::size_t {
 	std::size_t ret = -1;
 	if(!vore::parse_uint<10>(MAYBE_DUPA(str), ret))
 		err = true;
 	return ret;
 }
 
-static auto month_map(const std::string_view & month, bool & err) -> std::size_t {
+static auto month_map(const std::string_view & month, bool & err, bool) -> std::size_t {
 	static const constexpr std::string_view months[] = {"jan"sv, "feb"sv, "mar"sv, "apr"sv, "may"sv, "jun"sv,
 	                                                    "jul"sv, "aug"sv, "sep"sv, "oct"sv, "nov"sv, "dec"sv};
 	if(auto ret = int_map(month, err); !err)
@@ -1025,12 +1025,12 @@ static auto month_map(const std::string_view & month, bool & err) -> std::size_t
 	}
 }
 
-static auto dow_map(const std::string_view & dow_full, bool & err) -> std::size_t {
-	static const constexpr std::string_view dows[] = {"sun"sv, "mon"sv, "tue"sv, "wed"sv, "thu"sv, "fri"sv, "sat"sv};
+static auto dow_map(const std::string_view & dow_full, bool & err, bool to) -> std::size_t {
+	static const constexpr std::string_view dows[] = {"sun"sv, "mon"sv, "tue"sv, "wed"sv, "thu"sv, "fri"sv, "sat"sv, "sun"sv};
 	auto dow                                       = dow_full.substr(0, 3);
 	char buf[3];
 	std::transform(std::begin(dow), std::end(dow), buf, ::tolower);
-	if(auto itr = std::find(std::begin(dows), std::end(dows), std::string_view{buf, dow.size()}); itr != std::end(dows))
+	if(auto itr = std::find(std::begin(dows) + to, std::end(dows), std::string_view{buf, dow.size()}); itr != std::end(dows))
 		return itr - std::begin(dows);
 	else {
 		return int_map(dow_full, err);
@@ -1039,7 +1039,7 @@ static auto dow_map(const std::string_view & dow_full, bool & err) -> std::size_
 
 template <class T, class V>
 static auto parse_period(const std::string_view & value, const V & values, std::set<T> & into, bool & raw_for_schedule,
-                         std::size_t (*mapping)(const std::string_view &, bool &), std::size_t base) -> std::optional<const char *> {
+                         std::size_t (*mapping)(const std::string_view &, bool &, bool), std::size_t base) -> std::optional<const char *> {
 	std::string_view range = value;
 	std::size_t step       = 1;
 	bool err{};
@@ -1069,8 +1069,8 @@ static auto parse_period(const std::string_view & value, const V & values, std::
 			return "doubled ~";
 
 		raw_for_schedule = true;
-		auto i_start     = start.empty() ? base : mapping(start, err) - 1 + !base;
-		auto i_end       = std::min(end.empty() ? -1u : mapping(end, err) + !base, max);
+		auto i_start     = start.empty() ? base : mapping(start, err, false) - 1 + !base;
+		auto i_end       = end.empty() ? max : std::min(mapping(end, err, true) + !base, max);
 		if(i_start > max || i_start > i_end)
 			return nullptr;
 
@@ -1088,8 +1088,8 @@ static auto parse_period(const std::string_view & value, const V & values, std::
 	}
 
 
-	auto i_start = mapping(start, err) - 1 + !base;
-	auto i_end   = std::min(mapping(end, err) + !base, max + 1);
+	auto i_start = mapping(start, err, false) - 1 + !base;
+	auto i_end   = std::min(mapping(end, err, true) + !base, max + 1);
 	bool any{};
 	for(std::size_t i = i_start; i < i_end; i += step) {
 		into.emplace(values[i]);
