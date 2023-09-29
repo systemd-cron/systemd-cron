@@ -302,12 +302,13 @@ struct Job {
 				if(k == "SHELL"sv)
 					this->shell = v;
 
-				if(k == "TZ"sv || k == "CRON_TZ"sv)
-					if(!v.empty()) {
-						auto offset = v.front() == ':' ? 1 : 0;
-						if(!access(("/usr/share/zoneinfo/"s += v.substr(offset)).c_str(), F_OK))
-							this->timezone = v.substr(offset);
-					}
+				if(k == "TZ"sv || k == "CRON_TZ"sv) {
+					auto tz = v;
+					if(tz[0] == ':')
+						tz.remove_prefix(1);
+					if(!tz.empty() && !access(("/usr/share/zoneinfo/"s += tz).c_str(), F_OK))
+						this->timezone = tz;
+				}
 
 				if(k == "MAILTO"sv && !v.empty())
 					if(!HAS_SENDMAIL)
