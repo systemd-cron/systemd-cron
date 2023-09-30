@@ -410,11 +410,10 @@ struct Job {
 		this->timespec_minute = this->parse_time_unit<false, std::uint8_t>(minutes, "minute", MINUTES_SET, MINUTES_RANGE, int_map, this->timespec_minute_raw);
 		this->timespec_hour   = this->parse_time_unit<false, std::uint8_t>(hours, "hour", HOURS_SET, HOURS_RANGE, int_map, this->timespec_hour_raw);
 		this->last_dom        = days == "L"sv;
-		this->last_dow        = dows.back() == 'L';
+		this->last_dow        = (dows.size() == 2 && dows.back() == 'L');
 		if(this->last_dom)
 			days = "1"sv;
 		else if(this->last_dow) {
-			// TODO: "#L", cannot be "L" alone
 			days = "7/1"sv;
 			dows = dows.substr(0, dows.size() - 1);
 		}
