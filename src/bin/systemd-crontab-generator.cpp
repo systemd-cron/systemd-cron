@@ -304,7 +304,7 @@ struct Job {
 
 				if(k == "TZ"sv || k == "CRON_TZ"sv) {
 					auto tz = v;
-					if(tz[0] == ':')
+					if(tz.starts_with(':'))
 						tz.remove_prefix(1);
 					if(!tz.empty() && !access(("/usr/share/zoneinfo/"s += tz).c_str(), F_OK))
 						this->timezone = tz;
