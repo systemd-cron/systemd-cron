@@ -3,6 +3,12 @@ v2.3.0 : 2023-10-xx
    [наб]
    New feature: support random time ranges
                 with the '~' operator.
+   Fix: fix error handling in parse_period() that
+        turned bad values in '*'.
+
+   [adetiste]
+   Fix: also accept timezones prefixed with ':' as
+        documented in tzset(3)
 
 v2.2.0 : 2023-09-24
 
