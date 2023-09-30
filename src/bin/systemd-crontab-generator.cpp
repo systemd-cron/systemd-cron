@@ -306,12 +306,13 @@ struct Job {
 				if(k == "SHELL"sv)
 					this->shell = v;
 
-				if(k == "TZ"sv || k == "CRON_TZ"sv)
-					if(!v.empty()) {
-						auto offset = v.front() == ':' ? 1 : 0;
-						if(!access(("/usr/share/zoneinfo/"s += v.substr(offset)).c_str(), F_OK))
-							this->timezone = v.substr(offset);
-					}
+				if(k == "TZ"sv || k == "CRON_TZ"sv) {
+					auto tz = v;
+					if(tz[0] == ':')
+						tz.remove_prefix(1);
+					if(!tz.empty() && !access(("/usr/share/zoneinfo/"s += tz).c_str(), F_OK))
+						this->timezone = tz;
+				}
 
 				if(k == "MAILTO"sv && !v.empty())
 					if(!HAS_SENDMAIL)
@@ -1051,9 +1052,8 @@ static auto dow_map(const std::string_view & dow_full, bool & err, bool to) -> s
 	std::transform(std::begin(dow), std::end(dow), buf, ::tolower);
 	if(auto itr = std::find(std::begin(dows) + to, std::end(dows), std::string_view{buf, dow.size()}); itr != std::end(dows))
 		return itr - std::begin(dows);
-	else {
+	else
 		return int_map(dow_full, err);
-	}
 }
 
 template <class T, class V>
@@ -1109,6 +1109,9 @@ static auto parse_period(const std::string_view & value, const V & values, std::
 
 	auto i_start = mapping(start, err, false) - 1 + !base;
 	auto i_end   = std::min(mapping(end, err, true) + !base, max + 1);
+	if(err)
+		return nullptr;
+
 	bool any{};
 	for(std::size_t i = i_start; i < i_end; i += step) {
 		into.emplace(values[i]);
