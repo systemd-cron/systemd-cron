@@ -20,7 +20,7 @@ static const constexpr std::uint8_t MONTHS_SET[]   = {1, 2, 3, 4, 5, 6, 7, 8, 9,
 static const char * const MINUTES_RANGE            = "[0, 59]";
 static const char * const HOURS_RANGE              = "[0, 23]";
 static const char * const DAYS_RANGE               = "[1, 31] or 'L'";
-static const char * const DOWS_RANGE               = "[mon, sun] or [1, 7]";
+static const char * const DOWS_RANGE               = "[mon, sun] or [1, 7] or [1, 7]L";
 static const char * const MONTHS_RANGE             = "[jan, dec] or [1, 12]";
 
 #include "configuration.hpp"
@@ -415,7 +415,7 @@ struct Job {
 			days = "1"sv;
 		else if(this->last_dow) {
 			days = "7/1"sv;
-			dows = dows.substr(0, dows.size() - 1);
+			dows = dows.substr(0, 1);
 		}
 		this->timespec_dom    = this->parse_time_unit<false, std::uint8_t>(days, "day", DAYS_SET, DAYS_RANGE, int_map, this->timespec_dom_raw);
 		this->timespec_dow    = this->parse_time_unit<true, std::string_view>(dows, "dow", DOWS_SET, DOWS_RANGE, dow_map, this->timespec_dow_raw);
