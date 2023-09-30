@@ -192,6 +192,7 @@ The job is scheduled in this time-zone instead of in the system time-zone.
 Must be a full IANA time-zone name
 (as found under
 .IR /usr/share/zoneinfo ),
+or empty to reset to the default timezone,
 otherwise no special semantics.
 Always passed to the job.
 

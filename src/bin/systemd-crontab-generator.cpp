@@ -306,7 +306,9 @@ struct Job {
 					auto tz = v;
 					if(tz.starts_with(':'))
 						tz.remove_prefix(1);
-					if(!tz.empty() && !access(("/usr/share/zoneinfo/"s += tz).c_str(), F_OK))
+					if(tz.empty())
+						this->timezone = {};
+					else if(!access(("/usr/share/zoneinfo/"s += tz).c_str(), F_OK))
 						this->timezone = tz;
 				}
 
