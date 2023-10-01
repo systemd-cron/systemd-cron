@@ -1175,7 +1175,7 @@ static auto is_backup(const char * path, const std::string_view & name) -> bool 
 	if(name == ".placeholder"sv)
 		return true;
 
-	bool backup = name[0] == '.' || name.find('~') != std::string_view::npos || name.find(".dpkg-"sv) != std::string_view::npos || name == "0anacron"sv;
+	bool backup = name[0] == '.' || name.find('~') != std::string_view::npos || name.find(".dpkg-"sv) != std::string_view::npos || name.find(".rpm"sv) != std::string_view::npos || name == "0anacron"sv;
 	if(backup)
 		log(Log::DEBUG, "ignoring %s/%.*s", path, FORMAT_SV(name));
 	return backup;
