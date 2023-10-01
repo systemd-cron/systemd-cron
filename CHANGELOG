@@ -5,6 +5,9 @@ v2.3.0 : 2023-10-xx
                 with the '~' operator.
    Fix: fix error handling in parse_period() that
         turned bad values in '*'.
+   Fix: fix parsing of day of week ending on 'Sun'day.
+   Fix: allow reseting the timezone to the system
+        default using TZ= / CRON_TZ= .
 
    [adetiste]
    Fix: also accept timezones prefixed with ':' as
