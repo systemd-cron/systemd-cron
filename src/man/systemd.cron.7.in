@@ -121,7 +121,12 @@ to view the output of scripts run from these units.
 . \}
 .
 .It Nm cron-mail@.service
-Sends mail in case a cron service unit fails, succeeds, or succeeds-but-only-if-it-wrote-something.
+Sends mail
+(via
+.Xr sendmail 1 ,
+which can be overridden with
+.Pf $ Ev SENDMAIL )
+in case a cron service unit fails, succeeds, or succeeds-but-only-if-it-wrote-something.
 The instance name
 .Pq the bit after the Sy @
 is the unit name,
