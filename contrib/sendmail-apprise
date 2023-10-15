@@ -1,0 +1,13 @@
+#!/bin/sh
+
+from=
+subject=
+while read -r header rest; do
+	case "$header" in
+		""      )	break           ;;
+		From:   )	from="$rest"    ;;
+		Subject:)	subject="$rest" ;;
+	esac
+done
+
+exec apprise -vv -t "$subject – $from" -b "$(cat)"
