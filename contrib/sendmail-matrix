@@ -1,0 +1,25 @@
+#!/bin/sh
+TOKEN=systemd-cron  # probably source this from a file only readable by user _cron-failure, and don't make it "systemd-cron"
+# The TO stanza should look something like
+# TO='!QQQQQqqQQqQQqqQQqq:qqqqqqqqqqqqqq.qqq@https://matrix.qqqqqqqqqqqqqq.qqq:8448'
+
+
+from=
+to=
+subject=
+while read -r header rest; do
+	case "$header" in
+		""      )	break           ;;
+		From:   )	from="$rest"    ;;
+		To:     )	to="$rest"      ;;
+		Subject:)	subject="$rest" ;;
+	esac
+done
+
+room="${to%@*}"
+server="${to#*@}"
+
+
+content="$(jq -Rs --arg from "$from" --arg subject "$subject" '$subject + " ‒ " + $from + "\n\n" + .')"
+exec curl --fail-with-body --no-progress-meter --oauth2-bearer "$TOKEN" \
+	--data-binary '{"msgtype": "m.text", "body": '"$content"'}' -XPUT "$server/_matrix/client/r0/rooms/$room/send/m.room.message/$$"
