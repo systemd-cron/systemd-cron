@@ -6,6 +6,7 @@ RefuseManualStop=true
 
 [Service]
 Type=oneshot
+PassEnvironment=SENDMAIL
 ExecStart=@libexecdir@/systemd-cron/mail_for_job %i
 User=_cron-failure
 Group=systemd-journal
