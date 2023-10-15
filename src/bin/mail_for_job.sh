@@ -51,10 +51,12 @@ systemctl show --property=User --property=Environment --property=SourcePath --pr
 	mailto="$user"
 	mailfrom='root'
 
+	sendmail="$SENDMAIL"
 	for kv in $job_env; do
 		case "$kv" in
 			'MAILTO='*  )	mailto="${kv#'MAILTO='}"     ;;
 			'MAILFROM='*)	mailfrom="${kv#'MAILFROM='}" ;;
+			'SENDMAIL='*)	sendmail="${kv#'SENDMAIL='}" ;;
 		esac
 	done
 
@@ -102,5 +104,5 @@ systemctl show --property=User --property=Environment --property=SourcePath --pr
 		else
 			journalctl -u "$unit" -o cat       _SYSTEMD_INVOCATION_ID="$invocation_id"   SYSLOG_FACILITY=9
 		fi
-	} 2>&1 | "$SENDMAIL" -i -B 8BITMIME "$mailto"
+	} 2>&1 | "$sendmail" -i -B 8BITMIME "$mailto"
 }
