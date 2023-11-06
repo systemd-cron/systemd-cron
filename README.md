@@ -42,6 +42,7 @@ Dependencies history
 * systemd ≥ 235, support for timezones
 * systemd ≥ 236, `LogLevelMax` option
 * systemd ≥ 251, OnFailure handler receives $MONITOR_UNIT and more.
+* systemd ≥ 255, `SetLoginEnvironment`: no change needed.
 
 Installation
 ----------------
