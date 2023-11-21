@@ -1,6 +1,7 @@
 CFLAGS ?= -O2
 SHELLCHECK ?= shellcheck
 CRONTAB ?= crontab
+PCH ?= y
 
 version		:= @version@
 schedules		:= @schedules@
@@ -208,12 +209,12 @@ $(builddir)/include/%.hpp: $(srcdir)/include/%.hpp
 CXXVER := $(shell $(CXX) --version | { read -r l; echo "$$l"; })
 ifneq "$(findstring clang,$(CXXVER))" ""
 	# clang doesn't use PCHs automatically
-	PCH_ARG := -include-pch $(builddir)/include/libvoreutils.hpp.gch -Wno-gcc-compat
+	PCH_ARG := $(if $(PCH),-include-pch $(builddir)/include/libvoreutils.hpp.gch) -Wno-gcc-compat
 else
 	PCH_ARG :=
 endif
 
-common_headers := $(builddir)/include/configuration.hpp $(builddir)/include/libvoreutils.hpp.gch $(builddir)/include/util.hpp
+common_headers := $(builddir)/include/configuration.hpp $(builddir)/include/libvoreutils.hpp$(if $(PCH),.gch) $(builddir)/include/util.hpp
 CFLAGS += -Wall -Wextra -fno-exceptions -Wno-psabi
 $(builddir)/include/libvoreutils.hpp.gch : $(builddir)/include/libvoreutils.hpp
 	$(CXX) $(CFLAGS) $(CPPFLAGS) -std=c++20 -I $(builddir)/include            $< -o $@

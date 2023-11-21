@@ -146,6 +146,8 @@ without the override, the jobs would run twice since native-timer detection woul
 If there is already a perfect 1:1 mapping between `/etc/cron.<freq>/<job>` and `/usr/lib/systemd/system/<job>.timer`,
 then it is not needed to add an entry to these tables.
 
+If your compiler's [PCH compilation is broken](https://github.com/systemd-cron/systemd-cron/issues/141), build with `make PCH=`.
+
 ### Caveat
 
 Your package should also run these extra commands before starting cron.target
