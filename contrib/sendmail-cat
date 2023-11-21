@@ -2,7 +2,7 @@
 
 # this is a trivial fake sendmail for development of "mail_for_job" tool
 
-# export SENDMAIL=$(pwd)/contrib/sendmail-cat
+# export SENDMAIL=$PWD/contrib/sendmail-cat
 # out/build/bin/mail_for_job cron-monthly-check-dfsg-status.service
 
-cat
+exec cat
