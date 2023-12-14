@@ -228,7 +228,8 @@ static auto list(const char * cron_file, const char * user) -> int {
 			return exec(SETGID_HELPER, "r");
 
 		int pipe[2];
-		pipe2(pipe, O_CLOEXEC);
+		if(pipe2(pipe, O_CLOEXEC))
+			return std::fprintf(stderr, "%s: %s\n", self, std::strerror(errno)), 125;
 		switch(pid_t child = vfork()) {
 			case -1:
 				return std::fprintf(stderr, "%s: couldn't create child: %s\n", self, std::strerror(errno)), 125;
