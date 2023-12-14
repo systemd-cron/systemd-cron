@@ -1,6 +1,6 @@
 #include "libvoreutils.hpp"
 #include "util.hpp"
-#include <openssl/evp.h>
+#include <md5.h>
 #include <random>
 static const constexpr auto key_or_plain = [](auto && lhs, auto && rhs) {
 	static const constexpr auto key =
@@ -824,34 +824,22 @@ struct Job {
 		assert(!this->jobid.empty());
 		this->unit_name = ("cron-"s += this->jobid) += '-';
 		if(!this->persistent) {
-		plain:
 			char buf[20 + 1];  // 18446744073709551615
 			this->unit_name += std::string_view{buf, static_cast<std::size_t>(std::snprintf(buf, sizeof(buf), "%" PRIu64 "", seq++))};
 		} else {
-#define TRY_CRYPTO(...) \
-	if(!__VA_ARGS__)      \
-	goto plain
-			static EVP_MD_CTX * evp = [] {
-				auto evp = EVP_MD_CTX_new();
-				assert(evp);
-				return evp;
-			}();
+			MD5_CTX ctx;
+			MD5Init(&ctx);
 
-			TRY_CRYPTO(EVP_DigestInit_ex(evp, EVP_md5(), nullptr));
-			TRY_CRYPTO(EVP_DigestUpdate(evp, this->schedule_raw.data(), this->schedule_raw.size()));
+			MD5Update(&ctx, reinterpret_cast<const std::uint8_t *>(this->schedule_raw.data()), this->schedule_raw.size());
 			for(auto && hunk : this->command) {
 				if(hunk.empty())
 					continue;
-				TRY_CRYPTO(EVP_DigestUpdate(evp, "", 1));  // NUL byte
-				TRY_CRYPTO(EVP_DigestUpdate(evp, hunk.data(), hunk.size()));
+				MD5Update(&ctx, reinterpret_cast<const std::uint8_t *>(""), 1);  // NUL byte
+				MD5Update(&ctx, reinterpret_cast<const std::uint8_t *>(hunk.data()), hunk.size());
 			}
 
-			std::uint8_t hash[128 / 8];
-			TRY_CRYPTO(EVP_DigestFinal(evp, hash, nullptr));
-
-			char buf[(sizeof(hash) * 2) + 1], *cur = buf;
-			for(auto b : hash)
-				cur += std::sprintf(cur, "%02" PRIx8 "", b);
+			char buf[((128 / 8) * 2) + 1];
+			MD5End(&ctx, buf);
 			this->unit_name += std::string_view{buf, sizeof(buf) - 1};
 		}
 	}

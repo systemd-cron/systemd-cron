@@ -30,8 +30,8 @@ generatordir='$(libdir)/systemd/system-generators'
 # shellcheck disable=SC2016
 sysusersdir="$($pkgconf systemd --variable=sysusersdir)" 2>/dev/null || \
 sysusersdir='$(libdir)/sysusers.d'
-libcrypto="$($pkgconf --cflags --libs libcrypto)" 2>/dev/null || \
-libcrypto='-lcrypto'
+libmd="$($pkgconf --cflags --libs libmd)" 2>/dev/null || \
+libmd='-lmd'
 enable_runparts=no
 use_loglevelmax=no
 part2timer=/dev/null
@@ -161,8 +161,8 @@ do
             sysusersdir="${2}"
             shift 2;;
 
-        '--libcrypto')
-            libcrypto="${2}"
+        '--libmd')
+            libmd="${2}"
             shift 2;;
 
         '--enable-boot')
@@ -272,7 +272,7 @@ s|@docdir@|${docdir}|g
 s|@unitdir@|${unitdir}|g
 s|@generatordir@|${generatordir}|g
 s|@sysusersdir@|${sysusersdir}|g
-s|@libcrypto@|${libcrypto}|g
+s|@libmd@|${libmd}|g
 s|@use_loglevelmax@|${use_loglevelmax}|g
 s|@part2timer@|${part2timer}|g
 s|@crond2timer@|${crond2timer}|g

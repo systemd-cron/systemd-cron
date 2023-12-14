@@ -24,7 +24,7 @@ Dependencies
 * systemd ≥ 236
 * UsrMerged system
 * C and C++20 compilers
-* libssl (-lcrypto)
+* libmd (-lmd)
 * pkgconf (optional)
 * support for /usr/lib/sysusers.d/*.conf (optional)
 * [run-parts][3] (optional, disabled by default)
@@ -114,8 +114,8 @@ Other options include (`pkgconf` may be overridden with `$PKG_CONFIG`):
   Default: `no`.
 * `--enable-yearly[=yes|no]` Include support for the yearly timer.
   Default: `yes`.
-* `--libcrypto=<flags>` Compiler and linker flags required to build and link to libcrypto.
-  Default: `pkgconf --cflags --libs libcrypto` or `-lcrypto`.
+* `--libmd=<flags>` Compiler and linker flags required to build and link to libmd.
+  Default: `pkgconf --cflags --libs libmd` or `-lmd`.
 * `--with-part2timer=file` Mapping from basename in /etc/cron.{daily,weekly,etc.) to unit name.
   Default: `/dev/null`.
 * `--with-crond2timer=file` Mapping from basename in /etc/cron.d to unit name.
