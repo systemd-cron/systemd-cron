@@ -100,6 +100,14 @@ By default, this mail contains
 and the full log for the failed run, copied from the journal.
 
 .TP
+.B MAILFROM
+.br
+When sending output from a job,
+.IR systemd.cron (7)
+will look at MAILFROM. If MAILFROM is defined mail is sent from this email address.
+Otherwise is seen as beeing sent from root@HOSTNAME.
+
+.TP
 .B CRON_MAIL_SUCCESS
 Control if (when) to send mail with output from successful jobs.
 .br
