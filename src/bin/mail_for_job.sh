@@ -57,6 +57,8 @@ systemctl show --property=User --property=Environment --property=SourcePath --pr
 			'MAILTO='*  )	mailto="${kv#'MAILTO='}"     ;;
 			'MAILFROM='*)	mailfrom="${kv#'MAILFROM='}" ;;
 			'SENDMAIL='*)	sendmail="${kv#'SENDMAIL='}" ;;
+			'CRON_MAIL_FORMAT=nometadata')	metadata=;;
+			'CRON_MAIL_FORMAT=no-metadata')	metadata=;;
 		esac
 	done
 
