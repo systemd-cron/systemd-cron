@@ -1,3 +1,16 @@
+v2.3.1 : 2024-02-11
+
+   [наб]
+   New feature: allow SENDMAIL to be overridden to use
+                a sendmail-{matrix,appraise} connector.
+   New feature: replace OpenSSL by lighter libmd.
+   Fix: add a flag to disable PCH during build.
+
+   [adetiste]
+   New feature: support Last-day-of-{week,month} that maps
+                with `~` operator introduced in systemd 233.
+   Fix: document existing MAILFROM= in manpage.
+
 v2.3.0 : 2023-10-14
 
    [наб]
