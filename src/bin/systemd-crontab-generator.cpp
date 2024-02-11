@@ -693,6 +693,10 @@ struct Job {
 			ADDBOTH('-');
 		}
 		timespec_comma(this->timespec_dom, this->timespec_dom_raw);
+		if (this->last_dow) {
+			ADDBOTH('/');
+			ADDBOTH('1');
+		}
 		ADDBOTH(' ');
 		timespec_comma(this->timespec_hour, this->timespec_hour_raw);
 		ADDBOTH(':');
