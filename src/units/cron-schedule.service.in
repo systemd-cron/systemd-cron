@@ -3,7 +3,7 @@ Description=systemd-cron @schedule@ script service
 Documentation=man:systemd.cron(7)
 PartOf=cron-@schedule@.target
 ConditionDirectoryNotEmpty=/etc/cron.@schedule@
-OnFailure=cron-mail@%n:Failure
+OnFailure=cron-mail@%n:Failure.service
 
 [Service]
 User=root
