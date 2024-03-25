@@ -86,11 +86,6 @@ weekly jobs will run that day and the again the next (mon)day.
 .Pp
 There is no difference for the daily job.
 .
-.Sh NOTES
-anacron only supports
-.Sy @monthly .
-.\" https://manpages.debian.org/bookworm/anacron/anacrontab.5.en.html
-.
 .Sh DIAGNOSTICS
 After editing
 .Nm ,
