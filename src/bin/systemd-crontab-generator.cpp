@@ -417,9 +417,9 @@ struct Job {
 			days = "7/1"sv;
 			dows = dows.substr(0, 1);
 		}
-		this->timespec_dom    = this->parse_time_unit<false, std::uint8_t>(days, "day", DAYS_SET, DAYS_RANGE, int_map, this->timespec_dom_raw);
-		this->timespec_dow    = this->parse_time_unit<true, std::string_view>(dows, "dow", DOWS_SET, DOWS_RANGE, dow_map, this->timespec_dow_raw);
-		this->timespec_month  = this->parse_time_unit<false, std::uint8_t>(months, "month", MONTHS_SET, MONTHS_RANGE, month_map, this->timespec_month_raw);
+		this->timespec_dom   = this->parse_time_unit<false, std::uint8_t>(days, "day", DAYS_SET, DAYS_RANGE, int_map, this->timespec_dom_raw);
+		this->timespec_dow   = this->parse_time_unit<true, std::string_view>(dows, "dow", DOWS_SET, DOWS_RANGE, dow_map, this->timespec_dow_raw);
+		this->timespec_month = this->parse_time_unit<false, std::uint8_t>(months, "month", MONTHS_SET, MONTHS_RANGE, month_map, this->timespec_month_raw);
 
 		this->sunday_is_seven = dows.back() == '7' || [&] {
 			if(dows.size() < 3)
@@ -693,7 +693,7 @@ struct Job {
 			ADDBOTH('-');
 		}
 		timespec_comma(this->timespec_dom, this->timespec_dom_raw);
-		if (this->last_dow) {
+		if(this->last_dow) {
 			ADDBOTH('/');
 			ADDBOTH('1');
 		}
@@ -1183,7 +1183,8 @@ static auto is_backup(const char * path, const std::string_view & name) -> bool 
 	if(name == ".placeholder"sv)
 		return true;
 
-	bool backup = name[0] == '.' || name.find('~') != std::string_view::npos || name.find(".dpkg-"sv) != std::string_view::npos || name.find(".rpm"sv) != std::string_view::npos || name == "0anacron"sv;
+	bool backup = name[0] == '.' || name.find('~') != std::string_view::npos || name.find(".dpkg-"sv) != std::string_view::npos ||
+	              name.find(".rpm"sv) != std::string_view::npos || name == "0anacron"sv;
 	if(backup)
 		log(Log::DEBUG, "ignoring %s/%.*s", path, FORMAT_SV(name));
 	return backup;
