@@ -176,6 +176,21 @@ assert_dat() {  # file content testname
 	assert_key cron-crondtab-dummy-3.timer   'OnCalendar' 'Fri,Sat,Sun *-*-* *:*:00'                        test_fri-sun
 }
 
+{
+	rm -f /etc/cron.d/*
+	printf '%s\n' 'CRON_MAIL_SUCCESS=always'    \
+	              'CRON_MAIL_FORMAT=nometadata' \
+	              'MAILTO=root@test.owcy'       > /etc/crontab
+	printf '%s\n' '* * * * * dummy true'        > /etc/cron.d/crondtab
+
+	"$S_C_G" /etc/out-nojob || { err=$?; echo "$S_C_G" /etc/out-nojob = $err >&2; exit $err; }
+	cd /etc/out-nojob || exit
+
+	assert_key cron-crondtab-dummy-0.service 'OnSuccess'   'cron-mail@%n:Success:nometadata.service' test_nojob_OnSuccess
+	assert_key cron-crondtab-dummy-0.service 'OnFailure'   'cron-mail@%n:Failure:nometadata.service' test_nojob_OnFailure
+	assert_key cron-crondtab-dummy-0.service 'Environment' 'MAILTO=root@test.owcy'                   test_nojob_Environment
+}
+
 
 {
 	rm -r /etc/cron.d

@@ -946,9 +946,9 @@ static auto environment_write(const std::map<std::string_view, std::string_view>
 }
 
 
-template <class F>
+template <class F, class G = void (*)(Job &&)>
 static auto parse_crontab(std::string_view filename, withuser_t withuser, bool anacrontab, cron_mail_success_t default_cron_mail_success,
-                          cron_mail_format_t default_cron_mail_format, F && cbk) -> bool {
+                          cron_mail_format_t default_cron_mail_format, F && cbk, std::optional<G> && preview_env = std::nullopt) -> bool {
 	vore::file::mapping map;
 	{
 		vore::file::fd<true> f{filename.data(), O_RDONLY | O_CLOEXEC};
@@ -1009,6 +1009,11 @@ static auto parse_crontab(std::string_view filename, withuser_t withuser, bool a
 		j.decode();
 		j.generate_schedule();
 		cbk(j);
+	}
+	if(preview_env) {
+		Job j{filename, ""sv};
+		j.decode_environment(environment, /*default_persistent=*/false, default_cron_mail_success, default_cron_mail_format);
+		(*preview_env)(std::move(j));
 	}
 	return true;
 }
@@ -1198,34 +1203,38 @@ static auto realmain() -> int {
 
 	std::optional<std::string> fallback_mailto;
 	std::map<std::string_view, std::uint8_t> distro_start_hour;
-	cron_mail_success_t toplevel_cron_mail_success = cron_mail_success_t::dflt;
-	cron_mail_format_t toplevel_cron_mail_format   = cron_mail_format_t::dflt;
+	auto toplevel_cron_mail_success = cron_mail_success_t::dflt;
+	auto toplevel_cron_mail_format  = cron_mail_format_t::dflt;
 
-	if(!parse_crontab("/etc/crontab", withuser_t::from_cmd0, /*anacrontab=*/false, cron_mail_success_t::dflt, cron_mail_format_t::dflt, [&](auto && job) {
-		   if(auto itr = job.environment.find("MAILTO"sv); itr != std::end(job.environment))
-			   fallback_mailto = itr->second;
-		   if(!job.valid) {
-			   log(Log::ERR, "truncated line in /etc/crontab: %.*s", FORMAT_SV(job.line));
-			   return;
-		   }
+	if(!parse_crontab(
+	       "/etc/crontab", withuser_t::from_cmd0, /*anacrontab=*/false, cron_mail_success_t::dflt, cron_mail_format_t::dflt,
+	       [&](auto && job) {
+		       if(!job.valid) {
+			       log(Log::ERR, "truncated line in /etc/crontab: %.*s", FORMAT_SV(job.line));
+			       return;
+		       }
 
-		   toplevel_cron_mail_success = job.cron_mail_success;
-		   toplevel_cron_mail_format  = job.cron_mail_format;
+		       // legacy boilerplate: ignore jobs that run /etc/cron.hourly, daily, weekly, monthly
+		       //                     (but save the starting hour for daily, weekly, and monthly)
+		       if(job.line.find("/etc/cron.hourly"sv) != std::string_view::npos)
+			       return;
+		       for(auto && disableable_period : {"daily"sv, "weekly"sv, "monthly"sv})
+			       if(job.line.find("/etc/cron."s += disableable_period) != std::string_view::npos) {
+				       if(auto hour = *job.timespec_hour.begin(); hour != Job::TIMESPEC_ASTERISK)
+					       distro_start_hour[disableable_period] = hour;
 
-		   // legacy boilerplate: ignore jobs that run /etc/cron.hourly, daily, weekly, monthly
-		   //                     (but save the starting hour for daily, weekly, and monthly)
-		   if(job.line.find("/etc/cron.hourly"sv) != std::string_view::npos)
-			   return;
-		   for(auto && disableable_period : {"daily"sv, "weekly"sv, "monthly"sv})
-			   if(job.line.find("/etc/cron."s += disableable_period) != std::string_view::npos) {
-				   if(auto hour = *job.timespec_hour.begin(); hour != Job::TIMESPEC_ASTERISK)
-					   distro_start_hour[disableable_period] = hour;
+				       return;
+			       }
 
-				   return;
-			   }
+		       generate_timer_unit(job);
+	       },
+	       std::make_optional([&](auto && envjob) {
+		       if(auto itr = envjob.environment.find("MAILTO"sv); itr != std::end(envjob.environment))
+			       fallback_mailto = itr->second;
 
-		   generate_timer_unit(job);
-	   }))
+		       toplevel_cron_mail_success = envjob.cron_mail_success;
+		       toplevel_cron_mail_format  = envjob.cron_mail_format;
+	       })))
 		log(Log::ERR, "%s: %s", "/etc/crontab", std::strerror(errno));
 
 
