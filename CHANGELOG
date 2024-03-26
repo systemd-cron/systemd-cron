@@ -1,3 +1,11 @@
+v2.3.4 : 2024-03-25
+
+   [наб]
+   Fix: /etc/crontab CRON_MAIL_{SUCCESS,FORMAT} & MAILTO
+        not being honoured if no jobs were given therein
+   Clarify: anacron's support for @monthly and @yearly
+            vis-à-vis sd-cron's 10 @-periods (cf. Debian #1067752)
+
 v2.3.3 : 2024-02-24
 
    [наб]
