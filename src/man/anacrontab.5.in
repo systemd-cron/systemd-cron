@@ -86,6 +86,17 @@ weekly jobs will run that day and the again the next (mon)day.
 .Pp
 There is no difference for the daily job.
 .
+.Sh NOTES
+Real anacron only accepts
+.Sy @monthly
+and
+.Sy @yearly
+as
+.Va period ;
+all others listed above are
+.Xr systemd.cron 7 Ns 's
+extensions.
+.
 .Sh DIAGNOSTICS
 After editing
 .Nm ,
