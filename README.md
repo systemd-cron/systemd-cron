@@ -5,7 +5,7 @@ systemd-cron
 Description
 ---------------
 systemd units to provide cron daemon functionality by running scripts in cron directories.  
-The crontabs are automaticaly translated using /usr/lib/systemd/system-generators/[systemd-crontab-generator][6].
+The crontabs are automaticaly translated using /usr/lib/systemd/system-generators/systemd-crontab-generator.
 
 Usage
 ---------
@@ -170,7 +170,7 @@ It vendors a derived work of voreutils, which is available under the 0BSD licenc
 Copyright
 -------------
 © 2014, Dwayne Bent : original package with static units  
-© 2014, Konstantin Stepanov (me@kstep.me) : author of crontab generator  
+© 2014, Konstantin Stepanov (me@kstep.me) : author of crontab [generator][6]  
 © 2014, Daniel Schaal : review of crontab generator  
 © 2014-2024, Alexandre Detiste (alexandre@detiste.be) : maintainer  
 © 2023-2024, наб (nabijaczleweli@nabijaczleweli.xyz) : rewrite of generator in C++  
