@@ -38,7 +38,7 @@ v2.3.0 : 2023-10-14
    Fix: fix error handling in parse_period() that
         turned bad values in '*'.
    Fix: fix parsing of day of week ending on 'Sun'day.
-   Fix: allow reseting the timezone to the system
+   Fix: allow resetting the timezone to the system
         default using TZ= / CRON_TZ= .
 
    [adetiste]
@@ -221,7 +221,7 @@ v1.16 : 2023-07-10
    * major rewrite
    * MAILTO= : /etc/cron.*/ will inherit this from
                /etc/crontab if they don't provide their own
-   * always explicitely set `User=root`, this way systemd will itself
+   * always explicitly set `User=root`, this way systemd will itself
      provide fallback for HOME=, LOGNAME=, USER= & SHELL= env. variables.
      (issue #65)
    * accept a days-of-week range that ends with '...-7' (#57)
@@ -240,7 +240,7 @@ v1.15.20 : 2023-03-10
 
 v1.15.19 : 2022-07-16
 
-   * Allign with previous botched version jump (#82)
+   * Align with previous botched version jump (#82)
    * crontab accepts $EDITOR with spaces (#83)
 
 v1.5.18 : 2020-12-26
@@ -266,7 +266,7 @@ v1.5.15 : 2020-10-17
 
 v1.5.14 : 2018-11-11
 
-   * Python 3.7 comptability, thanks to enrico.detoma
+   * Python 3.7 compatibility, thanks to enrico.detoma
    * Handle sending mail_on_error when the locale is not correctly set
    * Use KillMode=process for generated units
 
@@ -285,7 +285,7 @@ v1.5.11 : 2017-12-08
 
 v1.5.10 : 2017-07-01
 
-   * fix regression in handling of masked/overriden timer units
+   * fix regression in handling of masked/overridden timer units
 
 v1.5.9 : 2017-06-18
 
@@ -320,7 +320,7 @@ v1.5.5 : 2017-01-10
 
 v1.5.4 : 2016-01-29
 
-   * generator: don't call OnFailure unit without a MTA avalaible.
+   * generator: don't call OnFailure unit without a MTA available.
    * sync with systemd-cron-next: remove --stale-stamps configure option
    * quote "Environment=" keypairs only when necessary
 
@@ -395,7 +395,7 @@ v1.4.1 : 2014-11-11
    * generator: try less aggressively to make jobs persistent: a job
      like 0 19 * * * root poweroff on a school/office PC would had run
      the next morning; which is not the expected behaviour; this can now
-     be overiden with the PERSISTENT=yes|auto|no variable
+     be overridden with the PERSISTENT=yes|auto|no variable
    * new trivial internal utility boot_delay : this is needed
      because combining OnCalendar= & OnBootSec= in timer units doesn't
      have the needed behaviour (OR instead of AND). A boot delay is a

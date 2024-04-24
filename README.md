@@ -5,7 +5,7 @@ systemd-cron
 Description
 ---------------
 systemd units to provide cron daemon functionality by running scripts in cron directories.  
-The crontabs are automaticaly translated using /usr/lib/systemd/system-generators/systemd-crontab-generator.
+The crontabs are automatically translated using /usr/lib/systemd/system-generators/systemd-crontab-generator.
 
 Usage
 ---------
@@ -36,7 +36,7 @@ Dependencies history
 * systemd ≥ 209, yearly timers
 * systemd ≥ 212, persistent timers
 * systemd ≥ 217, minutely, quarterly & semi-annually timers
-* systemd ≥ 228, `RemainAfterElapse` option, might be usefull for @reboot jobs
+* systemd ≥ 228, `RemainAfterElapse` option, might be useful for @reboot jobs
 * systemd ≥ 229, real random delay support with `RandomizedDelaySec` option [(bug)][90]
 * systemd ≥ 233, support for new `~` = 'last day of month' and '9..17/2' .timer syntax
 * systemd ≥ 235, support for timezones
@@ -46,7 +46,7 @@ Dependencies history
 
 Installation
 ----------------
-There exists packages avaible for:
+There exists packages available for:
 * [Debian][7]
 * [Ubuntu][8]
 * [Arch][9]

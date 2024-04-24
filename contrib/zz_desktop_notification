@@ -7,7 +7,7 @@
 # would be better
 #
 # in run-parts mode this would have gone to /etc/cron.daily/
-# with a splitted cron-daily, it should be appended
+# with a split cron-daily, it should be appended
 # to apt-daily-{upgrade}.service like this:
 #    ExecStartPost=/etc/site/zz_desktop_notification
 #
@@ -25,7 +25,7 @@ updated=$(echo "$line" | grep ^$(date +%Y-%m-%d) | cut -d: -f4)
 
 # reboot-required isn't broad enough to my taste (mostly only kernel);
 # these are the usual suspects that might make a system
-# unbootable or make X doens't come up
+# unbootable or make X doesn't come up
 for a in $updated; do
 	if [[ $a == *grub* ]]; then grub="$grub $a"; fi
 	if [[ $a == *systemd* ]]; then systemd="$systemd $a"; fi

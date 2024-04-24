@@ -773,9 +773,9 @@ struct Job {
 	auto generate_service(FILE * into) -> void {
 		this->generate_unit_header(into, "Cron");
 		if(auto itr = this->environment.find("MAILTO"sv); itr != std::end(this->environment) && itr->second.empty())
-			;  // mails explicitely disabled
+			;  // mails explicitly disabled
 		else if(!HAS_SENDMAIL)
-			;  // mails automaticaly disabled
+			;  // mails automatically disabled
 		else {
 			this->format_on_failure(into, "Failure");
 
@@ -1299,7 +1299,7 @@ static auto realmain() -> int {
 		log(Log::ERR, "%s: %s", "/etc/anacrontab", std::strerror(errno));
 
 	if(struct stat sb; !stat(STATEDIR, &sb) && S_ISDIR(sb.st_mode)) {
-		// /var is avaible
+		// /var is available
 		for_each_file(STATEDIR, [&](std::string_view basename) {
 			if(basename.find('.') != std::string_view::npos)
 				return;

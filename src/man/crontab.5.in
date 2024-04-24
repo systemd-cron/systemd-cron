@@ -174,12 +174,12 @@ the start times of @daily/@weekly/@monthly... jobs on a 24/24 system.
 .I 'hour'
 component of
 .BR OnCalendar= .
-This variable is inheritted from anacrontab(5), but also supported in crontab(5)
+This variable is inherited from anacrontab(5), but also supported in crontab(5)
 by systemd-crontab-generator. Anacron expect a time range in the START-END format (eg: 6-9),
 systemd-crontab-generator will only use the starting hour of the range as reference.
 Unless you set this variable, all the @daily/@weekly/@monthly/@yearly jobs
 will run at midnight. If you set this variable and the system was off during
-the ours defined in the range, the (persitent) job will start at boot.
+the ours defined in the range, the (persistent) job will start at boot.
 
 .TP
 .B PERSISTENT
