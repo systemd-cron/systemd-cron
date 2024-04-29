@@ -282,15 +282,23 @@ lists of names are not allowed.
 .PP
 The ``sixth'' field (the rest of the line) specifies the command to be
 run.
-The entire command portion of the line, up to a newline\c
-.\" or % character
-, will be executed by /bin/sh or by the shell
+The entire command portion of the line
+will be executed by /bin/sh or by the shell
 specified in the SHELL variable of the crontab file.
-.\"Percent-signs (%) in the command, unless escaped with backslash
-.\"(\\), will be changed into newline characters, and all data
-.\"after the first % will be sent to the command as standard
-.\"input. There is no way to split a single command line onto multiple
-.\"lines, like the shell's trailing "\\".
+.PP
+If the command contains an unescaped
+.B %
+character,
+it is instead split thereon:
+the part before is run by the shell,
+the part after is given on the standard input stream, with each subsequent
+.B %
+replaced by a newline.
+.BR % s
+can be escaped as
+.BR \e% ,
+and produce a literal
+.RB % .
 .PP
 systemd-crontab-generator doesn't handle multi-line command split by
 the
@@ -356,8 +364,9 @@ MAILTO=paul
 # run at 2:15pm on the first of every month
 .\" -- output mailed to paul
 15 14 1 * *     $HOME/bin/monthly
-.\"# run at 10 pm on weekdays, annoy Joe
-.\"0 22 * * 1-5    mail \-s "It's 10pm" joe%Joe,%%Where are your kids?%
+# run at 10 pm on weekdays, annoy Joe
+# runs 'mail \-s "It's 10 pm" joe', with 'Joe,\en\enWhere are your kids?\en' on stdin
+0 22 * * 1-5    mail \-s "It's 10pm" joe%Joe,%%Where are your kids?%
 23 0-23/2 * * * echo "run 23 minutes after midn, 2am, 4am ..., everyday"
 5 4 * * sun     echo "run at 5 after 4 every sunday"
 # Run on every second Saturday of the month
@@ -420,10 +429,6 @@ features:
 .TP
 *
 spawning forking daemons, the 'Service' units are all set with 'Type=oneshot'
-.TP
-*
-multi-line jobs separated by the '%' character
-(but '\e%'-escapes are still parsed and replaced with '%')
 .TP
 *
 vixie-cron requires that each entry in a crontab end in a newline character. If the

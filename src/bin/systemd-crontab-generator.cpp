@@ -165,8 +165,8 @@ struct Job {
 	cron_mail_success_t cron_mail_success;
 	cron_mail_format_t cron_mail_format;
 	struct {
-		vore::span<const std::string_view *> command;  // subview of parts
-		std::optional<std::string> command0;           // except this is command[0] if set
+		vore::span<std::string_view *> command;  // subview of parts
+		std::optional<std::string> command0;     // except this is command[0] if set
 		bool nopercent;
 
 		struct command_iter {
@@ -176,7 +176,7 @@ struct Job {
 			using pointer           = const std::string_view *;
 			using reference         = const std::string_view &;
 
-			vore::span<const std::string_view *> command;
+			vore::span<std::string_view *> command;
 			std::optional<std::string_view> command0;
 
 			command_iter & operator++() noexcept {
@@ -395,6 +395,7 @@ struct Job {
 		}
 		this->command.command.e = &*(this->parts.end());
 		this->jobid             = (std::string{this->basename} += '-') += this->user;
+		this->parse_percent();
 	}
 
 	// 6 2 * * * (user) do something
@@ -447,11 +448,24 @@ struct Job {
 		}
 		this->command.command.e = &*(this->parts.end());
 		this->jobid             = (std::string{this->basename} += '-') += this->user;
+		this->parse_percent();
 	}
 
 	// For non-anacron jobs: find the first unescaped %, terminate this->command there, and put the rest into this->input_data
 	auto parse_percent() -> void {
-		// TODO
+		for(auto itr = this->command.command.b; itr != this->command.command.e; ++itr) {
+			std::size_t cur{};
+			for(std::size_t percent; (percent = itr->find('%', cur)) != std::string_view::npos;) {
+				if(percent == 0 || (*itr)[percent - 1] != '\\') {
+					this->input_data = {itr->data() + percent + 1, this->line.data() + this->line.size()};
+					itr->remove_suffix(itr->size() - percent);
+					this->command.command.e = itr + 1;
+					return;
+				}
+
+				cur = percent + 1;
+			}
+		}
 	}
 
 	static const constexpr std::uint8_t TIMESPEC_ASTERISK = -1;
@@ -716,18 +730,18 @@ struct Job {
 	template <class F>
 	auto debackslashpercentise(std::string_view cmd, F && append) -> void {
 		if(this->command.nopercent) {
-			append(cmd);
+			append(cmd, false);
 			return;
 		}
 
 		while(cmd.size()) {
 			auto backpct = cmd.find("\\%"sv);
 			if(backpct == std::string_view::npos) {
-				append(cmd);
+				append(cmd, true);
 				cmd = {};
 			} else {
-				append(cmd.substr(0, backpct));
-				append("%"sv);
+				append(cmd.substr(0, backpct), true);
+				append("%"sv, false);
 				cmd.remove_prefix(backpct + 2);
 			}
 		}
@@ -738,7 +752,7 @@ struct Job {
 		assert(!this->unit_name.empty());
 		if(this->command.size() == 1) {
 			struct stat sb;
-			this->debackslashpercentise(this->command[0], [&](auto && segment) { this->execstart += segment; });
+			this->debackslashpercentise(this->command[0], [&](auto && segment, auto) { this->execstart += segment; });
 			if(!stat(this->execstart.c_str(), &sb) && S_ISREG(sb.st_mode))
 				return {};
 		}
@@ -842,6 +856,23 @@ struct Job {
 			environment_write(this->environment, into);
 			std::fputc('\n', into);
 		}
+		if(!this->input_data.empty()) {
+			std::fputs("StandardInput=data\n", into);
+			std::fputs("StandardInputData=", into);
+			b64 data{into};
+
+			this->debackslashpercentise(this->input_data, [&](auto segment, auto replace_percent) {
+				if(replace_percent)
+					for(std::size_t pct; (pct = segment.find('%')) != std::string_view::npos;) {
+						data.feed(segment.substr(0, pct));
+						data.feed("\n"sv);
+						segment.remove_prefix(pct + 1);
+					}
+				data.feed(segment);
+			});
+			data.finish();
+			std::fputc('\n', into);
+		}
 		if(this->batch) {
 			std::fputs("CPUSchedulingPolicy=idle\n", into);
 			std::fputs("IOSchedulingClass=idle\n", into);
@@ -911,7 +942,7 @@ struct Job {
 					continue;
 				if(!std::exchange(first, false))
 					std::fputc(' ', f);
-				this->debackslashpercentise(hunk, [&](auto && segment) { std::fwrite(segment.data(), 1, segment.size(), f); });
+				this->debackslashpercentise(hunk, [&](auto && segment, auto) { std::fwrite(segment.data(), 1, segment.size(), f); });
 			}
 			if(!first)
 				std::fputc('\n', f);
@@ -932,7 +963,8 @@ struct Job {
 		if(symlink(timer.c_str(), (((std::string{TIMERS_DIR} += '/') += this->unit_name) += ".timer"sv).c_str()) == -1 && errno != EEXIST)
 			return output_err(timer, "link"), false;
 
-		auto service = ((std::string{TARGET_DIR} += '/') += this->unit_name) += ".service"sv;
+		auto & service = timer;
+		service.replace(service.size() - "timer"sv.size(), service.size(), "service"sv);
 		{
 			vore::file::FILE<false> s{service.c_str(), "we"};
 			if(!s)

@@ -118,7 +118,11 @@ assert_dat() {  # file content testname
 	              '* * * * * dummy /etc/a\%b\%c'                              \
 	              '* * * * * dummy ~/a\%b\%c'                                 \
 	              '* * * * * dummy echo a\%b\%c'                              \
-	              '* * * * * dummy echo a; cat%b%c\%d'                        > /etc/cron.d/crondtab
+	              '* * * * * dummy echo a; cat%b%c\%d'                        \
+	              '* * * * * dummy echo a; cat%b %c\%d%'                      \
+	              '* * * * * dummy echo a; cat%b % c\%d%%'                    \
+	              '* * * * * dummy echo a; cat%b % c\%d%%%'                   \
+	              '* * * * * dummy echo a; cat%b % c\%d%%%%'                  > /etc/cron.d/crondtab
 
 	printf '%s\n' '# test_percent_anacrontab'                                 \
 	              '1 0 anacrussy echo a\%b\%c'                                \
@@ -188,10 +192,35 @@ assert_dat() {  # file content testname
 
 	assert_key cron-crondtab-dummy-3.timer   'OnCalendar' 'Fri,Sat,Sun *-*-* *:*:00'                        test_fri-sun
 
-	assert_key cron-crondtab-dummy-4.service 'ExecStart' '/etc/a%b%c'                                test_percent
-	assert_key cron-crondtab-dummy-5.service 'ExecStart' '/etc/home/dummy/a%b%c'                     test_percent
-	assert_key cron-crondtab-dummy-6.service 'ExecStart' '/bin/sh /etc/out/cron-crondtab-dummy-6.sh' test_percent
-	assert_dat cron-crondtab-dummy-6.sh      'echo a%b%c'                                            test_percent
+	assert_key cron-crondtab-dummy-4.service 'ExecStart'     '/etc/a%b%c'                                      test_percent
+	assert_key cron-crondtab-dummy-5.service 'ExecStart'     '/etc/home/dummy/a%b%c'                           test_percent
+	assert_key cron-crondtab-dummy-6.service 'ExecStart'     '/bin/sh /etc/out/cron-crondtab-dummy-6.sh'       test_percent
+	assert_dat cron-crondtab-dummy-6.sh      'echo a%b%c'                                                      test_percent
+	assert_key cron-crondtab-dummy-7.service 'ExecStart'     '/bin/sh /etc/out/cron-crondtab-dummy-7.sh'       test_percent
+	assert_key cron-crondtab-dummy-7.service 'StandardInput' 'data'                                            test_percent
+	assert_key cron-crondtab-dummy-7.service 'StandardInputData' "$(printf 'b\nc%%d' | base64 -w0)"            test_percent
+	assert_dat cron-crondtab-dummy-7.sh      'echo a; cat'                                                     test_percent
+	assert_key cron-crondtab-dummy-8.service 'ExecStart'     '/bin/sh /etc/out/cron-crondtab-dummy-8.sh'       test_percent
+	assert_key cron-crondtab-dummy-8.service 'StandardInput' 'data'                                            test_percent
+	assert_key cron-crondtab-dummy-8.service 'StandardInputData' "$(printf 'b \nc%%d\n' | base64 -w0)"         test_percent
+	assert_dat cron-crondtab-dummy-8.sh      'echo a; cat'                                                     test_percent
+	assert_key cron-crondtab-dummy-9.service 'ExecStart'     '/bin/sh /etc/out/cron-crondtab-dummy-9.sh'       test_percent
+	assert_key cron-crondtab-dummy-9.service 'StandardInput' 'data'                                            test_percent
+	assert_key cron-crondtab-dummy-9.service 'StandardInputData' "$(printf 'b \n c%%d\n\n' | base64 -w0)"      test_percent
+	assert_dat cron-crondtab-dummy-9.sh      'echo a; cat'                                                     test_percent
+	assert_key cron-crondtab-dummy-10.service 'ExecStart'     '/bin/sh /etc/out/cron-crondtab-dummy-10.sh'     test_percent
+	assert_key cron-crondtab-dummy-10.service 'StandardInput' 'data'                                           test_percent
+	assert_key cron-crondtab-dummy-10.service 'StandardInputData' "$(printf 'b \n c%%d\n\n\n' | base64 -w0)"   test_percent
+	assert_dat cron-crondtab-dummy-10.sh      'echo a; cat'                                                    test_percent
+	assert_key cron-crondtab-dummy-11.service 'ExecStart'     '/bin/sh /etc/out/cron-crondtab-dummy-11.sh'     test_percent
+	assert_key cron-crondtab-dummy-11.service 'StandardInput' 'data'                                           test_percent
+	assert_key cron-crondtab-dummy-11.service 'StandardInputData' "$(printf 'b \n c%%d\n\n\n\n' | base64 -w0)" test_percent
+	assert_dat cron-crondtab-dummy-11.sh      'echo a; cat'                                                    test_percent
+
+	assert_key cron-anacron-anacrussy-626d2e0fd1f5e39a4b4425d53d92559d.service 'ExecStart'     '/bin/sh /etc/out/cron-anacron-anacrussy-626d2e0fd1f5e39a4b4425d53d92559d.sh' test_percent_anacrontab
+	assert_dat cron-anacron-anacrussy-626d2e0fd1f5e39a4b4425d53d92559d.sh      'echo a\%b\%c'                                                                             test_percent_anacrontab
+	assert_key cron-anacron-anacrussy-90ac7985e1a331e6fd95807d7fd2bc25.service 'ExecStart'     '/bin/sh /etc/out/cron-anacron-anacrussy-90ac7985e1a331e6fd95807d7fd2bc25.sh' test_percent_anacrontab
+	assert_dat cron-anacron-anacrussy-90ac7985e1a331e6fd95807d7fd2bc25.sh      'echo a; cat%b%c\%d'                                                                       test_percent_anacrontab
 }
 
 {
