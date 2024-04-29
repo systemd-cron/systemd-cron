@@ -62,7 +62,7 @@ translated to
 is a single word used by
 .Nm systemd-crontab-generator
 to construct dynamic unit names in the form
-.Sy cron- Ns Va job-identifier Ns Sy -root- Ns Ar 0 Ns Sy .\& Ns Brq Sy timer , service ,
+.Sy cron-anacron- Ns Va job-identifier Ns Sy - Ns Ar MD5 Ns Sy .\& Ns Brq Sy timer , service ,
 .
 .It Va command
 is the program to run by the shell.
