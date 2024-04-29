@@ -1,3 +1,16 @@
+v2.4.0 : 2024-04-29
+
+   [наб]
+   New feature: Support seeding the stdin of a job with the %
+                operator alike other cron implementations.
+   Fix: Unescape \% as expected for existing crontabs.
+   Security Fix: Check single-word path commands as the user fsugid
+                 to avoid that user X use the generator to spy
+                 on user Y and see whether a file exist in it's $HOME.
+
+   [adetiste]
+   Fix: use proper CXXFLAGS instead of CFLAGS for C++ programs.
+
 v2.3.4 : 2024-03-25
 
    [наб]
