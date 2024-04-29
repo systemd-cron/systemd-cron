@@ -423,6 +423,7 @@ spawning forking daemons, the 'Service' units are all set with 'Type=oneshot'
 .TP
 *
 multi-line jobs separated by the '%' character
+(but '\e%'-escapes are still parsed and replaced with '%')
 .TP
 *
 vixie-cron requires that each entry in a crontab end in a newline character. If the

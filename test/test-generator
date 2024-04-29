@@ -31,7 +31,10 @@ assert_dat() {  # file content testname
 }
 
 {
-	echo 'dummy:x:12:34:dummy:/home/dummy:/bin/sh' > /etc/passwd
+	mkdir -p /etc/home/dummy
+	> /etc/a%b%c
+	> /etc/home/dummy/a%b%c
+	echo 'dummy:x:12:34:dummy:/etc/home/dummy:/bin/sh' > /etc/passwd
 
 	mkdir /etc/cron.d
 	printf '%s\n' '# test_no_scriptlet'                                       \
@@ -109,7 +112,17 @@ assert_dat() {  # file content testname
 	              '* * * * * dummy !'                                         \
 	              ''                                                          \
 	              '# test_fri-sun'                                            \
-	              '* * * * fri-sun dummy !'                                   > /etc/cron.d/crondtab
+	              '* * * * fri-sun dummy !'                                   \
+	                                                                          \
+	              '# test_percent'                                            \
+	              '* * * * * dummy /etc/a\%b\%c'                              \
+	              '* * * * * dummy ~/a\%b\%c'                                 \
+	              '* * * * * dummy echo a\%b\%c'                              \
+	              '* * * * * dummy echo a; cat%b%c\%d'                        > /etc/cron.d/crondtab
+
+	printf '%s\n' '# test_percent_anacrontab'                                 \
+	              '1 0 anacrussy echo a\%b\%c'                                \
+	              '1 0 anacrussy echo a; cat%b%c\%d'                          > /etc/anacrontab
 
 
 	"$S_C_G" /etc/out || { err=$?; echo "$S_C_G" /etc/out = $err >&2; exit $err; }
@@ -121,8 +134,8 @@ assert_dat() {  # file content testname
 	assert_key cron-crontab-dummy-d441f91bec8513ca5d4aa275d61ba4d5.service 'ExecStart'  '/bin/dash /etc/out/cron-crontab-dummy-d441f91bec8513ca5d4aa275d61ba4d5.sh' test_period_basic
 	assert_dat cron-crontab-dummy-d441f91bec8513ca5d4aa275d61ba4d5.sh      'true'                                                                                   test_period_basic
 
-	assert_key cron-crontab-dummy-80b34f6c6aa6234acaa2da2d110ecba9.service 'ExecStart'  '/bin/sh /etc/out/cron-crontab-dummy-80b34f6c6aa6234acaa2da2d110ecba9.sh' test_userpath_expansion
-	assert_dat cron-crontab-dummy-80b34f6c6aa6234acaa2da2d110ecba9.sh      '/home/dummy/fake >/dev/null'                                                          test_userpath_expansion
+	assert_key cron-crontab-dummy-de72613675650ff5241aa33a51102b29.service 'ExecStart'  '/bin/sh /etc/out/cron-crontab-dummy-de72613675650ff5241aa33a51102b29.sh' test_userpath_expansion
+	assert_dat cron-crontab-dummy-de72613675650ff5241aa33a51102b29.sh      '/etc/home/dummy/fake >/dev/null'                                                      test_userpath_expansion
 
 	assert_key cron-crontab-dummy-0.timer   'OnCalendar' '*-*-* 6:5:00'                                 test_timespec_basic
 	assert_key cron-crontab-dummy-1.timer   'OnCalendar' '*-*-* *:0,5,10,15,20,25,30,35,40,45,50,55:00' test_timespec_slice
@@ -174,6 +187,11 @@ assert_dat() {  # file content testname
 	assert_key cron-crondtab-dummy-2.service 'OnFailure' 'cron-mail@%n:Failure:nometadata.service'          test_MAIL_inherit_explicit
 
 	assert_key cron-crondtab-dummy-3.timer   'OnCalendar' 'Fri,Sat,Sun *-*-* *:*:00'                        test_fri-sun
+
+	assert_key cron-crondtab-dummy-4.service 'ExecStart' '/etc/a%b%c'                                test_percent
+	assert_key cron-crondtab-dummy-5.service 'ExecStart' '/etc/home/dummy/a%b%c'                     test_percent
+	assert_key cron-crondtab-dummy-6.service 'ExecStart' '/bin/sh /etc/out/cron-crondtab-dummy-6.sh' test_percent
+	assert_dat cron-crondtab-dummy-6.sh      'echo a%b%c'                                            test_percent
 }
 
 {

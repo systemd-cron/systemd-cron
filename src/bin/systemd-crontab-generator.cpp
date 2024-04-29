@@ -167,6 +167,7 @@ struct Job {
 	struct {
 		vore::span<const std::string_view *> command;  // subview of parts
 		std::optional<std::string> command0;           // except this is command[0] if set
+		bool nopercent;
 
 		struct command_iter {
 			using iterator_category = std::input_iterator_tag;
@@ -209,6 +210,7 @@ struct Job {
 		}
 	} command;
 	std::string execstart;
+	std::string_view input_data;
 	bool valid;
 
 	Job(std::string_view filename, std::string_view line) {
@@ -226,6 +228,7 @@ struct Job {
 		this->persistent      = false;
 		this->user            = "root"sv;
 		this->command         = {};
+		this->input_data      = {};
 		this->valid           = true;
 		this->batch           = false;
 		this->sunday_is_seven = false;
@@ -339,6 +342,7 @@ struct Job {
 			this->log(Log::WARNING, "invalid DELAY");
 		this->command.command.b = &*(this->parts.begin() + 3);
 		this->command.command.e = &*(this->parts.end());
+		this->command.nopercent = true;
 	}
 
 	// crontab --translate <something>
@@ -443,6 +447,11 @@ struct Job {
 		}
 		this->command.command.e = &*(this->parts.end());
 		this->jobid             = (std::string{this->basename} += '-') += this->user;
+	}
+
+	// For non-anacron jobs: find the first unescaped %, terminate this->command there, and put the rest into this->input_data
+	auto parse_percent() -> void {
+		// TODO
 	}
 
 	static const constexpr std::uint8_t TIMESPEC_ASTERISK = -1;
@@ -704,15 +713,34 @@ struct Job {
 		ADDBOTH(":00"sv);
 	}
 
+	template <class F>
+	auto debackslashpercentise(std::string_view cmd, F && append) -> void {
+		if(this->command.nopercent) {
+			append(cmd);
+			return;
+		}
+
+		while(cmd.size()) {
+			auto backpct = cmd.find("\\%"sv);
+			if(backpct == std::string_view::npos) {
+				append(cmd);
+				cmd = {};
+			} else {
+				append(cmd.substr(0, backpct));
+				append("%"sv);
+				cmd.remove_prefix(backpct + 2);
+			}
+		}
+	}
+
 	auto generate_scriptlet() -> std::optional<std::string> {
 		// ...only if needed
 		assert(!this->unit_name.empty());
 		if(this->command.size() == 1) {
 			struct stat sb;
-			if(!stat(MAYBE_DUPA(this->command[0]), &sb) && S_ISREG(sb.st_mode)) {
-				this->execstart = this->command[0];
+			this->debackslashpercentise(this->command[0], [&](auto && segment) { this->execstart += segment; });
+			if(!stat(this->execstart.c_str(), &sb) && S_ISREG(sb.st_mode))
 				return {};
-			}
 		}
 
 		auto scriptlet  = ((std::string{TARGET_DIR} += '/') += this->unit_name) += ".sh"sv;
@@ -883,7 +911,7 @@ struct Job {
 					continue;
 				if(!std::exchange(first, false))
 					std::fputc(' ', f);
-				std::fwrite(hunk.data(), 1, hunk.size(), f);
+				this->debackslashpercentise(hunk, [&](auto && segment) { std::fwrite(segment.data(), 1, segment.size(), f); });
 			}
 			if(!first)
 				std::fputc('\n', f);
@@ -1275,7 +1303,7 @@ static auto realmain() -> int {
 				job.period            = period;
 				job.start_hour        = distro_start_hour[period];  // default 0
 				job.boot_delay        = i * 5;
-				job.command           = {{&command, &command + 1}, {}};
+				job.command           = {{&command, &command + 1}, {}, true};
 				job.jobid             = (std::string{period} += '-') += basename;
 				job.cron_mail_success = toplevel_cron_mail_success;
 				job.cron_mail_format  = toplevel_cron_mail_format;
