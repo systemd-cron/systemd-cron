@@ -41,6 +41,7 @@ Dependencies history
 * systemd ≥ 233, support for new `~` = 'last day of month' and '9..17/2' .timer syntax
 * systemd ≥ 235, support for timezones
 * systemd ≥ 236, `LogLevelMax` option
+* systemd ≥ 236, `StandardInputData`  which is needed for '%' support.
 * systemd ≥ 251, OnFailure handler receives $MONITOR_UNIT and more.
 * systemd ≥ 255, `SetLoginEnvironment`: no change needed.
 
