@@ -2,6 +2,7 @@
 #include "util.hpp"
 #include <md5.h>
 #include <random>
+#include <sys/fsuid.h>
 static const constexpr auto key_or_plain = [](auto && lhs, auto && rhs) {
 	static const constexpr auto key =
 	    vore::overload{[](const std::string_view & s) { return s; }, [](const std::pair<std::string_view, std::string_view> & kv) { return kv.first; }};
@@ -161,7 +162,9 @@ struct Job {
 	std::string jobid;
 	std::string unit_name;
 	std::string_view user;
-	std::optional<std::string_view> home;  // 'static
+	std::optional<std::string_view> user_home;  // 'static
+	uid_t user_uid;
+	gid_t user_gid;
 	cron_mail_success_t cron_mail_success;
 	cron_mail_format_t cron_mail_format;
 	struct {
@@ -227,6 +230,8 @@ struct Job {
 		this->random_delay    = 0;
 		this->persistent      = false;
 		this->user            = "root"sv;
+		this->user_uid        = 0;
+		this->user_gid        = 0;
 		this->command         = {};
 		this->input_data      = {};
 		this->valid           = true;
@@ -519,21 +524,9 @@ struct Job {
 			return;
 
 
-		if(!this->home) {
-			static std::map<std::string, std::string, std::less<>> pwnam_cache;
-			auto itr = pwnam_cache.find(this->user);
-			if(itr == std::end(pwnam_cache)) {
-				std::string user{this->user};
-				if(auto ent = getpwnam(user.data()))
-					itr = pwnam_cache.emplace(std::move(user), ent->pw_dir).first;
-			}
-			if(itr != std::end(pwnam_cache))
-				this->home = itr->second;
-		}
-
-		if(this->home) {
+		if(this->pull_user()) {
 			if(this->command[0].starts_with("~/"sv)) {
-				this->command.command0 = std::string{ * this->home} += this->command[0].substr(1);
+				this->command.command0 = std::string{ * this->user_home} += this->command[0].substr(1);
 				++this->command.command.b;
 			}
 
@@ -541,7 +534,7 @@ struct Job {
 				if(itr->second.starts_with("~/") || itr->second.find(":~/"sv) != std::string_view::npos) {
 					for(auto && path : vore::soft_tokenise{itr->second, ":"sv}) {
 						if(path.starts_with("~/")) {
-							this->environment_PATH_storage += *this->home;
+							this->environment_PATH_storage += *this->user_home;
 							this->environment_PATH_storage += path.substr(1);
 						} else
 							this->environment_PATH_storage += path;
@@ -551,6 +544,26 @@ struct Job {
 					this->environment["PATH"sv] = this->environment_PATH_storage;
 				}
 		}
+	}
+
+	auto pull_user() -> bool {
+		if(this->user_home)
+			return true;
+
+		static std::map<std::string, std::tuple<std::string, uid_t, gid_t>, std::less<>> pwnam_cache;
+		auto itr = pwnam_cache.find(this->user);
+		if(itr == std::end(pwnam_cache)) {
+			std::string user{this->user};
+			if(auto ent = getpwnam(user.data()))
+				itr = pwnam_cache.emplace(std::move(user), std::tuple{ent->pw_dir, ent->pw_uid, ent->pw_gid}).first;
+		}
+		if(itr != std::end(pwnam_cache)) {
+			this->user_home = std::get<0>(itr->second);
+			this->user_uid  = std::get<1>(itr->second);
+			this->user_gid  = std::get<2>(itr->second);
+		}
+
+		return !!this->user_home;
 	}
 
 	auto is_active() -> bool {
@@ -750,10 +763,23 @@ struct Job {
 	auto generate_scriptlet() -> std::optional<std::string> {
 		// ...only if needed
 		assert(!this->unit_name.empty());
-		if(this->command.size() == 1) {
-			struct stat sb;
+		if(this->command.size() == 1 && this->pull_user()) {
 			this->debackslashpercentise(this->command[0], [&](auto && segment, auto) { this->execstart += segment; });
-			if(!stat(this->execstart.c_str(), &sb) && S_ISREG(sb.st_mode))
+
+			uid_t uid;
+			gid_t gid;
+			if(this->user_uid)
+				uid = setfsuid(this->user_uid);
+			if(this->user_gid)
+				gid = setfsgid(this->user_gid);
+			struct stat sb;
+			auto statres = stat(this->execstart.c_str(), &sb);
+			if(this->user_uid)
+				setfsuid(uid);
+			if(this->user_gid)
+				setfsgid(gid);
+
+			if(!statres && S_ISREG(sb.st_mode))
 				return {};
 		}
 
@@ -834,8 +860,8 @@ struct Job {
 		}
 		if(this->user != "root"sv || this->filename.find(STATEDIR) != std::string_view::npos) {
 			std::fputs("Requires=systemd-user-sessions.service\n", into);
-			if(this->home)
-				std::fprintf(into, "RequiresMountsFor=%.*s\n", FORMAT_SV(*this->home));
+			if(this->user_home)
+				std::fprintf(into, "RequiresMountsFor=%.*s\n", FORMAT_SV(*this->user_home));
 		}
 		std::fputc('\n', into);
 
