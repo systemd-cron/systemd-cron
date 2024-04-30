@@ -1305,10 +1305,10 @@ static auto realmain() -> int {
 		       //                     (but save the starting hour for daily, weekly, and monthly)
 		       if(job.line.find("/etc/cron.hourly"sv) != std::string_view::npos)
 			       return;
-		       for(auto && disableable_period : {"daily"sv, "weekly"sv, "monthly"sv})
-			       if(job.line.find("/etc/cron."s += disableable_period) != std::string_view::npos) {
+		       for(auto && disableable_dir : {"/etc/cron.daily"sv, "/etc/cron.weekly"sv, "/etc/cron.monthly"sv})
+			       if(job.line.find(disableable_dir) != std::string_view::npos) {
 				       if(auto hour = *job.timespec_hour.begin(); hour != Job::TIMESPEC_ASTERISK)
-					       distro_start_hour[disableable_period] = hour;
+					       distro_start_hour[disableable_dir.substr("/etc/cron."sv.size())] = hour;
 
 				       return;
 			       }
