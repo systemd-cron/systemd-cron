@@ -1,3 +1,8 @@
+v2.4.1 : 2024-xx-xx
+
+   [наб]
+   Fix: always set WorkingDir=~ to behave like other cron's.
+
 v2.4.0 : 2024-04-29
 
    [наб]
