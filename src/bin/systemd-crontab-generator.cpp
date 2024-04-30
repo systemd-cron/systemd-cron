@@ -867,7 +867,7 @@ struct Job {
 
 		std::fputs("[Service]\n", into);
 		std::fprintf(into, "User=%.*s\n", FORMAT_SV(this->user));
-		std::fputs("WorkingDirectory=~\n", into);
+		std::fputs("WorkingDirectory=-~\n", into);
 		std::fputs("Type=oneshot\n", into);
 		std::fputs("IgnoreSIGPIPE=false\n", into);
 		std::fputs("SyslogFacility=cron\n", into);

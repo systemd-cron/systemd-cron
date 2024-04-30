@@ -149,7 +149,7 @@ assert_dat() {  # file content testname
 	assert_key cron-crontab-dummy-4.timer   'OnCalendar'          'Mon,Tue,Wed *-*-* *:1:00'               test_tz  # TZ=UTC0 is valid (as is TZ=UTC2), but systemd doesn't accept it as a suffix
 	assert_key cron-crontab-dummy-3.service 'CPUSchedulingPolicy' 'idle'                                   test_BATCH
 	assert_ney cron-crontab-dummy-4.service 'CPUSchedulingPolicy'                                          test_BATCH
-	assert_key cron-crontab-dummy-4.service 'WorkingDirectory'    '~'                                      test_BATCH
+	assert_key cron-crontab-dummy-4.service 'WorkingDirectory'    '-~'                                     test_BATCH
 
 	assert_key cron-crontab-dummy-4.service  'OnSuccess' 'cron-mail@%n:Success:nonempty.service'            test_cron_mail_success_default
 	assert_key cron-crontab-dummy-4.service  'OnFailure' 'cron-mail@%n:Failure.service'                     test_cron_mail_success_default
