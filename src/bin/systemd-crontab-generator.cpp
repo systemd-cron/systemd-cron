@@ -766,8 +766,8 @@ struct Job {
 		if(this->command.size() == 1 && this->pull_user()) {
 			this->debackslashpercentise(this->command[0], [&](auto && segment, auto) { this->execstart += segment; });
 
-			uid_t uid;
-			gid_t gid;
+			uid_t uid{};
+			gid_t gid{};
 			if(this->user_uid)
 				uid = setfsuid(this->user_uid);
 			if(this->user_gid)
