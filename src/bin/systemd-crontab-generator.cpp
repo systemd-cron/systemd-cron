@@ -162,6 +162,7 @@ struct Job {
 	std::string jobid;
 	std::string unit_name;
 	std::string_view user;
+	bool set_working_dir = false;
 	std::optional<std::string_view> user_home;  // 'static
 	uid_t user_uid;
 	gid_t user_gid;
@@ -392,6 +393,7 @@ struct Job {
 				this->command.command.b = &*(this->parts.begin() + 2);
 				break;
 			case withuser_t::from_basename:
+				this->set_working_dir = true;
 				this->user = this->basename;
 				[[fallthrough]];
 			case withuser_t::initial:
@@ -446,6 +448,7 @@ struct Job {
 				break;
 			case withuser_t::from_basename:
 				this->user = this->basename;
+				this->set_working_dir = true;
 				[[fallthrough]];
 			case withuser_t::initial:
 				this->command.command.b = &*(this->parts.begin() + 5);
@@ -867,6 +870,8 @@ struct Job {
 
 		std::fputs("[Service]\n", into);
 		std::fprintf(into, "User=%.*s\n", FORMAT_SV(this->user));
+		if(this->set_working_dir)
+			std::fputs("WorkingDirectory=~\n", into);
 		std::fputs("Type=oneshot\n", into);
 		std::fputs("IgnoreSIGPIPE=false\n", into);
 		std::fputs("SyslogFacility=cron\n", into);
