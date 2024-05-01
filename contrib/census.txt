@@ -5,7 +5,7 @@
 --statedir
     Arch: /var/spool/cron/
     Debian: /var/spool/cron/crontabs/ (managed by cron-daemon-common)
-    Fedora: ?
+    Fedora: /var/spool/cron/
     Gentoo: /var/spool/cron/crontabs/ (has sys-process/cronbase)
     OpenMamba: /var/spool/cron
 
@@ -29,3 +29,10 @@ creation of a system group for the setgid helper
     Fedora: ?
     Gentoo: ?
     OpenMamba: ?
+
+use systemd per-user instances:
+    Arch: no
+    Debian: no
+    Fedora: no
+    Gentoo: no
+    OpenMamba: no
