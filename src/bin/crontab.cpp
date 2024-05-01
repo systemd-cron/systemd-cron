@@ -37,6 +37,16 @@ static auto reload() -> void {
 			while(waitpid(child, &childret, 0) == -1 && errno == EINTR);  // no other errors possible
 		}
 	}
+	switch(pid_t child = vfork()) {
+		case -1:
+			return;
+		case 0:  // child
+			_exit(exec("/usr/bin/systemctl", "--user", "start", "timers.target"));
+		default: {  // parent
+			int childret;
+			while(waitpid(child, &childret, 0) == -1 && errno == EINTR);  // no other errors possible
+		}
+	}
 }
 
 
