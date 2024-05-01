@@ -1387,8 +1387,13 @@ static auto realmain() -> int {
 
 	if(struct stat sb; !stat(STATEDIR, &sb) && S_ISDIR(sb.st_mode)) {
 		// /var is available
+		bool has_user_generator = stat(USER_GENERATOR, &sb) == 0;
+
 		for_each_file(STATEDIR, [&](std::string_view basename) {
 			if(basename.find('.') != std::string_view::npos)
+				return;
+			if(has_user_generator && basename != "root"sv)
+				// will be handled by usermain()
 				return;
 
 			auto filename = (std::string{STATEDIR} += '/') += basename;
@@ -1432,6 +1437,16 @@ static auto check(const char * cron_file) -> int {
 	return err;
 }
 
+static auto usermain() -> int {
+	// only process the single file /var/spool/.../$USER
+	// but with the need of SETGID_HELPER
+	if(!mkdirp(TIMERS_DIR)) {
+		log(Log::ERR, "making %.*s: %s", FORMAT_SV(TIMERS_DIR), std::strerror(errno));
+		return 1;
+	}
+
+	return 0;
+}
 
 static auto translate(const char * line) -> int {
 	Job job{"-"sv, line};
@@ -1474,7 +1489,6 @@ int main(int argc, const char * const * argv) {
 		TARGET_DIR = "/ENOENT"sv;
 		file       = argv[2] ?: "-";
 	}
-	TIMERS_DIR = std::string{TARGET_DIR} += "/cron.target.wants"sv;
 
 
 	if(file)
@@ -1487,5 +1501,11 @@ int main(int argc, const char * const * argv) {
 			if(std::fscanf(up, "%" SCNu64 "", &UPTIME.emplace()) != 1)
 				UPTIME = {};
 
-	return realmain();
+	if(std::getenv("SYSTEMD_SCOPE") == "user"sv) {
+		TIMERS_DIR = std::string{TARGET_DIR} += "/timers.target.wants"sv;
+		return usermain();
+	} else {
+		TIMERS_DIR = std::string{TARGET_DIR} += "/cron.target.wants"sv;
+		return realmain();
+	}
 }
