@@ -1,0 +1,10 @@
+[Unit]
+Description=systemd-cron job mail — %i
+Documentation=man:systemd.cron(7)
+RefuseManualStart=true
+RefuseManualStop=true
+
+[Service]
+Type=oneshot
+PassEnvironment=SENDMAIL
+ExecStart=@libexecdir@/systemd-cron/mail_for_job --user %i

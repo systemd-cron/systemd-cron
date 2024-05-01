@@ -28,6 +28,12 @@ unitdir='$(libdir)/systemd/system'
 generatordir="$($pkgconf systemd --variable=systemdsystemgeneratordir)" 2>/dev/null || \
 generatordir='$(libdir)/systemd/system-generators'
 # shellcheck disable=SC2016
+userunitdir="$($pkgconf systemd --variable=systemduserunitdir)" 2>/dev/null || \
+userunitdir='$(libdir)/systemd/user'
+# shellcheck disable=SC2016
+usergeneratordir="$($pkgconf systemd --variable=systemdusergeneratordir)" 2>/dev/null || \
+usergeneratordir='$(libdir)/systemd/user-generators'
+# shellcheck disable=SC2016
 sysusersdir="$($pkgconf systemd --variable=sysusersdir)" 2>/dev/null || \
 sysusersdir='$(libdir)/sysusers.d'
 libmd="$($pkgconf --cflags --libs libmd)" 2>/dev/null || \
@@ -64,6 +70,8 @@ mandir:,
 docdir:,
 unitdir:,
 generatordir:,
+userunitdir:,
+usergeneratordir:,
 sysusersdir:,
 enable-boot::,
 enable-minutely::,
@@ -83,7 +91,7 @@ with-version:,
 
 usage()
 {
-    grep ^'### Configuration' README.md -A 50
+    grep ^'### Configuration' README.md -A 54
 }
 
 # shellcheck disable=SC2181
@@ -155,6 +163,14 @@ do
 
         '--generatordir')
             generatordir="${2}"
+            shift 2;;
+
+        '--userunitdir')
+            userunitdir="${2}"
+            shift 2;;
+
+        '--usergeneratordir')
+            usergeneratordir="${2}"
             shift 2;;
 
         '--sysusersdir')
@@ -271,6 +287,8 @@ s|@mandir@|${mandir}|g
 s|@docdir@|${docdir}|g
 s|@unitdir@|${unitdir}|g
 s|@generatordir@|${generatordir}|g
+s|@userunitdir@|${userunitdir}|g
+s|@usergeneratordir@|${usergeneratordir}|g
 s|@sysusersdir@|${sysusersdir}|g
 s|@libmd@|${libmd}|g
 s|@use_loglevelmax@|${use_loglevelmax}|g

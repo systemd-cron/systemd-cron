@@ -8,4 +8,5 @@ static const constexpr std::string_view BOOT_DELAY      = "@libexecdir@/systemd-
 #define STATEDIR "@statedir@"
 static const char * const SETGID_HELPER                 = "@libexecdir@/systemd-cron/crontab_setgid";
 
-static const char * const REBOOT_FILE = "/run/crond.reboot";
+static const char * const REBOOT_FILE                   = "/run/crond.reboot";
+static const char * const USER_GENERATOR                = "@usergeneratordir@/systemd-crontab-generator";

@@ -1,7 +1,17 @@
 #!/bin/sh -f
 
+if [ "$1" = "--user" ]
+then
+	usermode="--user"
+	facility=""
+	shift
+else
+	usermode=""
+	facility="SYSLOG_FACILITY=9"
+fi
+
 [ $# -eq 1 ] || {
-	printf 'usage: %s unit[:Success|:Failure][:nonempty][:nometadata][:verbose]\n' "$0" >&2
+	printf 'usage: %s [--user] unit[:Success|:Failure][:nonempty][:nometadata][:verbose]\n' "$0" >&2
 	exit 1
 }
 unit="$1"
@@ -25,7 +35,7 @@ SENDMAIL="$(command -v "$SENDMAIL" || command -v sendmail || command -v /usr/sbi
 	exit 0
 }
 
-systemctl show --property=User --property=Environment --property=SourcePath --property=Description --property=ActiveState --property=InvocationID "$unit" | {
+systemctl $usermode show --property=User --property=Environment --property=SourcePath --property=Description --property=ActiveState --property=InvocationID "$unit" | {
 	user=
 	job_env=
 	source_path=
@@ -71,7 +81,7 @@ systemctl show --property=User --property=Environment --property=SourcePath --pr
 		# INVOCATION_ID=          matches messages from systemd
 		# _SYSTEMD_INVOCATION_ID= matches messages from the service
 		# SYSLOG_FACILITY=9       matches lines from the standard output and standard error only (we set SyslogFacility=cron, cron=9)
-		journalctl -qu "$unit" _SYSTEMD_INVOCATION_ID="$invocation_id" SYSLOG_FACILITY=9 | read -r _ || {
+		journalctl $usermode -qu "$unit" _SYSTEMD_INVOCATION_ID="$invocation_id" $facility | read -r _ || {
 			[ -n "$verbose" ] && printf 'This cron job (%s) produced no output, therefore quitting\n' "$unit" >&2
 			exit 0
 		}
@@ -101,10 +111,10 @@ systemctl show --property=User --property=Environment --property=SourcePath --pr
 		esac
 
 		if [ -n "$metadata" ]; then
-			systemctl status -n0 "$unit"
-			journalctl -u "$unit" -o short-iso _SYSTEMD_INVOCATION_ID="$invocation_id" + INVOCATION_ID="$invocation_id"
+			systemctl $usermode status -n0 "$unit"
+			journalctl $usermode -u "$unit" -o short-iso _SYSTEMD_INVOCATION_ID="$invocation_id" + INVOCATION_ID="$invocation_id"
 		else
-			journalctl -u "$unit" -o cat       _SYSTEMD_INVOCATION_ID="$invocation_id"   SYSLOG_FACILITY=9
+			journalctl $usermode -u "$unit" -o cat       _SYSTEMD_INVOCATION_ID="$invocation_id"   $facility
 		fi
 	} 2>&1 | "$sendmail" -i -B 8BITMIME "$mailto"
 }
