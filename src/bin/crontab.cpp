@@ -23,6 +23,22 @@ static auto exec(const char * prog, A... args) -> int {
 	return exec_err == ENOENT ? 127 : 126;
 }
 
+static auto reload() -> void {
+	struct stat sb;
+	if(stat(USER_GENERATOR, &sb))
+		return;
+	switch(pid_t child = vfork()) {
+		case -1:
+			return;
+		case 0:  // child
+			_exit(exec("/usr/bin/systemctl", "--user", "daemon-reload"));
+		default: {  // parent
+			int childret;
+			while(waitpid(child, &childret, 0) == -1 && errno == EINTR);  // no other errors possible
+		}
+	}
+}
+
 
 static const std::string_view current_user = getpass_getlogin();
 
@@ -272,8 +288,20 @@ static auto remove(const char * cron_file, const char * user, bool ask) -> int {
 	if(user != current_user)
 		return std::fprintf(stderr, "you can not delete %s's crontab\n", user), 1;
 
-	if(HAVE_SETGID)
-		return exec(SETGID_HELPER, "d");
+	if(HAVE_SETGID) {
+		switch(pid_t child = vfork()) {
+			case -1:
+				return std::fprintf(stderr, "%s: couldn't create child: %s\n", self, std::strerror(errno)), 125;
+			case 0:  // child
+				_exit(exec(SETGID_HELPER, "d"));
+			default: {  // parent
+				int childret;
+				while(waitpid(child, &childret, 0) == -1 && errno == EINTR);
+				reload();
+				return childret;
+			}
+		}
+	}
 
 	if(err == EACCES)
 		if(!truncate(cron_file, 0))
@@ -438,6 +466,7 @@ static auto edit(const char * cron_file, const char * user) -> int {
 					return std::fprintf(stderr, "your edit is kept here: %s\n", tmp_path.buf), childret;
 				else {
 					tmp_path.armed = true;
+					reload();
 					return 0;
 				}
 			}
@@ -506,6 +535,7 @@ static auto replace(const char * cron_file, const char * user, const char * file
 				int childret;
 				while(waitpid(child, &childret, 0) == -1 && errno == EINTR)  // no other errors possible
 					;
+				reload();
 				return WIFSIGNALED(childret) ? 128 + WTERMSIG(childret) : WEXITSTATUS(childret);
 			}
 		}

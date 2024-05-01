@@ -23,6 +23,7 @@ docdir		:= @docdir@
 unitdir		:= @unitdir@
 generatordir	:= @generatordir@
 userunitdir	:= @userunitdir@
+usergeneratordir	:= @usergeneratordir@
 sysusersdir	:= @sysusersdir@
 
 srcdir		:= $(CURDIR)/src
@@ -207,6 +208,7 @@ $(builddir)/include/configuration.hpp : $(srcdir)/include/configuration.hpp.in
 	    -e 's:\@use_runparts\@:$(use_runparts):' \
 	    -e 's:\@version\@:$(version):' \
 	    -e 's:\@libexecdir\@:$(libexecdir):' \
+	    -e 's:\@usergeneratordir\@:$(usergeneratordir):' \
 	    -e 's:\@statedir\@:$(statedir):' $< > $@
 
 $(builddir)/include/%.hpp: $(srcdir)/include/%.hpp
