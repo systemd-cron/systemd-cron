@@ -135,6 +135,7 @@ enum class cron_mail_format_t : bool {
 
 
 struct Job {
+	bool user_instance;
 	std::string filename;
 	std::string_view basename;
 	std::string_view line;
@@ -217,9 +218,10 @@ struct Job {
 	bool valid;
 
 	Job(std::string_view filename, std::string_view line) {
-		this->filename = filename;
-		this->basename = vore::basename(filename);
-		this->line     = line;
+		this->user_instance = false;
+		this->filename      = filename;
+		this->basename      = vore::basename(filename);
+		this->line          = line;
 
 		vore::soft_tokenise tokens{line, " \t\n"sv};
 		std::copy(std::begin(tokens), std::end(tokens), std::back_inserter(this->parts));
@@ -825,7 +827,10 @@ struct Job {
 	}
 
 	auto format_on_failure(FILE * into, const char * on, bool nonempty = false) -> void {
-		std::fprintf(into, "On%s=cron-mail@%%n:%s", on, on);
+		if(this->user_instance)
+			std::fprintf(into, "On%s=cron-user-mail@%%n:%s", on, on);
+		else
+			std::fprintf(into, "On%s=cron-mail@%%n:%s", on, on);
 		if(nonempty)
 			std::fputs(":nonempty", into);
 		switch(this->cron_mail_format) {
@@ -859,14 +864,16 @@ struct Job {
 			}
 		}
 		if(this->user != "root"sv || this->filename.find(STATEDIR) != std::string_view::npos) {
-			std::fputs("Requires=systemd-user-sessions.service\n", into);
+			if(!this->user_instance)
+				std::fputs("Requires=systemd-user-sessions.service\n", into);
 			if(this->user_home)
 				std::fprintf(into, "RequiresMountsFor=%.*s\n", FORMAT_SV(*this->user_home));
 		}
 		std::fputc('\n', into);
 
 		std::fputs("[Service]\n", into);
-		std::fprintf(into, "User=%.*s\n", FORMAT_SV(this->user));
+		if(!this->user_instance)
+			std::fprintf(into, "User=%.*s\n", FORMAT_SV(this->user));
 		std::fputs("WorkingDirectory=-~\n", into);
 		std::fputs("Type=oneshot\n", into);
 		std::fputs("IgnoreSIGPIPE=false\n", into);
