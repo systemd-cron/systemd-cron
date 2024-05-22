@@ -3,6 +3,8 @@
 #include <md5.h>
 #include <random>
 #include <sys/fsuid.h>
+#include <sys/wait.h>
+
 static const constexpr auto key_or_plain = [](auto && lhs, auto && rhs) {
 	static const constexpr auto key =
 	    vore::overload{[](const std::string_view & s) { return s; }, [](const std::pair<std::string_view, std::string_view> & kv) { return kv.first; }};
@@ -1446,6 +1448,66 @@ static auto check(const char * cron_file) -> int {
 	return err;
 }
 
+template <class... A>
+static auto exec(const char * prog, A... args) -> int {
+	execl(prog, "x", static_cast<const char *>(args)..., static_cast<const char *>(nullptr));
+
+	auto exec_err = errno;
+	std::fprintf(stderr, "%s: %s: %s\n", "x", prog, std::strerror(exec_err));
+	return exec_err == ENOENT ? 127 : 126;
+}
+
+static auto process_user_crontab(FILE * f) -> void {
+	char * line_raw{};
+	std::size_t linecap{};
+	std::map<std::string_view, std::string_view> environment;
+	std::string basename = std::string{getpass_getlogin()};
+	std::string filename{std::string{STATEDIR} + "/" + basename};
+
+	for(ssize_t len; (len = getline(&line_raw, &linecap, f)) != -1;) {
+		std::string_view line{line_raw, static_cast<std::size_t>(len)};
+		while(!line.empty() && std::isspace(line[0]))
+			line.remove_prefix(1);
+		if(line.empty() || line[0] == '#')
+			continue;
+		while(!line.empty() && std::isspace(line.back()))
+			line.remove_suffix(1);
+
+		regmatch_t matches[3] = {{.rm_so = 0, .rm_eo = static_cast<regoff_t>(line.size())}};
+		if(!regexec(&ENVVAR_RE, line.data(), sizeof(matches) / sizeof(*matches), matches, REG_STARTEND)) {
+			auto key   = line.substr(matches[1].rm_so, matches[1].rm_eo - matches[1].rm_so);
+			auto value = line.substr(matches[2].rm_so, matches[2].rm_eo - matches[2].rm_so);
+			for(char tostrip : {'\'', '\"', ' '}) {
+				while(!value.empty() && value[0] == tostrip)
+					value.remove_prefix(1);
+				while(!value.empty() && value.back() == tostrip)
+					value.remove_suffix(1);
+			}
+			if(key == "PERSISTENT"sv && value == "auto"sv)
+				environment.erase("PERSISTENT"sv);
+			else
+				environment[key] = value;
+			continue;
+		}
+		Job j{filename, line};
+		j.user_instance = true;
+		j.basename      = basename;
+		j.log(Log::WARNING, "RUN");
+		if(line[0] == '@') {
+			j.decode_environment(environment, true, cron_mail_success_t::dflt, cron_mail_format_t::dflt);
+			j.parse_crontab_at(withuser_t::from_basename);
+		} else {
+			j.decode_environment(environment, false, cron_mail_success_t::dflt, cron_mail_format_t::dflt);
+			j.parse_crontab_timespec(withuser_t::from_basename);
+		}
+		j.decode();
+		j.generate_schedule();
+		if(j.valid) {
+			generate_timer_unit(j);
+		}
+	}
+}
+
 static auto usermain() -> int {
 	// only process the single file /var/spool/.../$USER
 	// but with the need of SETGID_HELPER
@@ -1454,6 +1516,28 @@ static auto usermain() -> int {
 		return 1;
 	}
 
+	int pipe[2];
+	if(pipe2(pipe, O_CLOEXEC))
+		return std::fprintf(stderr, "%s\n", std::strerror(errno)), 125;
+	switch(pid_t child = vfork()) {
+		case -1:
+			return std::fprintf(stderr, "couldn't create child: %s\n", std::strerror(errno)), 125;
+		case 0:  // child
+			dup2(pipe[1], 1);
+			_exit(exec(SETGID_HELPER, "r"));
+		default: {  // parent
+			close(pipe[1]);
+			vore::file::FILE<false> f{pipe[0], "r"};
+			if(!f)
+				return std::fprintf(stderr, "%s\n", std::strerror(errno)), 1;
+			process_user_crontab(f);
+
+			int childret;
+			while(waitpid(child, &childret, 0) == -1 && errno == EINTR)  // no other errors possible
+				;
+			return WIFSIGNALED(childret) ? 128 + WTERMSIG(childret) : WEXITSTATUS(childret);
+		}
+	}
 	return 0;
 }
 
