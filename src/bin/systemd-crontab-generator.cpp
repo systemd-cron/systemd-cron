@@ -935,7 +935,9 @@ struct Job {
 
 	auto generate_unit_name(std::uint64_t & seq) -> void {
 		assert(!this->jobid.empty());
-		this->unit_name = ("cron-"s += this->jobid) += '-';
+		this->unit_name = "cron-"s;
+		if(!this->user_instance)
+			this->unit_name += (this->jobid + '-');
 		if(!this->persistent) {
 			char buf[20 + 1];  // 18446744073709551615
 			this->unit_name += std::string_view{buf, static_cast<std::size_t>(std::snprintf(buf, sizeof(buf), "%" PRIu64 "", seq++))};
