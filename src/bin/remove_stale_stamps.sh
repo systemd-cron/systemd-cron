@@ -12,14 +12,26 @@ set -u
 # can/should be removed if the matching .timer
 # does not exist anymore
 
-find /var/lib/systemd/timers/ -name 'stamp-cron-*' -type f -mtime +10 | while read -r stamp
+id="$(id -u)"
+if [ "$id" = 0 ]
+then
+    stampdir='/var/lib/systemd/timers/'
+    rundir='/run/systemd/generator'
+    libdir='/lib/systemd/system'
+else
+    stampdir="$HOME/.local/share/systemd/timers/"
+    rundir="/run/user/$id/systemd/generator"
+    libdir='/n/a'
+fi
+
+find "$stampdir" -name 'stamp-cron-*' -type f -mtime +10 | while read -r stamp
 do
     timer=${stamp##*/stamp-}
 
-    if test -f "/run/systemd/generator/$timer"
+    if test -f "$rundir/$timer"
     then
         :
-    elif test -f "/lib/systemd/system/$timer"
+    elif test -f "$libdir/$timer"
     then
         :
     else
