@@ -569,6 +569,9 @@ struct Job {
 	}
 
 	auto is_active() -> bool {
+		if(this->user_instance)
+			return true;
+
 		if(this->schedule == "reboot"sv && !access(REBOOT_FILE, F_OK))
 			return false;
 
@@ -881,7 +884,7 @@ struct Job {
 		std::fputs("KillMode=process\n", into);
 		if(USE_LOGLEVELMAX != "no"sv)
 			std::fprintf(into, "LogLevelMax=%.*s\n", FORMAT_SV(USE_LOGLEVELMAX));
-		if(!this->schedule.empty() && this->boot_delay)
+		if(!this->user_instance && !this->schedule.empty() && this->boot_delay)
 			if(!UPTIME || this->boot_delay > *UPTIME)
 				std::fprintf(into, "ExecStartPre=-%.*s %zu\n", FORMAT_SV(BOOT_DELAY), this->boot_delay);
 		std::fprintf(into, "ExecStart=%.*s\n", FORMAT_SV(this->execstart));
