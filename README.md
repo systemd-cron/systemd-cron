@@ -44,6 +44,7 @@ Dependencies history
 * systemd ≥ 236, `StandardInputData`  which is needed for '%' support.
 * systemd ≥ 251, OnFailure handler receives $MONITOR_UNIT and more.
 * systemd ≥ 255, `SetLoginEnvironment`: no change needed.
+* systemd ≥ 256, `run0`.
 
 Installation
 ----------------
