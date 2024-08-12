@@ -246,6 +246,8 @@ assert_dat() {  # file content testname
 	cp "${TESTDIR}crontab" /etc
 	mkdir /etc/cron.daily
 	echo id > /etc/cron.daily/id
+	chmod +x /etc/cron.daily/id
+	> /etc/cron.daily/nonexecutable
 
 	"$S_C_G" /etc/out2 || { err=$?; echo "$S_C_G" /etc/out2 = $err >&2; exit $err; }
 	cd /etc/out2 || exit
@@ -286,6 +288,8 @@ test_test_crontab_common() {
 
 if [ "$USE_RUN_PARTS" = 'no' ]
 then
+	[ -e cron-daily-nonexecutable.service ] && { err=1; echo "cron-daily-nonexecutable.service exists!"; }
+
 	assert_key cron-daily-id.service  'Description'       '[Cron] /etc/cron.daily/id'                /etc/cron.daily
 	assert_key cron-daily-id.service  'ExecStartPre'      '-/usr/libexec/systemd-cron/boot_delay 10' /etc/cron.daily    # hourly.daily = 2nd, *5min for each longer one
 	assert_key cron-daily-id.service  'ExecStart'         '/etc/cron.daily/id'                       /etc/cron.daily

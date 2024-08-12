@@ -1356,6 +1356,8 @@ static auto realmain() -> int {
 				if(is_backup(directory.c_str(), basename))
 					return;
 				auto filename            = (directory + '/') += basename;
+				if(access(filename.c_str(), X_OK))
+					return;
 				std::string_view command = filename;
 				Job job{filename, filename};
 				job.persistent        = true;
