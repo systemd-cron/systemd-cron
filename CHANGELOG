@@ -1,9 +1,9 @@
-v2.4.1 : 2024-xx-xx
+v2.4.1 : 2024-08-13
 
    [наб]
    Fix: always set WorkingDir=~ to behave like other crons.
    Fix: if no-run-parts, don't generate units for
-        /etc/cron.{period}/timer if it isn't executable
+        /etc/cron.{period}/{job} if it isn't executable
 
 v2.4.0 : 2024-04-29
 
