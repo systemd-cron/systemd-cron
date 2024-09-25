@@ -3,6 +3,8 @@
 #include <md5.h>
 #include <random>
 #include <sys/fsuid.h>
+#include <sys/wait.h>
+
 static const constexpr auto key_or_plain = [](auto && lhs, auto && rhs) {
 	static const constexpr auto key =
 	    vore::overload{[](const std::string_view & s) { return s; }, [](const std::pair<std::string_view, std::string_view> & kv) { return kv.first; }};
@@ -135,6 +137,7 @@ enum class cron_mail_format_t : bool {
 
 
 struct Job {
+	bool user_instance;
 	std::string filename;
 	std::string_view basename;
 	std::string_view line;
@@ -217,9 +220,10 @@ struct Job {
 	bool valid;
 
 	Job(std::string_view filename, std::string_view line) {
-		this->filename = filename;
-		this->basename = vore::basename(filename);
-		this->line     = line;
+		this->user_instance = false;
+		this->filename      = filename;
+		this->basename      = vore::basename(filename);
+		this->line          = line;
 
 		vore::soft_tokenise tokens{line, " \t\n"sv};
 		std::copy(std::begin(tokens), std::end(tokens), std::back_inserter(this->parts));
@@ -567,6 +571,9 @@ struct Job {
 	}
 
 	auto is_active() -> bool {
+		if(this->user_instance)
+			return true;
+
 		if(this->schedule == "reboot"sv && !access(REBOOT_FILE, F_OK))
 			return false;
 
@@ -825,7 +832,10 @@ struct Job {
 	}
 
 	auto format_on_failure(FILE * into, const char * on, bool nonempty = false) -> void {
-		std::fprintf(into, "On%s=cron-mail@%%n:%s", on, on);
+		if(this->user_instance)
+			std::fprintf(into, "On%s=cron-user-mail@%%n:%s", on, on);
+		else
+			std::fprintf(into, "On%s=cron-mail@%%n:%s", on, on);
 		if(nonempty)
 			std::fputs(":nonempty", into);
 		switch(this->cron_mail_format) {
@@ -859,14 +869,16 @@ struct Job {
 			}
 		}
 		if(this->user != "root"sv || this->filename.find(STATEDIR) != std::string_view::npos) {
-			std::fputs("Requires=systemd-user-sessions.service\n", into);
+			if(!this->user_instance)
+				std::fputs("Requires=systemd-user-sessions.service\n", into);
 			if(this->user_home)
 				std::fprintf(into, "RequiresMountsFor=%.*s\n", FORMAT_SV(*this->user_home));
 		}
 		std::fputc('\n', into);
 
 		std::fputs("[Service]\n", into);
-		std::fprintf(into, "User=%.*s\n", FORMAT_SV(this->user));
+		if(!this->user_instance)
+			std::fprintf(into, "User=%.*s\n", FORMAT_SV(this->user));
 		std::fputs("WorkingDirectory=-~\n", into);
 		std::fputs("Type=oneshot\n", into);
 		std::fputs("IgnoreSIGPIPE=false\n", into);
@@ -874,7 +886,7 @@ struct Job {
 		std::fputs("KillMode=process\n", into);
 		if(USE_LOGLEVELMAX != "no"sv)
 			std::fprintf(into, "LogLevelMax=%.*s\n", FORMAT_SV(USE_LOGLEVELMAX));
-		if(!this->schedule.empty() && this->boot_delay)
+		if(!this->user_instance && !this->schedule.empty() && this->boot_delay)
 			if(!UPTIME || this->boot_delay > *UPTIME)
 				std::fprintf(into, "ExecStartPre=-%.*s %zu\n", FORMAT_SV(BOOT_DELAY), this->boot_delay);
 		std::fprintf(into, "ExecStart=%.*s\n", FORMAT_SV(this->execstart));
@@ -928,7 +940,9 @@ struct Job {
 
 	auto generate_unit_name(std::uint64_t & seq) -> void {
 		assert(!this->jobid.empty());
-		this->unit_name = ("cron-"s += this->jobid) += '-';
+		this->unit_name = "cron-"s;
+		if(!this->user_instance)
+			this->unit_name += (this->jobid + '-');
 		if(!this->persistent) {
 			char buf[20 + 1];  // 18446744073709551615
 			this->unit_name += std::string_view{buf, static_cast<std::size_t>(std::snprintf(buf, sizeof(buf), "%" PRIu64 "", seq++))};
@@ -1389,8 +1403,13 @@ static auto realmain() -> int {
 
 	if(struct stat sb; !stat(STATEDIR, &sb) && S_ISDIR(sb.st_mode)) {
 		// /var is available
+		bool has_user_generator = stat(USER_GENERATOR, &sb) == 0;
+
 		for_each_file(STATEDIR, [&](std::string_view basename) {
 			if(basename.find('.') != std::string_view::npos)
+				return;
+			if(has_user_generator && basename != "root"sv)
+				// will be handled by usermain()
 				return;
 
 			auto filename = (std::string{STATEDIR} += '/') += basename;
@@ -1434,6 +1453,98 @@ static auto check(const char * cron_file) -> int {
 	return err;
 }
 
+template <class... A>
+static auto exec(const char * prog, A... args) -> int {
+	execl(prog, "x", static_cast<const char *>(args)..., static_cast<const char *>(nullptr));
+
+	auto exec_err = errno;
+	std::fprintf(stderr, "%s: %s: %s\n", "x", prog, std::strerror(exec_err));
+	return exec_err == ENOENT ? 127 : 126;
+}
+
+static auto process_user_crontab(FILE * f) -> void {
+	char * line_raw{};
+	std::size_t linecap{};
+	std::map<std::string_view, std::string_view> environment;
+	std::string basename = std::string{getpass_getlogin()};
+	std::string filename{std::string{STATEDIR} + "/" + basename};
+
+	for(ssize_t len; (len = getline(&line_raw, &linecap, f)) != -1;) {
+		std::string_view line{line_raw, static_cast<std::size_t>(len)};
+		while(!line.empty() && std::isspace(line[0]))
+			line.remove_prefix(1);
+		if(line.empty() || line[0] == '#')
+			continue;
+		while(!line.empty() && std::isspace(line.back()))
+			line.remove_suffix(1);
+
+		regmatch_t matches[3] = {{.rm_so = 0, .rm_eo = static_cast<regoff_t>(line.size())}};
+		if(!regexec(&ENVVAR_RE, line.data(), sizeof(matches) / sizeof(*matches), matches, REG_STARTEND)) {
+			auto key   = line.substr(matches[1].rm_so, matches[1].rm_eo - matches[1].rm_so);
+			auto value = line.substr(matches[2].rm_so, matches[2].rm_eo - matches[2].rm_so);
+			for(char tostrip : {'\'', '\"', ' '}) {
+				while(!value.empty() && value[0] == tostrip)
+					value.remove_prefix(1);
+				while(!value.empty() && value.back() == tostrip)
+					value.remove_suffix(1);
+			}
+			if(key == "PERSISTENT"sv && value == "auto"sv)
+				environment.erase("PERSISTENT"sv);
+			else
+				environment[key] = value;
+			continue;
+		}
+		Job j{filename, line};
+		j.user_instance = true;
+		j.basename      = basename;
+		j.log(Log::WARNING, "RUN");
+		if(line[0] == '@') {
+			j.decode_environment(environment, true, cron_mail_success_t::dflt, cron_mail_format_t::dflt);
+			j.parse_crontab_at(withuser_t::from_basename);
+		} else {
+			j.decode_environment(environment, false, cron_mail_success_t::dflt, cron_mail_format_t::dflt);
+			j.parse_crontab_timespec(withuser_t::from_basename);
+		}
+		j.decode();
+		j.generate_schedule();
+		if(j.valid) {
+			generate_timer_unit(j);
+		}
+	}
+}
+
+static auto usermain() -> int {
+	// only process the single file /var/spool/.../$USER
+	// but with the need of SETGID_HELPER
+	if(!mkdirp(TIMERS_DIR)) {
+		log(Log::ERR, "making %.*s: %s", FORMAT_SV(TIMERS_DIR), std::strerror(errno));
+		return 1;
+	}
+
+	int pipe[2];
+	if(pipe2(pipe, O_CLOEXEC))
+		return std::fprintf(stderr, "%s\n", std::strerror(errno)), 125;
+	switch(pid_t child = vfork()) {
+		case -1:
+			return std::fprintf(stderr, "couldn't create child: %s\n", std::strerror(errno)), 125;
+		case 0:  // child
+			dup2(pipe[1], 1);
+			_exit(exec(SETGID_HELPER, "r"));
+		default: {  // parent
+			close(pipe[1]);
+			vore::file::FILE<false> f{pipe[0], "r"};
+			if(!f)
+				return std::fprintf(stderr, "%s\n", std::strerror(errno)), 1;
+			process_user_crontab(f);
+
+			int childret;
+			while(waitpid(child, &childret, 0) == -1 && errno == EINTR)  // no other errors possible
+				;
+			return WIFSIGNALED(childret) ? 128 + WTERMSIG(childret) : WEXITSTATUS(childret);
+		}
+	}
+	return 0;
+}
 
 static auto translate(const char * line) -> int {
 	Job job{"-"sv, line};
@@ -1476,7 +1587,6 @@ int main(int argc, const char * const * argv) {
 		TARGET_DIR = "/ENOENT"sv;
 		file       = argv[2] ?: "-";
 	}
-	TIMERS_DIR = std::string{TARGET_DIR} += "/cron.target.wants"sv;
 
 
 	if(file)
@@ -1489,5 +1599,11 @@ int main(int argc, const char * const * argv) {
 			if(std::fscanf(up, "%" SCNu64 "", &UPTIME.emplace()) != 1)
 				UPTIME = {};
 
-	return realmain();
+	if(std::getenv("SYSTEMD_SCOPE") == "user"sv) {
+		TIMERS_DIR = std::string{TARGET_DIR} += "/timers.target.wants"sv;
+		return usermain();
+	} else {
+		TIMERS_DIR = std::string{TARGET_DIR} += "/cron.target.wants"sv;
+		return realmain();
+	}
 }

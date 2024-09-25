@@ -22,6 +22,8 @@ mandir		:= @mandir@
 docdir		:= @docdir@
 unitdir		:= @unitdir@
 generatordir	:= @generatordir@
+userunitdir	:= @userunitdir@
+usergeneratordir	:= @usergeneratordir@
 sysusersdir	:= @sysusersdir@
 
 srcdir		:= $(CURDIR)/src
@@ -42,7 +44,7 @@ out_targets	:=
 endif
 out_units		:= $(out_services) $(out_timers) $(out_targets) $(builddir)/units/cron.target \
                            $(builddir)/units/cron-update.path $(builddir)/units/cron-update.service \
-                           $(builddir)/units/cron-mail@.service
+                           $(builddir)/units/cron-mail@.service $(builddir)/units/cron-user-mail@.service
 out_manuals		:= $(patsubst $(srcdir)/man/%.in,$(builddir)/man/%,$(wildcard $(srcdir)/man/*))
 out_programs_sh		:= $(subst $(srcdir),$(builddir),$(patsubst %.sh,%,$(wildcard $(srcdir)/bin/*.sh)))
 out_programs_cpp	:= $(subst $(srcdir),$(builddir),$(patsubst %.cpp,%,$(wildcard $(srcdir)/bin/*.cpp)))
@@ -115,6 +117,7 @@ install: all
 	install -m644 $(builddir)/units/cron-update.path $(DESTDIR)$(unitdir)
 	install -m644 $(builddir)/units/cron-update.service $(DESTDIR)$(unitdir)
 	install -m644 $(builddir)/units/cron-mail@.service $(DESTDIR)$(unitdir)
+	install -m644 $(builddir)/units/cron-user-mail@.service $(DESTDIR)$(userunitdir)
 
 ifneq ($(enable_runparts),no)
 	$(foreach schedule,$(schedules),\
@@ -141,6 +144,9 @@ $(builddir)/units/cron-update.service: $(srcdir)/units/cron-update.service.in
 	$(call in2out,$<,$@)
 
 $(builddir)/units/cron-mail@.service: $(srcdir)/units/cron-mail@.service.in
+	$(call in2out,$<,$@)
+
+$(builddir)/units/cron-user-mail@.service: $(srcdir)/units/cron-user-mail@.service.in
 	$(call in2out,$<,$@)
 
 $(builddir)/units/cron-%.service: $(srcdir)/units/cron-schedule.service.in
@@ -202,6 +208,7 @@ $(builddir)/include/configuration.hpp : $(srcdir)/include/configuration.hpp.in
 	    -e 's:\@use_runparts\@:$(use_runparts):' \
 	    -e 's:\@version\@:$(version):' \
 	    -e 's:\@libexecdir\@:$(libexecdir):' \
+	    -e 's:\@usergeneratordir\@:$(usergeneratordir):' \
 	    -e 's:\@statedir\@:$(statedir):' $< > $@
 
 $(builddir)/include/%.hpp: $(srcdir)/include/%.hpp

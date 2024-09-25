@@ -96,6 +96,10 @@ Other options include (`pkgconf` may be overridden with `$PKG_CONFIG`):
   Default: `pkgconf systemd --variable=systemdsystemunitdir` or `<libdir>/systemd/system`.
 * `--generatordir=<path>` Path to systemd generators.
   Default: `pkgconf systemd --variable=systemdsystemgeneratordir` or `<libdir>/systemd/system-generators`.
+* `--userunitdir=<path>` Path to systemd user unit files.
+  Default: `pkgconf systemd --variable=systemduserunitdir` or `<libdir>/systemd/user`.
+* `--usergeneratordir=<path>` Path to systemd user generators.
+  Default: `pkgconf systemd --variable=systemdusergeneratordir` or `<libdir>/systemd/user-generators`.
 * `--sysusersdir=<path>` Path to systemd-sysusers snippets.
   Default: `pkgconf systemd --variable=sysusersdir` or `<libdir>/sysusers.d`.
 * `--enable-boot[=yes|no]` Include support for the boot timer.
