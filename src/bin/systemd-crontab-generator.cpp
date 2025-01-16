@@ -1251,10 +1251,11 @@ static auto is_masked(const char * path, std::string_view name, vore::span<const
 
 		if(!access(unit_file.c_str(), F_OK)) {
 			const char * reason = "native timer is present";
+			const char * interjection = "";
 			struct stat sb;
 			if(!stat(unit_file.c_str(), &sb) && sb.st_size == 0)
-				reason = "it is masked";
-			log(Log::NOTICE, "ignoring %s/%.*s because %s", path, FORMAT_SV(name), reason);
+				interjection = " and masked";
+			log(Log::NOTICE, "ignoring %s/%.*s because it is overridden%s by native .timer unit", path, FORMAT_SV(name), interjection);
 			return true;
 		}
 	}
