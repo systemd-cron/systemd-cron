@@ -96,6 +96,12 @@ as
 all others listed above are
 .Xr systemd.cron 7 Ns 's
 extensions.
+.Pp
+Unlike
+.Xr crontab 5 ,
+every
+.Xr anacrontab 5
+job is persistent by default.
 .
 .Sh DIAGNOSTICS
 After editing

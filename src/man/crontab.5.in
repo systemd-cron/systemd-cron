@@ -190,6 +190,7 @@ force all further jobs to be persistent
 .br
 .BR 'auto' :
 only recognize @ keywords to be persistent
+(this is the default)
 .br
 .BR 'no' :
 force all further jobs not to be persistent
