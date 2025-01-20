@@ -225,7 +225,7 @@ assert_dat() {  # file content testname
 }
 
 {
-	rm -f /etc/cron.d/*
+	rm -f /etc/cron.d/* /etc/anacrontab
 	printf '%s\n' 'CRON_MAIL_SUCCESS=always'    \
 	              'CRON_MAIL_FORMAT=nometadata' \
 	              'MAILTO=root@test.owcy'       > /etc/crontab
@@ -241,7 +241,52 @@ assert_dat() {  # file content testname
 
 
 {
-	rm -r /etc/cron.d
+	rm -r /etc/cron.*
+	mkdir /etc/cron.d /etc/cron.daily
+	printf '%s\n' 'CRON_INHERIT_VARIABLES=RANDOM_DELAY NORMAL_VARIABLE'       \
+	              'RANDOM_DELAY=10'                                           \
+	              'NORMAL_VARIABLE=real'                                      \
+	              '* * * * * dummy /bin/true'                                 > /etc/crontab
+	printf '%s\n' '* * * * * dummy /bin/true'                                 \
+	              'NORMAL_VARIABLE=over'                                      \
+	              '* * * * * dummy /bin/true'                                 > /etc/cron.d/crondtab
+	ln -s /bin/true /etc/cron.daily/true
+
+	"$S_C_G" /etc/outI || { err=$?; echo "$S_C_G" /etc/outI = $err >&2; exit $err; }
+	cd /etc/outI || exit
+
+	assert_key cron-crontab-dummy-0.service  'Environment'        'NORMAL_VARIABLE=real' toplevel_control
+	assert_key cron-crontab-dummy-0.timer    'RandomizedDelaySec' '10m'                  toplevel_control
+
+	assert_key cron-crondtab-dummy-0.service 'Environment'        'NORMAL_VARIABLE=real' inherited
+	assert_key cron-crondtab-dummy-0.timer   'RandomizedDelaySec' '10m'                  inherited
+	assert_key cron-crondtab-dummy-1.service 'Environment'        'NORMAL_VARIABLE=over' inherited_overridden
+	assert_key cron-crondtab-dummy-1.timer   'RandomizedDelaySec' '10m'                  inherited_overridden
+
+if [ "$USE_RUN_PARTS" = 'no' ]
+then
+	assert_key cron-daily-true.service       'Environment'        'NORMAL_VARIABLE=real' inherited_runparts
+	assert_key cron-daily-true.timer         'RandomizedDelaySec' '10m'                  inherited_runparts
+fi
+}
+{
+	rm -r /etc/cron.*
+	mkdir /etc/cron.d
+	printf '%s\n' 'CRON_INHERIT_VARIABLES=RANDOM_DELAY NORMAL_VARIABLE'       \
+	              'RANDOM_DELAY=10'                                           \
+	              'NORMAL_VARIABLE=real'                                      > /etc/crontab
+	printf '%s\n' '* * * * * dummy /bin/true'                                 > /etc/cron.d/crondtab
+
+	"$S_C_G" /etc/outI2 || { err=$?; echo "$S_C_G" /etc/outI2 = $err >&2; exit $err; }
+	cd /etc/outI2 || exit
+
+	assert_key cron-crondtab-dummy-0.service 'Environment'        'NORMAL_VARIABLE=real' inherited_nojob
+	assert_key cron-crondtab-dummy-0.timer   'RandomizedDelaySec' '10m'                  inherited_nojob
+}
+
+
+{
+	rm -r /etc/cron.*
 	printf '%s\n' 'root:x:0:0:root:/root:/bin/sh' 'eroot:x:0:0:root:/root:/bin/ed' > /etc/passwd
 	cp "${TESTDIR}crontab" /etc
 	mkdir /etc/cron.daily

@@ -149,11 +149,25 @@ and
 if changed in
 .IR /etc/crontab ,
 are remembered for all other crontabs
-.RI ( /etc/cron.d ", " /etc/anacron ",  users'\ crontabs)"
+.RI ( /etc/cron.d ", " /etc/anacron ", users'\ crontabs)"
 and act as an administrator-controlled default.
 They can be set to
 .BR 'inherit'
 to get that default back.
+
+.TP
+.B CRON_INHERIT_VARIABLES
+In the top-level
+.IR /etc/crontab :
+a whitespace-separated list of variables
+.RI ( including " control statements that get removed from the environment otherwise)"
+to remember into other crontabs
+.RI ( /etc/cron.d ", users'\ crontabs; not " /etc/anacron ).
+This allows instituting a global
+.BR RANDOM_DELAY / SHELL /&c.\&
+default policy.
+.br
+Elsewhere: ignored.
 
 .TP
 .B RANDOM_DELAY
