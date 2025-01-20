@@ -1,3 +1,24 @@
+v2.5.0 : 2025-01-21
+
+   [Andrew Sayers]
+   Clarify: "ignoring /etc/… because native timer is present"
+          & "ignoring /etc/… because it is masked"
+         -> "ignoring /etc/… because it is overridden by native .timer unit"
+          & "ignoring /etc/… because it is overridden and masked by native .timer unit"
+
+   [Josef Johansson]
+   Fix: RANDOM_DELAY=1 being ignored as-if it were unset or =0
+
+   [наб]
+   Clarify: PERSISTENT=auto is the default except in anacrontab(5)
+   New feature: "CRON_INHERIT_VARIABLES=var1 var2 var3..." in /etc/crontab
+                copies var1 var2 &c. to /etc/cron.d/* and /etc/cron.*/*;
+                this allows global defaults for both environment variables
+                and cron configuration like RANDOM_DELAY, SHELL, &c.
+   New feature: ./configure --with-pamname=$pamconfigname
+                to generate PAMName=$pamconfigname into .service units
+                         (+ KillMode=control-group by necessity)
+
 v2.4.1 : 2024-08-13
 
    [наб]
