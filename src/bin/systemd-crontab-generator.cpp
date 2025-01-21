@@ -867,11 +867,14 @@ struct Job {
 
 		std::fputs("[Service]\n", into);
 		std::fprintf(into, "User=%.*s\n", FORMAT_SV(this->user));
+		if(*PAMNAME)
+			std::fputs("PAMName=" PAMNAME "\n", into);  // + default KillMode=control-group (can't have =process with PAMName)
+		else
+			std::fputs("KillMode=process\n", into);
 		std::fputs("WorkingDirectory=-~\n", into);
 		std::fputs("Type=oneshot\n", into);
 		std::fputs("IgnoreSIGPIPE=false\n", into);
 		std::fputs("SyslogFacility=cron\n", into);
-		std::fputs("KillMode=process\n", into);
 		if(USE_LOGLEVELMAX != "no"sv)
 			std::fprintf(into, "LogLevelMax=%.*s\n", FORMAT_SV(USE_LOGLEVELMAX));
 		if(!this->schedule.empty() && this->boot_delay)
@@ -1355,7 +1358,7 @@ static auto realmain() -> int {
 					return;
 				if(is_backup(directory.c_str(), basename))
 					return;
-				auto filename            = (directory + '/') += basename;
+				auto filename = (directory + '/') += basename;
 				if(access(filename.c_str(), X_OK))
 					return;
 				std::string_view command = filename;
