@@ -4,13 +4,14 @@ SHELLCHECK ?= shellcheck
 CRONTAB ?= crontab
 PCH ?= y
 
-version		:= @version@
+version			:= @version@
 schedules		:= @schedules@
 schedules_not		:= @schedules_not@
 enable_runparts		:= @enable_runparts@
 use_loglevelmax		:= @use_loglevelmax@
 part2timer		:= @part2timer@
 crond2timer		:= @crond2timer@
+pamname			:= @pamname@
 
 prefix		:= @prefix@
 bindir		:= @bindir@
@@ -202,7 +203,8 @@ $(builddir)/include/configuration.hpp : $(srcdir)/include/configuration.hpp.in
 	    -e 's:\@use_runparts\@:$(use_runparts):' \
 	    -e 's:\@version\@:$(version):' \
 	    -e 's:\@libexecdir\@:$(libexecdir):' \
-	    -e 's:\@statedir\@:$(statedir):' $< > $@
+	    -e 's:\@statedir\@:$(statedir):' \
+	    -e 's:\@pamname\@:$(pamname):g' $< > $@
 
 $(builddir)/include/%.hpp: $(srcdir)/include/%.hpp
 	cp $< $@

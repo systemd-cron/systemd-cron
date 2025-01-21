@@ -122,6 +122,8 @@ Other options include (`pkgconf` may be overridden with `$PKG_CONFIG`):
   Default: `/dev/null`.
 * `--with-crond2timer=file` Mapping from basename in /etc/cron.d to unit name.
   Default: `/dev/null`.
+* `--with-pamname=pamconfigname` Name of /etc/pam.d script to put into `PAMName=` directives.
+  Default: not generated. If set, also forces `KillMode=control-group` instead of the default `=process`.
 * `--with-version=ver` Downstream version.
   Default: contents of `VERSION`.
 
