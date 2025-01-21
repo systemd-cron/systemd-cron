@@ -6,7 +6,7 @@
 # they must be covered by the Fedora preset policy."
 
 Name:           systemd-cron
-Version:        1.16.3
+Version:        2.5.0
 Release:        1
 License:        MIT
 Summary:        systemd units to provide cron daemon & anacron functionality
@@ -17,7 +17,6 @@ Provides:       cronie
 Provides:       cronie-anacron
 Conflicts:      cronie
 Conflicts:      cronie-anacron
-BuildArch:      noarch
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 Requires:       crontabs
 Requires:       systemd
@@ -51,7 +50,10 @@ fi
 %setup -q
 
 %build
-./configure --enable-boot=no
+./configure \
+  --enable-boot=no \
+  --enable-runparts
+
 make
 
 %install
@@ -70,9 +72,10 @@ echo 'enable cron.target' > $RPM_BUILD_ROOT/usr/lib/systemd/system-preset/50-sys
 %dir /etc/cron.d/
 /etc/cron.weekly/
 /usr/bin/crontab
-/usr/libexec/systemd-cron/mail_on_failure
+/usr/libexec/systemd-cron/mail_for_job
 /usr/libexec/systemd-cron/boot_delay
 /usr/libexec/systemd-cron/remove_stale_stamps
+/usr/libexec/systemd-cron/crontab_setgid
 /usr/lib/systemd/system-preset/50-systemd-cron.preset
 /usr/lib/systemd/system/cron.target
 /usr/lib/systemd/system/cron-weekly.service
@@ -82,7 +85,7 @@ echo 'enable cron.target' > $RPM_BUILD_ROOT/usr/lib/systemd/system-preset/50-sys
 /usr/lib/systemd/system/cron-weekly.timer
 /usr/lib/systemd/system/cron-monthly.service
 /usr/lib/systemd/system/cron-weekly.target
-/usr/lib/systemd/system/cron-failure@.service
+/usr/lib/systemd/system/cron-mail@.service
 /usr/lib/systemd/system/cron-daily.timer
 /usr/lib/systemd/system/cron-daily.service
 /usr/lib/systemd/system/cron-daily.target
@@ -90,7 +93,12 @@ echo 'enable cron.target' > $RPM_BUILD_ROOT/usr/lib/systemd/system-preset/50-sys
 /usr/lib/systemd/system/cron-update.service
 /usr/lib/systemd/system/cron-hourly.timer
 /usr/lib/systemd/system/cron-monthly.target
+/usr/lib/systemd/system/cron-yearly.service
+/usr/lib/systemd/system/cron-yearly.target
+/usr/lib/systemd/system/cron-yearly.timer
 /usr/lib/systemd/system-generators/systemd-crontab-generator
+/usr/lib/sysusers.d/systemd-cron.conf
+
 %{_mandir}/man1/crontab.*
 %{_mandir}/man5/crontab.*
 %{_mandir}/man5/anacrontab.*
