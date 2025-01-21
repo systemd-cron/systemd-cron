@@ -126,7 +126,12 @@ static auto translate(const char * line) -> int {
 	// oddly, missing /run/systemd is perfectly okay
 	std::rewind(timer);
 	std::rewind(service);
-	execlp("systemd-analyze", "systemd-analyze", "verify", "/dev/fd/3:input.timer", "/dev/fd/4:input.service", static_cast<const char *>(nullptr));
+	// TODO: roll back to straight execlp() if we ever bump past the systemd ≥ 236 requirement (this is 250); cf. #161
+	// execlp("systemd-analyze", "systemd-analyze", "verify", "/dev/fd/3:input.timer", "/dev/fd/4:input.service", static_cast<const char *>(nullptr));
+	execl("/bin/sh", "sh", "-c",
+	      "systemd-analyze --version 2>/dev/null |"
+	      "{ read -r _ v _ || v=0; [ \"$v\" -lt 250 ] || exec systemd-analyze verify /dev/fd/3:input.timer /dev/fd/4:input.service; }",
+	      static_cast<const char *>(nullptr));
 	return 0;
 }
 
