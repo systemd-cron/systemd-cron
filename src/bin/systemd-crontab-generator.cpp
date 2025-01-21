@@ -920,7 +920,7 @@ struct Job {
 				std::fprintf(into, " %.*s", FORMAT_SV(*this->timezone));
 			std::fputc('\n', into);
 		}
-		if(this->random_delay > 1)
+		if(this->random_delay)
 			std::fprintf(into, "RandomizedDelaySec=%zum\n", this->random_delay);
 		if(this->persistent)
 			std::fputs("Persistent=true\n", into);
