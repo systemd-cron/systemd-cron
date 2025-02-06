@@ -223,7 +223,7 @@ static auto list(const char * cron_file, const char * user) -> int {
 	auto err = errno;
 
 	if(err == ENOENT)
-		return std::fprintf(stderr, "no crontab for %s\n", user), ENOENT;
+		return std::fprintf(stderr, "no crontab for %s\n", user), 1;
 
 	if(user != current_user)
 		return std::fprintf(stderr, "you can not display %s's crontab\n", user), 1;
@@ -520,7 +520,7 @@ static auto replace(const char * cron_file, const char * user, const char * file
 }
 
 
-enum class action_t { replace, list = 'l', remove = 'r', edit = 'e', show = 's', translate = 't', test = 'T', version = 'V' };
+enum class action_t : char { replace, list = 'l', remove = 'r', edit = 'e', show = 's', translate = 't', test = 'T', version = 'V' };
 
 #define USAGE                                                                               \
 	"usage:\n"                                                                                \
