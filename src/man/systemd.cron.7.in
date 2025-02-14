@@ -3,7 +3,7 @@
 .Os systemd-cron @version@
 .
 .Sh NAME
-.Nm systemd.crom
+.Nm systemd.cron
 .Nd systemd units for cron periodic jobs
 .
 .Sh SYNOPSIS
