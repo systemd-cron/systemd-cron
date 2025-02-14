@@ -50,6 +50,10 @@ enable_quarterly=no
 enable_semi_annually=no
 enable_yearly=yes
 
+# TODO: roll back to straight OnSuccess= if we ever bump past the systemd ≥ 236 requirement (this is 249); cf. #165
+have_onsuccess="$($pkgconf systemd --max-version=249 && echo no)" 2>/dev/null || \
+have_onsuccess=yes
+
 
 orig_args="$*"
 ARGS=$(getopt -n "$(basename "${0}")" -o '' -l '
@@ -284,4 +288,5 @@ s|@part2timer@|${part2timer}|g
 s|@crond2timer@|${crond2timer}|g
 s|@pamname@|${pamname}|g
 s|@version@|${version}|g
+s|@have_onsuccess@|${have_onsuccess}|g
 " Makefile.in > Makefile

@@ -826,8 +826,17 @@ struct Job {
 			std::fprintf(into, "SourcePath=%.*s\n", FORMAT_SV(this->filename));
 	}
 
-	auto format_on_failure(FILE * into, const char * on, bool nonempty = false) -> void {
-		std::fprintf(into, "On%s=cron-mail@%%n:%s", on, on);
+	// TODO: roll back to straight OnSuccess= and drop onsuccess_shim if we ever bump past the systemd ≥ 236 requirement (this is 249); cf. #165
+	auto format_on_failure(FILE * into, const char * on, bool nonempty = false) -> char * {
+		size_t sp;
+		char * onsuccess_shim{};
+		FILE * onsuccess_out{};
+		if(on[0] == 'S' && !HAVE_ONSUCCESS) {
+			if((onsuccess_out = open_memstream(&onsuccess_shim, &sp)))
+				into = onsuccess_out;
+			std::fputs("ExecStart=-+/usr/bin/systemctl start cron-mail@%n:Success", into);
+		} else
+			std::fprintf(into, "On%s=cron-mail@%%n:%s", on, on);
 		if(nonempty)
 			std::fputs(":nonempty", into);
 		switch(this->cron_mail_format) {
@@ -838,10 +847,14 @@ struct Job {
 				break;
 		}
 		std::fputs(".service\n", into);
+		if(onsuccess_out)
+			std::fclose(onsuccess_out);
+		return onsuccess_shim;
 	}
 
 	auto generate_service(FILE * into) -> void {
 		this->generate_unit_header(into, "Cron");
+		char * onsuccess_shim{};
 		if(auto itr = this->environment.find("MAILTO"sv); itr != std::end(this->environment) && itr->second.empty())
 			;  // mails explicitly disabled
 		else if(!HAS_SENDMAIL)
@@ -853,10 +866,10 @@ struct Job {
 				case cron_mail_success_t::never:
 					break;
 				case cron_mail_success_t::always:
-					this->format_on_failure(into, "Success");
+					onsuccess_shim = this->format_on_failure(into, "Success");
 					break;
 				case cron_mail_success_t::nonempty:
-					this->format_on_failure(into, "Success", true);
+					onsuccess_shim = this->format_on_failure(into, "Success", true);
 					break;
 			}
 		}
@@ -883,6 +896,10 @@ struct Job {
 			if(!UPTIME || this->boot_delay > *UPTIME)
 				std::fprintf(into, "ExecStartPre=-%.*s %zu\n", FORMAT_SV(BOOT_DELAY), this->boot_delay);
 		std::fprintf(into, "ExecStart=%.*s\n", FORMAT_SV(this->execstart));
+		if(onsuccess_shim) {
+			std::fputs(onsuccess_shim, into);
+			std::free(onsuccess_shim);
+		}
 		if(this->environment.size()) {
 			std::fputs("Environment=", into);
 			environment_write(this->environment, into);

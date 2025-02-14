@@ -4,6 +4,7 @@ using namespace std::literals;
 static const char * const VERSION                       = "@version@";
 static const constexpr std::string_view USE_LOGLEVELMAX = "@use_loglevelmax@"sv;
 static const constexpr bool USE_RUNPARTS                = @use_runparts@;
+static const constexpr bool HAVE_ONSUCCESS              = @have_onsuccess@;
 static const constexpr std::string_view BOOT_DELAY      = "@libexecdir@/systemd-cron/boot_delay"sv;
 #define STATEDIR "@statedir@"
 static const char * const SETGID_HELPER                 = "@libexecdir@/systemd-cron/crontab_setgid";

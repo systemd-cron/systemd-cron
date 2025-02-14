@@ -8,6 +8,8 @@ export SENDMAIL  # s-c-g won't generate On{Success,Failure}= lines if it doesn't
 
 USE_RUN_PARTS="${1:-no}"
 echo "USE_RUN_PARTS: $USE_RUN_PARTS"
+HAVE_ONSUCCESS="${3:-yes}"
+echo "HAVE_ONSUCCESS: $HAVE_ONSUCCESS"
 
 mount -t tmpfs tmpfs /etc || exit
 STATEDIR="${2:-"/var/spool/cron"}"
@@ -18,7 +20,10 @@ fi
 
 err=0
 assert_key() {  # file k v testname
-	val="$(grep "^$2=" "$1")"
+	# TODO: roll back to no special-case if we ever bump past the systemd ≥ 236 requirement (this is 249); cf. #165
+	[ "$2" = ExecStart ] && [ "$HAVE_ONSUCCESS" = no ] && greparg=-m1 || greparg=
+	[ "$2" = OnSuccess ] && [ "$HAVE_ONSUCCESS" = no ] && set -- "$1" "ExecStart" "-+/usr/bin/systemctl start $3" "$4" && postgrep() { tail -n+2; } || postgrep() { cat; }
+	val="$(grep $greparg "^$2=" "$1" | postgrep)"
 	[ "${val#"$2="}" = "$3" ] || { err=1; echo "$4: $1: $val != $3" >&2; }
 }
 

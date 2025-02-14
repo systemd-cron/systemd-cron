@@ -1,7 +1,8 @@
 [Unit]
 Description=systemd-cron job mail — %i
 Documentation=man:systemd.cron(7)
-RefuseManualStart=true
+# TODO: drop conditional and roll back to straight OnSuccess= if we ever bump past the systemd ≥ 236 requirement (this is 249); cf. #165
+@remove_if_no_onsuccess@RefuseManualStart=true
 RefuseManualStop=true
 
 [Service]

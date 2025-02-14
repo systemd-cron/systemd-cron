@@ -8,6 +8,7 @@ version			:= @version@
 schedules		:= @schedules@
 schedules_not		:= @schedules_not@
 enable_runparts		:= @enable_runparts@
+have_onsuccess		:= @have_onsuccess@
 use_loglevelmax		:= @use_loglevelmax@
 part2timer		:= @part2timer@
 crond2timer		:= @crond2timer@
@@ -61,7 +62,6 @@ requires = $(subst ${null} ${null},\n,$(foreach schedule,$(schedules),Requires=c
 else
 requires = Requires=systemd-cron-cleaner.timer
 endif
-use_runparts = $(if $(filter $(enable_runparts),yes),true,false)
 
 # $(call in2out,$input,$output,$schedule,$requires)
 define in2out
@@ -72,6 +72,7 @@ define in2out
 		-e "s|\@version\@|$(version)|g" \
 		-e "s|\@use_loglevelmax\@|$(use_loglevelmax)|g" \
 		-e "s|\@enable_runparts\@|$(enable_runparts)|g" \
+		-e "$(if $(filter $(have_onsuccess),yes),s|\@remove_if_no_onsuccess\@||g,/\@remove_if_no_onsuccess\@/d)" \
 		-e "s|\@schedule\@|$3|g" \
 		-e "s|\@requires\@|$4|g" \
 		$1 > $2
@@ -89,7 +90,7 @@ dist: $(tarball)
 
 test: test-unshare test-nounshare
 test-unshare: all
-	unshare -rm test/test-generator $(enable_runparts) "$(statedir)"
+	unshare -rm test/test-generator $(enable_runparts) "$(statedir)" $(have_onsuccess)
 	unshare -ru test/test-m_f_j $(version)
 	unshare -rm test/test-r_s_s
 test-nounshare: all
@@ -200,11 +201,12 @@ $(builddir)/include/crond2timer.hpp : $(crond2timer)
 $(builddir)/include/configuration.hpp : $(srcdir)/include/configuration.hpp.in
 	mkdir -p $(builddir)/include
 	sed -e 's:\@use_loglevelmax\@:$(use_loglevelmax):' \
-	    -e 's:\@use_runparts\@:$(use_runparts):' \
+	    -e 's:\@use_runparts\@:$(if $(filter $(enable_runparts),yes),true,false):' \
 	    -e 's:\@version\@:$(version):' \
 	    -e 's:\@libexecdir\@:$(libexecdir):' \
 	    -e 's:\@statedir\@:$(statedir):' \
-	    -e 's:\@pamname\@:$(pamname):g' $< > $@
+	    -e 's:\@pamname\@:$(pamname):g' \
+	    -e 's:\@have_onsuccess\@:$(if $(filter $(have_onsuccess),yes),true,false):g' $< > $@
 
 $(builddir)/include/%.hpp: $(srcdir)/include/%.hpp
 	cp $< $@
