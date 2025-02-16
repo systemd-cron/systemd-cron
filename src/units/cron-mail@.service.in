@@ -10,4 +10,5 @@ Type=oneshot
 PassEnvironment=SENDMAIL
 ExecStart=@libexecdir@/systemd-cron/mail_for_job %i
 User=_cron-failure
+# TODO: drop Group= systemd ≥ 236 requirement (this is 245); cf. https://github.com/systemd-cron/systemd-cron/issues/165#issuecomment-2661583788
 Group=systemd-journal
