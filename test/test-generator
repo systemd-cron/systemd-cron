@@ -22,7 +22,7 @@ err=0
 assert_key() {  # file k v testname
 	# TODO: roll back to no special-case if we ever bump past the systemd ≥ 236 requirement (this is 249); cf. #165
 	[ "$2" = ExecStart ] && [ "$HAVE_ONSUCCESS" = no ] && greparg=-m1 || greparg=
-	[ "$2" = OnSuccess ] && [ "$HAVE_ONSUCCESS" = no ] && set -- "$1" "ExecStart" "-+/usr/bin/systemctl start $3" "$4" && postgrep() { tail -n+2; } || postgrep() { cat; }
+	[ "$2" = OnSuccess ] && [ "$HAVE_ONSUCCESS" = no ] && set -- "$1" "ExecStart" "-+/usr/bin/systemctl start --no-block $3" "$4" && postgrep() { tail -n+2; } || postgrep() { cat; }
 	val="$(grep $greparg "^$2=" "$1" | postgrep)"
 	[ "${val#"$2="}" = "$3" ] || { err=1; echo "$4: $1: $val != $3" >&2; }
 }

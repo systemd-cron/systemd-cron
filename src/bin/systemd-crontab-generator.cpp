@@ -827,16 +827,18 @@ struct Job {
 	}
 
 	// TODO: roll back to straight OnSuccess= and drop onsuccess_shim if we ever bump past the systemd ≥ 236 requirement (this is 249); cf. #165
-	auto format_on_failure(FILE * into, const char * on, bool nonempty = false) -> char * {
+	auto format_on_failure(FILE * into, const char * key, const char * state, bool nonempty = false) -> char * {
 		size_t sp;
 		char * onsuccess_shim{};
 		FILE * onsuccess_out{};
-		if(on[0] == 'S' && !HAVE_ONSUCCESS) {
+		if(key[2] == 'S' && !HAVE_ONSUCCESS) {
+			format_on_failure(into, "Before", "Success", nonempty);
+
 			if((onsuccess_out = open_memstream(&onsuccess_shim, &sp)))
 				into = onsuccess_out;
-			std::fputs("ExecStart=-+/usr/bin/systemctl start cron-mail@%n:Success", into);
+			std::fputs("ExecStart=-+/usr/bin/systemctl start --no-block cron-mail@%n:Success", into);
 		} else
-			std::fprintf(into, "On%s=cron-mail@%%n:%s", on, on);
+			std::fprintf(into, "%s=cron-mail@%%n:%s", key, state);
 		if(nonempty)
 			std::fputs(":nonempty", into);
 		switch(this->cron_mail_format) {
@@ -860,16 +862,16 @@ struct Job {
 		else if(!HAS_SENDMAIL)
 			;  // mails automatically disabled
 		else {
-			this->format_on_failure(into, "Failure");
+			this->format_on_failure(into, "OnFailure", "Failure");
 
 			switch(this->cron_mail_success) {
 				case cron_mail_success_t::never:
 					break;
 				case cron_mail_success_t::always:
-					onsuccess_shim = this->format_on_failure(into, "Success");
+					onsuccess_shim = this->format_on_failure(into, "OnSuccess", "Success");
 					break;
 				case cron_mail_success_t::nonempty:
-					onsuccess_shim = this->format_on_failure(into, "Success", true);
+					onsuccess_shim = this->format_on_failure(into, "OnSuccess", "Success", true);
 					break;
 			}
 		}
