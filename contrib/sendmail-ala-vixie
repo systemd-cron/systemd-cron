@@ -1,0 +1,36 @@
+#!/bin/sh
+# https://github.com/systemd-cron/systemd-cron/issues/166
+#
+# sd-cron default:
+#   From: root@$(hostname -f)
+#   Subject: [$(hostname -f)] Failure: $USER's crontab "cron-command"
+#
+# vixie(?) cron:
+#   From: (Cron Daemon) <$USER@$(hostname -f)>
+#   Subject: Cron <$USER@$(hostname)> cron-command
+
+{
+	shift $(( $# - 1 ))
+	user=
+	while read -r header rest; do
+		case "$header" in
+			"")
+				echo
+				exec cat
+				;;
+			From:)
+ 				user="${rest%@*}"
+ 				hostname="${rest%% *}"
+				hostname="${hostname##*@}"
+				printf 'From: (Cron Daemon) <%s@%s>\n' "$user" "$hostname"
+				;;
+			Subject:)
+				rest="${rest%\"}"
+				rest="${rest#*\"}"
+				read -r _ _ _ _ _ rest <<<"$rest"
+				printf 'Subject: Cron <%s@%s> %s\n' "$user" "${hostname%%.*}" "$rest"
+				;;
+		esac
+	done
+} | sendmail "$@"
+
