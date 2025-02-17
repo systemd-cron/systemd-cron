@@ -104,8 +104,8 @@ and the full log for the failed run, copied from the journal.
 .br
 When sending output from a job,
 .IR systemd.cron (7)
-will look at MAILFROM. If MAILFROM is defined mail is sent from this email address.
-Otherwise is seen as being sent from root@HOSTNAME.
+will look at MAILFROM. If MAILFROM is defined, mail is sent from this email address.
+Otherwise it's seen as being sent by "root".
 
 .TP
 .B CRON_MAIL_SUCCESS
