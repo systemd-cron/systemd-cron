@@ -48,6 +48,7 @@ systemctl show --property=User --property=Environment --property=SourcePath --pr
 	# Description is either »[Cron] "0 * * * * program"« or »[Cron] /etc/crontab«; we don't care about the latter
 	[ "${description#'[Cron] "'}" != "$description" ] && source_path="$source_path ${description#'[Cron] '}"
 
+	export user
 	mailto="$user"
 	mailfrom='root'
 
@@ -61,10 +62,6 @@ systemctl show --property=User --property=Environment --property=SourcePath --pr
 			'CRON_MAIL_FORMAT=no-metadata')	metadata=;;
 		esac
 	done
-
-	if [ "$mailfrom" == 'user@hostname' ]; then
-		mailfrom="$user@$HOSTNAME"
-	fi
 
 	[ -z "$mailto" ] && {
 		[ -n "$verbose" ] && printf 'This cron job (%s) opted out of email, therefore quitting\n' "$unit" >&2
