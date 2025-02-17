@@ -62,6 +62,10 @@ systemctl show --property=User --property=Environment --property=SourcePath --pr
 		esac
 	done
 
+	if [ "$mailfrom" == 'user@hostname' ]; then
+		mailfrom="$user@$HOSTNAME"
+	fi
+
 	[ -z "$mailto" ] && {
 		[ -n "$verbose" ] && printf 'This cron job (%s) opted out of email, therefore quitting\n' "$unit" >&2
 		exit 0
