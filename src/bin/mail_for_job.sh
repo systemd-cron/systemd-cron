@@ -48,6 +48,7 @@ systemctl show --property=User --property=Environment --property=SourcePath --pr
 	# Description is either »[Cron] "0 * * * * program"« or »[Cron] /etc/crontab«; we don't care about the latter
 	[ "${description#'[Cron] "'}" != "$description" ] && source_path="$source_path ${description#'[Cron] '}"
 
+	export user  # used by custom sendmails!
 	mailto="$user"
 	mailfrom='root'
 
