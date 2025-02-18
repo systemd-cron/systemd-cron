@@ -1,3 +1,19 @@
+v2.5.1 : 2025-02-18
+
+   [Josef Johansson]
+   Update: contrib/systemd-cron.spec
+   New feature: contrib/sendmail-ala-vixie that formats From: & Subject:
+                like vixie cron did
+   New feature: mail_for_job exports $user in environment to $sendmail
+
+   [наб]
+   Fix:     Don't run systemd-analyze in crontab --translate on systemd <250
+   Change:  crontab -l exits 1 instead of ENOENT if no crontab
+   Fix:     systemd.cron(7)'s .Nm said systemd.crom
+   Fix:     Replace OnSuccess= with ExecStopPost= in generated units
+            when systemd <249 detected in ./configure
+   Clarify: crontab(5) said MAILFROM defaulted to root@HOSTNAME, not root
+
 v2.5.0 : 2025-01-21
 
    [Andrew Sayers]

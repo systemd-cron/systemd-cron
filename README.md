@@ -57,6 +57,9 @@ There exists packages available for:
 
 There is also a old .spec file for Fedora in [contrib/][12].
 
+Using [`contrib/sendmail-ala-vixie`][14] and the right `CRON_MAIL_*=` configuration,
+the e-mail format and firing conditions can be matched to vixie cron precisely.
+
 A complete list of all packages can be browsed at [Repology][13].
 
 You can also build it manually from source.
@@ -177,7 +180,7 @@ Copyright
 © 2014, Konstantin Stepanov (me@kstep.me) : author of crontab [generator][6]  
 © 2014, Daniel Schaal : review of crontab generator  
 © 2014-2024, Alexandre Detiste (alexandre@detiste.be) : maintainer  
-© 2023-2024, наб (nabijaczleweli@nabijaczleweli.xyz) : rewrite of generator in C++  
+© 2023-2025, наб (nabijaczleweli@nabijaczleweli.xyz) : rewrite of generator in C++, maintainer
 
 [1]: http://www.freedesktop.org/wiki/Software/systemd/ "systemd"
 [2]: http://en.wikipedia.org/wiki/Cron "cron"
@@ -191,6 +194,7 @@ Copyright
 [10]: https://packages.gentoo.org/package/sys-process/systemd-cron
 [11]: https://openmamba.org/en/packages/?tag=devel&pkg=systemd-cron.source
 [12]: https://github.com/systemd-cron/systemd-cron/blob/master/contrib/systemd-cron.spec
-[13]: https://repology.org/project/systemd-cron/packages
+[13]: https://github.com/systemd-cron/systemd-cron/blob/master/contrib/sendmail-ala-vixie
+[14]: https://repology.org/project/systemd-cron/packages
 
 [90]: https://bugs.freedesktop.org/show_bug.cgi?id=82084
