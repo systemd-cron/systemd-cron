@@ -1,0 +1,48 @@
+#!/bin/sh
+# https://github.com/systemd-cron/systemd-cron/issues/166
+#
+# sd-cron default:
+#   From: root
+#   Subject: [$(hostname)] Failure: $USER's crontab "cron-command"
+#
+# vixie cron:
+#   From: (Cron Daemon) <$USER@$(hostname -f)>
+#   Subject: Cron <$USER@$(hostname)> cron-command
+#
+# $user inherited in the environment from mail_for_job.sh
+
+{
+	hostname="$(hostname -f)"
+	while read -r header rest; do
+		case "$header" in
+			"")
+				echo
+				exec cat
+				;;
+			From:)
+				printf 'From: (Cron Daemon) <%s@%s>\n' "$user" "$hostname"
+				;;
+			Subject:)
+				rest="${rest%\"}"
+				rest="${rest#*\"}"
+				# down to '0   0    *   *     *   cd /home/...' (or '@daily cd /home/...')
+				if [ "${rest#@}" != "$rest" ]; then
+					rest="${rest#*[ 	]}"
+				else
+					rest="${rest#*[ 	]}"; rest="${rest#*[! 	]}"
+					rest="${rest#*[ 	]}"; rest="${rest#*[! 	]}"
+					rest="${rest#*[ 	]}"; rest="${rest#*[! 	]}"
+					rest="${rest#*[ 	]}"; rest="${rest#*[! 	]}"
+					rest="${rest#*[ 	]}"
+				fi
+				while [ "${rest#[ 	]}" != "$rest" ]; do
+					rest="${rest#[ 	]}"
+				done
+				printf 'Subject: Cron <%s@%s> %s\n' "$user" "${hostname%%.*}" "$rest"
+				;;
+			*)
+				printf '%s %s\n' "$header" "$rest"
+				;;
+		esac
+	done
+} | "$(command -v sendmail || command -v /usr/sbin/sendmail || command -v /usr/lib/sendmail)" "$@"
