@@ -6,13 +6,15 @@
 # they must be covered by the Fedora preset policy."
 
 Name:           systemd-cron
-Version:        2.5.0
+Version:        2.5.1
 Release:        1
 License:        MIT
 Summary:        systemd units to provide cron daemon & anacron functionality
 Url:            https://github.com/systemd-cron/systemd-cron/
 Group:          System Environment/Base
 Source:         https://github.com/systemd-cron/systemd-cron/archive/v%{version}.tar.gz
+BuildRequires:  g++
+BuildRequires:  libmd-devel
 Provides:       cronie
 Provides:       cronie-anacron
 Conflicts:      cronie
