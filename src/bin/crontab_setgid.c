@@ -1,3 +1,8 @@
+/* Copyright (C) 2014 Alexandre Detiste (alexandre@detiste.be)
+ * Copyright (C) 2023 наб (nabijaczleweli@nabijaczleweli.xyz)
+ * SPDX-License-Identifier: MIT
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
