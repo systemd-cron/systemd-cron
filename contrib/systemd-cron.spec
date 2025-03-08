@@ -56,7 +56,7 @@ fi
   --enable-boot=no \
   --enable-runparts
 
-make
+%make_build
 
 %install
 make DESTDIR=$RPM_BUILD_ROOT install
