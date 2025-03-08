@@ -11,7 +11,6 @@ Release:        1
 License:        MIT
 Summary:        systemd units to provide cron daemon & anacron functionality
 Url:            https://github.com/systemd-cron/systemd-cron/
-Group:          System Environment/Base
 Source:         https://github.com/systemd-cron/systemd-cron/archive/v%{version}.tar.gz
 BuildRequires:  g++
 BuildRequires:  libmd-devel
