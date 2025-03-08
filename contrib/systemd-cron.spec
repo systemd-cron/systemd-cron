@@ -74,6 +74,7 @@ echo 'enable cron.target' > $RPM_BUILD_ROOT/usr/lib/systemd/system-preset/50-sys
 %dir /etc/cron.d/
 /etc/cron.weekly/
 /usr/bin/crontab
+%dir /usr/libexec/systemd-cron/
 /usr/libexec/systemd-cron/mail_for_job
 /usr/libexec/systemd-cron/boot_delay
 /usr/libexec/systemd-cron/remove_stale_stamps
