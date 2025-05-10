@@ -1,3 +1,7 @@
+# Copyright (C) 2015-2025 Alexandre Detiste (alexandre@detiste.be)
+# Copyright (C) 2025 Josef Johansson (josef@oderland.se)
+# SPDX-License-Identifier: MIT
+
 # https://fedoraproject.org/wiki/Packaging:ScriptletSnippets#Systemd
 # https://github.com/systemd/systemd/blob/42911a567dc22c3115fb3ee3c56a7dcfb034f102/src/core/macros.systemd.in
 
