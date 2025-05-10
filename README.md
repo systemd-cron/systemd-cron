@@ -54,8 +54,8 @@ There exists packages available for:
 * [Arch][9]
 * [Gentoo][10]
 * [OpenMamba][11] (RPM based)
+* [Fedora][12] ([in copr](https://copr.fedorainfracloud.org/coprs/pramodvu1502/systemd-cron) until accepted)
 
-There is also a old .spec file for Fedora in [contrib/][12].
 
 Using [`contrib/sendmail-ala-vixie`][14] and the right `CRON_MAIL_*=` configuration,
 the e-mail format and firing conditions can be matched to vixie cron precisely.

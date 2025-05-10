@@ -1,53 +1,43 @@
 # Copyright (C) 2015-2025 Alexandre Detiste (alexandre@detiste.be)
 # Copyright (C) 2025 Josef Johansson (josef@oderland.se)
+# Copyright (C) 2025 Pramod (pramodvu1502@proton.me)
 # SPDX-License-Identifier: MIT
-
-# https://fedoraproject.org/wiki/Packaging:ScriptletSnippets#Systemd
-# https://github.com/systemd/systemd/blob/42911a567dc22c3115fb3ee3c56a7dcfb034f102/src/core/macros.systemd.in
-
-# "If your package includes one or more systemd units that need
-# to be enabled by default on package installation,
-# they must be covered by the Fedora preset policy."
 
 Name:           systemd-cron
 Version:        2.5.1
-Release:        1
+Release:        %{autorelease}
 License:        MIT
-Summary:        systemd units to provide cron daemon & anacron functionality
-Url:            https://github.com/systemd-cron/systemd-cron/
-Source:         https://github.com/systemd-cron/systemd-cron/archive/v%{version}.tar.gz
+Summary:        systemd generator to provide cron daemon & anacron functionality
+Url:            https://github.com/systemd-cron/systemd-cron
+Source0:        %{url}/archive/v%{version}.tar.gz
 BuildRequires:  g++
 BuildRequires:  libmd-devel
 BuildRequires:  systemd-rpm-macros
-Provides:       cronie
-Provides:       cronie-anacron
 Conflicts:      cronie
 Conflicts:      cronie-anacron
-BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 Requires:       crontabs
 Requires:       systemd
+Requires:       libmd
+BuildRequires:  g++
+BuildRequires:  libmd-devel
+BuildRequires:  systemd-rpm-macros
 
 %description
-Provides systemd units to run cron jobs in /etc/cron.hourly cron.daily
-cron.weekly and cron.monthly directories, without having cron
-or anacron installed.
-It also provides a generator that dynamically translate /etc/crontab,
-/etc/cron.d/* and user cronjobs in systemd units.
+A systemd generator implementing (ana)cron.
+It uses systemd.timer and systemd.service under the hood.
 
 %pre
-touch %{_rundir}/crond.reboot
+# Prevent execution of boot and reboot scripts on installation
+touch %{_rundir}/crond.reboot %{_rundir}/crond.bootdir
 
 %preun
 %systemd_preun cron.target
 
 %post
-# XXX this macro doesn't seems to do anything
 %systemd_post cron.target
-if [ $1 -eq 1 ] ; then
-	systemctl daemon-reload
-	systemctl enable cron.target
-	systemctl start cron.target
-fi
+
+# To apply the /var/spool/cron and crontab group to the system on installation
+%{_bindir}/systemctl reload-or-restart systemd-sysusers.service systemd-tmpfiles-setup.service
 
 %postun
 %systemd_postun_with_restart cron.target
@@ -56,62 +46,80 @@ fi
 %setup -q
 
 %build
+# Don't use the %%configure macro as this is not an autotool script
 ./configure \
-  --enable-boot=no \
-  --enable-runparts
+  --version="%{version}" \
+  --prefix="%{_prefix}" \
+  --bindir="%{_bindir}" \
+  --datadir="%{_datadir}" \
+  --libdir="%{_libdir}" \
+  --libexecdir="%{_libexecdir}" \
+  --mandir="%{_mandir}" \
+  --docdir="%{_docdir}" \
+  --unitdir="%{_unitdir}" \
+  --generatordir="%{_systemdgeneratordir}" \
+  --sysusersdir="%{_sysusersdir}" \
+  --enable-runparts=no \
+  --enable-minutely=yes \
+  --enable-quarterly=yes \
+  --enable-semi_annually=yes \
+  --enable-boot=no
 
+# Disabled run-parts i.e. static single units for each granuarity level.
+# Instead opting to use only the systemd-crontab-generator
+# run-parts override the generator when installed
+#
+# Also enabled all disabled-by-default granularity levels
+#
+# cron.boot isn't otherwise supported in fedora, we follow that.
+
+# Compile
 %make_build
 
 %install
-make DESTDIR=$RPM_BUILD_ROOT install
-sed -i '/Persistent=true/d' $RPM_BUILD_ROOT/usr/lib/systemd/system/cron-hourly.timer
-mkdir -p $RPM_BUILD_ROOT/var/spool/cron
-mkdir -p $RPM_BUILD_ROOT/etc/cron.d/
-mkdir -p $RPM_BUILD_ROOT/etc/cron.weekly/
-cp contrib/systemd-cron.cron.weekly $RPM_BUILD_ROOT/etc/cron.weekly/systemd-cron
-mkdir -p $RPM_BUILD_ROOT/usr/lib/systemd/system-preset/
-echo 'enable cron.target' > $RPM_BUILD_ROOT/usr/lib/systemd/system-preset/50-systemd-cron.preset
+%make_install
+
+# Systemd preset policy
+mkdir -p "${RPM_BUILD_ROOT}%{_presetdir}"
+echo 'enable cron.target' > "${RPM_BUILD_ROOT}%{_presetdir}/50-systemd-cron.preset"
+
+# Preparing /var/spool/cron using tmpfiles.d
+mkdir -p "${RPM_BUILD_ROOT}%{_tmpfilesdir}"
+echo "d %{_localstatedir}/spool/cron 1730 root crontab" >> "${RPM_BUILD_ROOT}%{_tmpfilesdir}/systemd-cron.conf"
+
+# setgid helper
+chmod g+s "${RPM_BUILD_ROOT}%{_libexecdir}/systemd-cron/crontab_setgid"
 
 %files
 %license LICENSE
 %doc README.md CHANGELOG
+
 %dir %{_sysconfdir}/cron.d
-/etc/cron.weekly/
+%dir %{_libexecdir}/systemd-cron
+
 %{_bindir}/crontab
-%dir /usr/libexec/systemd-cron/
 %{_libexecdir}/systemd-cron/mail_for_job
 %{_libexecdir}/systemd-cron/boot_delay
 %{_libexecdir}/systemd-cron/remove_stale_stamps
-%{_libexecdir}/systemd-cron/crontab_setgid
+%attr(2755, root, crontab) %{_libexecdir}/systemd-cron/crontab_setgid
+%{_systemdgeneratordir}/systemd-crontab-generator
+
 %{_presetdir}/50-systemd-cron.preset
 %{_unitdir}/cron.target
-%{_unitdir}/cron-weekly.service
 %{_unitdir}/cron-update.path
-%{_unitdir}/cron-monthly.timer
-%{_unitdir}/cron-hourly.target
-%{_unitdir}/cron-weekly.timer
-%{_unitdir}/cron-monthly.service
-%{_unitdir}/cron-weekly.target
-%{_unitdir}/cron-mail@.service
-%{_unitdir}/cron-daily.timer
-%{_unitdir}/cron-daily.service
-%{_unitdir}/cron-daily.target
-%{_unitdir}/cron-hourly.service
 %{_unitdir}/cron-update.service
-%{_unitdir}/cron-hourly.timer
-%{_unitdir}/cron-monthly.target
-%{_unitdir}/cron-yearly.service
-%{_unitdir}/cron-yearly.target
-%{_unitdir}/cron-yearly.timer
-%{_systemdgeneratordir}/systemd-crontab-generator
+%{_unitdir}/cron-mail@.service
+%{_unitdir}/systemd-cron-cleaner.service
+%{_unitdir}/systemd-cron-cleaner.timer
+
 %{_sysusersdir}/systemd-cron.conf
+%{_tmpfilesdir}/systemd-cron.conf
 
 %{_mandir}/man1/crontab.*
 %{_mandir}/man5/crontab.*
 %{_mandir}/man5/anacrontab.*
 %{_mandir}/man7/systemd.cron.*
 %{_mandir}/man8/systemd-crontab-generator.*
-%dir /var/spool/cron
 
 %changelog
 %autochangelog
