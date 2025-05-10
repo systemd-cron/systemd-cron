@@ -13,21 +13,21 @@
 --enable-boot
     Arch: yes
     Debian: no
-    Fedora: no
+    Fedora: yes
     Gentoo: (optional)
     OpenMamba: yes
 
 --enable-runparts:
     Arch: no
     Debian: no
-    Fedora: ?
+    Fedora: no
     Gentoo: (optional)
     OpenMamba: yes
 
 creation of a system group for the setgid helper
     Arch: ?
     Debian: managed by cron-daemon-common
-    Fedora: ?
+    Fedora: yes (named "crontab")
     Gentoo: ?
     OpenMamba: ?
 
