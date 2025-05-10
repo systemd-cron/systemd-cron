@@ -75,36 +75,36 @@ echo 'enable cron.target' > $RPM_BUILD_ROOT/usr/lib/systemd/system-preset/50-sys
 %files
 %license LICENSE
 %doc README.md CHANGELOG
-%dir /etc/cron.d/
+%dir %{_sysconfdir}/cron.d
 /etc/cron.weekly/
-/usr/bin/crontab
+%{_bindir}/crontab
 %dir /usr/libexec/systemd-cron/
-/usr/libexec/systemd-cron/mail_for_job
-/usr/libexec/systemd-cron/boot_delay
-/usr/libexec/systemd-cron/remove_stale_stamps
-/usr/libexec/systemd-cron/crontab_setgid
-/usr/lib/systemd/system-preset/50-systemd-cron.preset
-/usr/lib/systemd/system/cron.target
-/usr/lib/systemd/system/cron-weekly.service
-/usr/lib/systemd/system/cron-update.path
-/usr/lib/systemd/system/cron-monthly.timer
-/usr/lib/systemd/system/cron-hourly.target
-/usr/lib/systemd/system/cron-weekly.timer
-/usr/lib/systemd/system/cron-monthly.service
-/usr/lib/systemd/system/cron-weekly.target
-/usr/lib/systemd/system/cron-mail@.service
-/usr/lib/systemd/system/cron-daily.timer
-/usr/lib/systemd/system/cron-daily.service
-/usr/lib/systemd/system/cron-daily.target
-/usr/lib/systemd/system/cron-hourly.service
-/usr/lib/systemd/system/cron-update.service
-/usr/lib/systemd/system/cron-hourly.timer
-/usr/lib/systemd/system/cron-monthly.target
-/usr/lib/systemd/system/cron-yearly.service
-/usr/lib/systemd/system/cron-yearly.target
-/usr/lib/systemd/system/cron-yearly.timer
-/usr/lib/systemd/system-generators/systemd-crontab-generator
-/usr/lib/sysusers.d/systemd-cron.conf
+%{_libexecdir}/systemd-cron/mail_for_job
+%{_libexecdir}/systemd-cron/boot_delay
+%{_libexecdir}/systemd-cron/remove_stale_stamps
+%{_libexecdir}/systemd-cron/crontab_setgid
+%{_presetdir}/50-systemd-cron.preset
+%{_unitdir}/cron.target
+%{_unitdir}/cron-weekly.service
+%{_unitdir}/cron-update.path
+%{_unitdir}/cron-monthly.timer
+%{_unitdir}/cron-hourly.target
+%{_unitdir}/cron-weekly.timer
+%{_unitdir}/cron-monthly.service
+%{_unitdir}/cron-weekly.target
+%{_unitdir}/cron-mail@.service
+%{_unitdir}/cron-daily.timer
+%{_unitdir}/cron-daily.service
+%{_unitdir}/cron-daily.target
+%{_unitdir}/cron-hourly.service
+%{_unitdir}/cron-update.service
+%{_unitdir}/cron-hourly.timer
+%{_unitdir}/cron-monthly.target
+%{_unitdir}/cron-yearly.service
+%{_unitdir}/cron-yearly.target
+%{_unitdir}/cron-yearly.timer
+%{_systemdgeneratordir}/systemd-crontab-generator
+%{_sysusersdir}/systemd-cron.conf
 
 %{_mandir}/man1/crontab.*
 %{_mandir}/man5/crontab.*
