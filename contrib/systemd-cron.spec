@@ -18,6 +18,7 @@ Url:            https://github.com/systemd-cron/systemd-cron/
 Source:         https://github.com/systemd-cron/systemd-cron/archive/v%{version}.tar.gz
 BuildRequires:  g++
 BuildRequires:  libmd-devel
+BuildRequires:  systemd-rpm-macros
 Provides:       cronie
 Provides:       cronie-anacron
 Conflicts:      cronie
@@ -34,7 +35,7 @@ It also provides a generator that dynamically translate /etc/crontab,
 /etc/cron.d/* and user cronjobs in systemd units.
 
 %pre
-touch /run/crond.reboot
+touch %{_rundir}/crond.reboot
 
 %preun
 %systemd_preun cron.target
@@ -111,3 +112,6 @@ echo 'enable cron.target' > $RPM_BUILD_ROOT/usr/lib/systemd/system-preset/50-sys
 %{_mandir}/man7/systemd.cron.*
 %{_mandir}/man8/systemd-crontab-generator.*
 %dir /var/spool/cron
+
+%changelog
+%autochangelog
