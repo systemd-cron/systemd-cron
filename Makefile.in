@@ -106,7 +106,9 @@ install: all
 	install -m755 -D $(builddir)/bin/mail_for_job $(DESTDIR)$(libexecdir)/systemd-cron/mail_for_job
 	install -m755 -D $(builddir)/bin/boot_delay $(DESTDIR)$(libexecdir)/systemd-cron/boot_delay
 	install -m644 -D $(srcdir)/lib/sysusers.d/systemd-cron.conf $(DESTDIR)$(sysusersdir)/systemd-cron.conf
+ifdef presetdir
 	install -m644 -D $(srcdir)/lib/50-systemd-cron.preset $(DESTDIR)$(presetdir)/50-systemd-cron.preset
+endif
 	install -m755 -D $(builddir)/bin/crontab_setgid $(DESTDIR)$(libexecdir)/systemd-cron/crontab_setgid
 
 	install -m644 -D $(builddir)/man/systemd.cron.7 $(DESTDIR)$(mandir)/man7/systemd.cron.7
