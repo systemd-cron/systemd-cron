@@ -3,6 +3,7 @@ Description=systemd-cron
 Documentation=man:systemd.cron(7)
 @requires@
 Wants=cron-update.path
+Conflicts=crond.service
 
 [Install]
 WantedBy=multi-user.target
