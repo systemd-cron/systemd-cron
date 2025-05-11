@@ -13,7 +13,7 @@
 --enable-boot
     Arch: yes
     Debian: no
-    Fedora: yes
+    Fedora: no
     Gentoo: (optional)
     OpenMamba: yes
 
