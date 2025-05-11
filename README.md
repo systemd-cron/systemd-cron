@@ -97,6 +97,8 @@ Other options include (`pkgconf` may be overridden with `$PKG_CONFIG`):
   Default: `no`.
 * `--unitdir=<path>` Path to systemd unit files.
   Default: `pkgconf systemd --variable=systemdsystemunitdir` or `<libdir>/systemd/system`.
+* `--presetdir=<path>` Path to systemd preset files
+  Default: `pkgconf systemd --variable=systemdsystempresetdir` or `<libdir>/systemd/system-preset`
 * `--generatordir=<path>` Path to systemd generators.
   Default: `pkgconf systemd --variable=systemdsystemgeneratordir` or `<libdir>/systemd/system-generators`.
 * `--sysusersdir=<path>` Path to systemd-sysusers snippets.
