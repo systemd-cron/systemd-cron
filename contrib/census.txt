@@ -1,6 +1,7 @@
 # census on how s-d-c is configured on various distros
 #
 # https://repology.org/project/systemd-cron/packages
+# https://www.freedesktop.org/software/systemd/man/latest/systemd.preset.html
 
 --statedir
     Arch: /var/spool/cron/
@@ -36,3 +37,10 @@ use systemd per-user instances:
     Fedora: no
     Gentoo: no
     OpenMamba: no
+
+use systemd presets:
+    Arch: ?
+    Debian: no
+    Fedora: yes
+    Gentoo: ?
+    OpenMamba: ?
