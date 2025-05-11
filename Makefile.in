@@ -24,6 +24,7 @@ mandir		:= @mandir@
 docdir		:= @docdir@
 unitdir		:= @unitdir@
 generatordir	:= @generatordir@
+presetdir       := @presetdir@
 sysusersdir	:= @sysusersdir@
 
 srcdir		:= $(CURDIR)/src
@@ -105,6 +106,7 @@ install: all
 	install -m755 -D $(builddir)/bin/mail_for_job $(DESTDIR)$(libexecdir)/systemd-cron/mail_for_job
 	install -m755 -D $(builddir)/bin/boot_delay $(DESTDIR)$(libexecdir)/systemd-cron/boot_delay
 	install -m644 -D $(srcdir)/lib/sysusers.d/systemd-cron.conf $(DESTDIR)$(sysusersdir)/systemd-cron.conf
+	install -m644 -D $(srcdir)/lib/50-systemd-cron.preset $(DESTDIR)$(presetdir)/50-systemd-cron.preset
 	install -m755 -D $(builddir)/bin/crontab_setgid $(DESTDIR)$(libexecdir)/systemd-cron/crontab_setgid
 
 	install -m644 -D $(builddir)/man/systemd.cron.7 $(DESTDIR)$(mandir)/man7/systemd.cron.7
@@ -117,6 +119,7 @@ install: all
 	install -m644 $(builddir)/units/cron-update.path $(DESTDIR)$(unitdir)
 	install -m644 $(builddir)/units/cron-update.service $(DESTDIR)$(unitdir)
 	install -m644 $(builddir)/units/cron-mail@.service $(DESTDIR)$(unitdir)
+
 
 ifneq ($(enable_runparts),no)
 	$(foreach schedule,$(schedules),\
