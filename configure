@@ -27,9 +27,9 @@ unitdir='$(libdir)/systemd/system'
 # shellcheck disable=SC2016
 generatordir="$($pkgconf systemd --variable=systemdsystemgeneratordir)" 2>/dev/null || \
 generatordir='$(libdir)/systemd/system-generators'
-#
-presetdir="$($pkgconf systemd --variable=systemdsystempresetdir)" 2>/dev/null || \
-presetdir='$(libdir)/systemd/system-preset'
+# Don't set the presetdir unless manually passed
+#presetdir="$($pkgconf systemd --variable=systemdsystempresetdir)" 2>/dev/null || \
+#presetdir='$(libdir)/systemd/system-preset'
 # shellcheck disable=SC2016
 sysusersdir="$($pkgconf systemd --variable=sysusersdir)" 2>/dev/null || \
 sysusersdir='$(libdir)/sysusers.d'
@@ -287,6 +287,7 @@ s|@mandir@|${mandir}|g
 s|@docdir@|${docdir}|g
 s|@unitdir@|${unitdir}|g
 s|@generatordir@|${generatordir}|g
+s|@presetdir@|${presetdir:-""}|g
 s|@sysusersdir@|${sysusersdir}|g
 s|@libmd@|${libmd}|g
 s|@use_loglevelmax@|${use_loglevelmax}|g
