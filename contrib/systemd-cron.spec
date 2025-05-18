@@ -18,9 +18,6 @@ Conflicts:      cronie-anacron
 Requires:       crontabs
 Requires:       systemd
 Requires:       libmd
-BuildRequires:  g++
-BuildRequires:  libmd-devel
-BuildRequires:  systemd-rpm-macros
 
 %description
 A systemd generator implementing (ana)cron.
