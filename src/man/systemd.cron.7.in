@@ -82,7 +82,7 @@ You can also use this mechanism to mask an unneeded crontab provided by a packag
 .El
 .
 .Sh UNITS
-.Bl -tag -compact -width ".Pa /etc/cron.semi-annually"
+.Bl -tag -compact -width ".Nm cron- Ns Ar schedule Ns Nm .service"
 .It Nm cron.target
 Target unit which starts the others, needs to be enabled to use systemd-cron.
 .
