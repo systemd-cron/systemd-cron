@@ -220,23 +220,23 @@ else
 endif
 
 common_headers := $(builddir)/include/configuration.hpp $(builddir)/include/libvoreutils.hpp$(if $(PCH),.gch) $(builddir)/include/util.hpp
-CFLAGS += -Wall -Wextra -fno-exceptions -Wno-psabi
+CFLAGS   += -Wall -Wextra -fno-exceptions -Wno-psabi
 CXXFLAGS += -Wall -Wextra -fno-exceptions -Wno-psabi
 $(builddir)/include/libvoreutils.hpp.gch : $(builddir)/include/libvoreutils.hpp
-	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -std=c++20 -I $(builddir)/include            $< -o $@
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS)            -std=c++20 -I $(builddir)/include            $< -o $@
 
 $(builddir)/bin/systemd-crontab-generator: $(srcdir)/bin/systemd-crontab-generator.cpp $(common_headers) $(builddir)/include/part2timer.hpp $(builddir)/include/crond2timer.hpp
-	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -std=c++20 -I $(builddir)/include $(PCH_ARG) $< -o $@ $(LDFLAGS) @libmd@
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) -std=c++20 -I $(builddir)/include $(PCH_ARG) $< -o $@ $(LDLIBS) @libmd@
 
 $(builddir)/bin/crontab: $(srcdir)/bin/crontab.cpp $(common_headers)
-	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -std=c++20 -I $(builddir)/include $(PCH_ARG) $< -o $@ $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) -std=c++20 -I $(builddir)/include $(PCH_ARG) $< -o $@ $(LDLIBS)
 
 $(builddir)/bin/%: $(srcdir)/bin/%.sh
 	$(call in2out,$<,$@)
 	chmod +x $@
 
 $(builddir)/bin/crontab_setgid: $(srcdir)/bin/crontab_setgid.c
-	$(CC) $(CFLAGS) $(CPPFLAGS) $< -DCRONTAB_DIR='"$(statedir)"' -o $@ $(LDFLAGS)
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) $< -DCRONTAB_DIR='"$(statedir)"' -o $@ $(LDLIBS)
 
 $(outputs): | $(builddir)
 
