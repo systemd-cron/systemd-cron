@@ -25,6 +25,7 @@ docdir		:= @docdir@
 unitdir		:= @unitdir@
 generatordir	:= @generatordir@
 sysusersdir	:= @sysusersdir@
+tmpfilesdir	:= @tmpfilesdir@
 
 srcdir		:= $(CURDIR)/src
 outdir		:= $(CURDIR)/out
@@ -101,10 +102,12 @@ test-nounshare: all
 install: all
 	install -m755 -D $(builddir)/bin/crontab $(DESTDIR)$(bindir)/$(CRONTAB)
 	install -m755 -D $(builddir)/bin/systemd-crontab-generator $(DESTDIR)$(generatordir)/systemd-crontab-generator
+	install -m755 -D $(builddir)/bin/loadavg_dam $(DESTDIR)$(libexecdir)/systemd-cron/loadavg_dam
 	install -m755 -D $(builddir)/bin/remove_stale_stamps $(DESTDIR)$(libexecdir)/systemd-cron/remove_stale_stamps
 	install -m755 -D $(builddir)/bin/mail_for_job $(DESTDIR)$(libexecdir)/systemd-cron/mail_for_job
 	install -m755 -D $(builddir)/bin/boot_delay $(DESTDIR)$(libexecdir)/systemd-cron/boot_delay
 	install -m644 -D $(srcdir)/lib/sysusers.d/systemd-cron.conf $(DESTDIR)$(sysusersdir)/systemd-cron.conf
+	install -m644 -D $(srcdir)/lib/tmpfiles.d/systemd-cron.conf $(DESTDIR)$(tmpfilesdir)/systemd-cron.conf
 	install -m755 -D $(builddir)/bin/crontab_setgid $(DESTDIR)$(libexecdir)/systemd-cron/crontab_setgid
 
 	install -m644 -D $(builddir)/man/systemd.cron.7 $(DESTDIR)$(mandir)/man7/systemd.cron.7
@@ -222,6 +225,7 @@ endif
 common_headers := $(builddir)/include/configuration.hpp $(builddir)/include/libvoreutils.hpp$(if $(PCH),.gch) $(builddir)/include/util.hpp
 CFLAGS   += -Wall -Wextra -fno-exceptions -Wno-psabi
 CXXFLAGS += -Wall -Wextra -fno-exceptions -Wno-psabi
+LDFLAGS  += -Wl,-as-needed
 $(builddir)/include/libvoreutils.hpp.gch : $(builddir)/include/libvoreutils.hpp
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS)            -std=c++20 -I $(builddir)/include            $< -o $@
 
@@ -230,6 +234,9 @@ $(builddir)/bin/systemd-crontab-generator: $(srcdir)/bin/systemd-crontab-generat
 
 $(builddir)/bin/crontab: $(srcdir)/bin/crontab.cpp $(common_headers)
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) -std=c++20 -I $(builddir)/include $(PCH_ARG) $< -o $@ $(LDLIBS)
+
+$(builddir)/bin/loadavg_dam: $(srcdir)/bin/loadavg_dam.cpp $(common_headers)
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) -std=c++20 -I $(builddir)/include $(PCH_ARG) $< -o $@ $(LDLIBS) -latomic -lrt
 
 $(builddir)/bin/%: $(srcdir)/bin/%.sh
 	$(call in2out,$<,$@)

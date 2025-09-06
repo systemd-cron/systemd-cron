@@ -227,6 +227,11 @@ and
 .B IOSchedulingClass=idle
 when set.
 
+.TP
+.B CRON_BATCH_LOADAVG_BELOW
+If set and nonempty, delay starting the job until the 1-minute system load average drops below the set value.
+All jobs using this option join a global queue scheduling a random eligible job every 30 seconds.
+
 .PP
 The format of a
 .B cron command
