@@ -121,7 +121,7 @@ namespace vore::file {
 					;
 				this->opened = this->desc != -1;
 			}
-			fd(int desc) noexcept : desc(desc), opened(true) {}
+			fd(int desc) noexcept : desc(desc), opened(desc != -1) {}
 
 			fd(const fd &) = delete;
 			constexpr fd(fd && oth) noexcept { *this = std::move(oth); }
@@ -461,6 +461,11 @@ namespace vore {
 [[maybe_unused]]
 constexpr static bool operator>(const struct timespec & lhs, const struct timespec & rhs) {
 	return lhs.tv_sec > rhs.tv_sec || (lhs.tv_sec == rhs.tv_sec && lhs.tv_nsec > rhs.tv_nsec);
+}
+
+[[maybe_unused]]
+constexpr static bool operator<(const struct timespec & lhs, const struct timespec & rhs) {
+	return lhs.tv_sec < rhs.tv_sec || (lhs.tv_sec == rhs.tv_sec && lhs.tv_nsec < rhs.tv_nsec);
 }
 
 [[maybe_unused]]

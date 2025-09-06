@@ -35,6 +35,8 @@ tmpfilesdir="$($pkgconf systemd --variable=tmpfilesdir)" 2>/dev/null || \
 tmpfilesdir='$(libdir)/tmpfiles.d'
 libmd="$($pkgconf --cflags --libs libmd)" 2>/dev/null || \
 libmd='-lmd'
+libsystemd="$($pkgconf --cflags --libs libsystemd)" 2>/dev/null || \
+libsystemd='-lsystemd'
 enable_runparts=no
 use_loglevelmax=no
 part2timer=/dev/null
@@ -292,6 +294,7 @@ s|@generatordir@|${generatordir}|g
 s|@sysusersdir@|${sysusersdir}|g
 s|@tmpfilesdir@|${tmpfilesdir}|g
 s|@libmd@|${libmd}|g
+s|@libsystemd@|${libsystemd}|g
 s|@use_loglevelmax@|${use_loglevelmax}|g
 s|@part2timer@|${part2timer}|g
 s|@crond2timer@|${crond2timer}|g
