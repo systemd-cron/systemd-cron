@@ -55,6 +55,10 @@ System crontabs managed by packages live here.
 .It Pa @statedir@
 Users' crontabs live here.
 .
+.It Pa /dev/shm/systemd-cron
+Queue used for
+.Sy CRON_BATCH_LOADAVG_BELOW .
+.
 .Pp
 .de etccron
 .if \\n[etccron_\\$1] \{ .

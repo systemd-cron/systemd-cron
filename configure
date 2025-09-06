@@ -30,6 +30,9 @@ generatordir='$(libdir)/systemd/system-generators'
 # shellcheck disable=SC2016
 sysusersdir="$($pkgconf systemd --variable=sysusersdir)" 2>/dev/null || \
 sysusersdir='$(libdir)/sysusers.d'
+# shellcheck disable=SC2016
+tmpfilesdir="$($pkgconf systemd --variable=tmpfilesdir)" 2>/dev/null || \
+tmpfilesdir='$(libdir)/tmpfiles.d'
 libmd="$($pkgconf --cflags --libs libmd)" 2>/dev/null || \
 libmd='-lmd'
 enable_runparts=no
@@ -70,6 +73,7 @@ docdir:,
 unitdir:,
 generatordir:,
 sysusersdir:,
+tmpfilesdir:,
 enable-boot::,
 enable-minutely::,
 enable-hourly::,
@@ -165,6 +169,10 @@ do
 
         '--sysusersdir')
             sysusersdir="${2}"
+            shift 2;;
+
+        '--tmpfilesdir')
+            tmpfilesdir="${2}"
             shift 2;;
 
         '--libmd')
@@ -282,6 +290,7 @@ s|@docdir@|${docdir}|g
 s|@unitdir@|${unitdir}|g
 s|@generatordir@|${generatordir}|g
 s|@sysusersdir@|${sysusersdir}|g
+s|@tmpfilesdir@|${tmpfilesdir}|g
 s|@libmd@|${libmd}|g
 s|@use_loglevelmax@|${use_loglevelmax}|g
 s|@part2timer@|${part2timer}|g

@@ -436,4 +436,41 @@ namespace vore {
 		overload(Ts...) -> overload<Ts...>;
 	}
 }
+
+
+namespace vore {
+	namespace {
+		[[maybe_unused]]
+		const char * parse_floating(const char * val, double & out) {
+			char * end{};
+			errno = 0;
+			out   = std::strtod(val, &end);
+			if(out == 0 && end == val)
+				return "invalid";
+			else if(end && *end)
+				return "partial conversion";
+			else if(errno)
+				return std::strerror(errno);
+
+			return std::isnan(out) ? "is NaN" : nullptr;
+		}
+	}
+}
+
+
+[[maybe_unused]]
+constexpr static bool operator>(const struct timespec & lhs, const struct timespec & rhs) {
+	return lhs.tv_sec > rhs.tv_sec || (lhs.tv_sec == rhs.tv_sec && lhs.tv_nsec > rhs.tv_nsec);
+}
+
+[[maybe_unused]]
+constexpr static struct timespec operator-(struct timespec lhs, const struct timespec & rhs) {
+	if(rhs.tv_nsec > lhs.tv_nsec) {
+		lhs.tv_sec -= 1;
+		lhs.tv_nsec += 1'000'000'000;
+	}
+	lhs.tv_nsec -= rhs.tv_nsec;
+	lhs.tv_sec -= rhs.tv_sec;
+	return lhs;
+}
 #endif
