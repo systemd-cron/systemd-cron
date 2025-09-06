@@ -5,7 +5,8 @@ static const char * const VERSION                       = "@version@";
 static const constexpr std::string_view USE_LOGLEVELMAX = "@use_loglevelmax@"sv;
 static const constexpr bool USE_RUNPARTS                = @use_runparts@;
 static const constexpr bool HAVE_ONSUCCESS              = @have_onsuccess@;
-static const constexpr std::string_view BOOT_DELAY      = "@libexecdir@/systemd-cron/boot_delay"sv;
+static const char * const BOOT_DELAY                    = "@libexecdir@/systemd-cron/boot_delay";
+static const char * const LOADAVG_DAM                   = "@libexecdir@/systemd-cron/loadavg_dam";
 #define STATEDIR "@statedir@"
 static const char * const SETGID_HELPER                 = "@libexecdir@/systemd-cron/crontab_setgid";
 #define PAMNAME "@pamname@"  // ignore if empty
