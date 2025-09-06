@@ -7,6 +7,7 @@ static const constexpr bool USE_RUNPARTS                = @use_runparts@;
 static const constexpr bool HAVE_ONSUCCESS              = @have_onsuccess@;
 static const char * const BOOT_DELAY                    = "@libexecdir@/systemd-cron/boot_delay";
 static const char * const LOADAVG_DAM                   = "@libexecdir@/systemd-cron/loadavg_dam";
+static const char * const THROTTLE_GROUP                = "@libexecdir@/systemd-cron/throttle_group";
 #define STATEDIR "@statedir@"
 static const char * const SETGID_HELPER                 = "@libexecdir@/systemd-cron/crontab_setgid";
 #define PAMNAME "@pamname@"  // ignore if empty

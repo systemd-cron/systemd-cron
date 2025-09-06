@@ -232,6 +232,12 @@ when set.
 If set and nonempty, delay starting the job until the 1-minute system load average drops below the set value.
 All jobs using this option join a global queue scheduling a random eligible job every 30 seconds.
 
+.TP
+.B CRON_BATCH_THROTTLE_GROUP
+If set and nonempty, all jobs with the same value form a group where
+no two jobs can run concurrently,
+no job is started within 5 minutes of another exiting.
+
 .PP
 The format of a
 .B cron command

@@ -103,6 +103,7 @@ install: all
 	install -m755 -D $(builddir)/bin/crontab $(DESTDIR)$(bindir)/$(CRONTAB)
 	install -m755 -D $(builddir)/bin/systemd-crontab-generator $(DESTDIR)$(generatordir)/systemd-crontab-generator
 	install -m755 -D $(builddir)/bin/loadavg_dam $(DESTDIR)$(libexecdir)/systemd-cron/loadavg_dam
+	install -m755 -D $(builddir)/bin/throttle_group $(DESTDIR)$(libexecdir)/systemd-cron/throttle_group
 	install -m755 -D $(builddir)/bin/remove_stale_stamps $(DESTDIR)$(libexecdir)/systemd-cron/remove_stale_stamps
 	install -m755 -D $(builddir)/bin/mail_for_job $(DESTDIR)$(libexecdir)/systemd-cron/mail_for_job
 	install -m755 -D $(builddir)/bin/boot_delay $(DESTDIR)$(libexecdir)/systemd-cron/boot_delay
@@ -235,8 +236,12 @@ $(builddir)/bin/systemd-crontab-generator: $(srcdir)/bin/systemd-crontab-generat
 $(builddir)/bin/crontab: $(srcdir)/bin/crontab.cpp $(common_headers)
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) -std=c++20 -I $(builddir)/include $(PCH_ARG) $< -o $@ $(LDLIBS)
 
+common_headers += $(builddir)/include/shmemutil.hpp
 $(builddir)/bin/loadavg_dam: $(srcdir)/bin/loadavg_dam.cpp $(common_headers)
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) -std=c++20 -I $(builddir)/include $(PCH_ARG) $< -o $@ $(LDLIBS) -latomic -lrt
+
+$(builddir)/bin/throttle_group: $(srcdir)/bin/throttle_group.cpp $(common_headers)
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) -std=c++20 -I $(builddir)/include $(PCH_ARG) $< -o $@ $(LDLIBS) -latomic -lrt @libsystemd@
 
 $(builddir)/bin/%: $(srcdir)/bin/%.sh
 	$(call in2out,$<,$@)
