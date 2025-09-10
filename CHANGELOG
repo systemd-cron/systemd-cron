@@ -29,7 +29,7 @@ v2.5.1 : 2025-02-18
    [Josef Johansson]
    Update: contrib/systemd-cron.spec
    New feature: contrib/sendmail-ala-vixie that formats From: & Subject:
-                like vixie cron did
+                like Vixie Cron did
    New feature: mail_for_job exports $user in environment to $sendmail
 
    [наб]
@@ -565,4 +565,3 @@ v0.1.0 : 2013-05-27
 
    * Initial release supporting hourly, daily, weekly, and monthly
      scripts.
-

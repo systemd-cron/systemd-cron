@@ -5,7 +5,7 @@
 #   From: root
 #   Subject: [$(hostname)] Failure: $USER's crontab "* * * * * cron-command"
 #
-# vixie cron:
+# Vixie Cron:
 #   From: (Cron Daemon) <$USER@$(hostname -f)>
 #   Subject: Cron <$USER@$(hostname)> cron-command
 #

@@ -178,6 +178,7 @@ $(builddir)/units/systemd-cron-cleaner.timer: $(srcdir)/units/systemd-cron-clean
 
 $(builddir)/man/%: $(srcdir)/man/%.in
 	$(call in2out,$<,$@)
+	sed -i -e 's/ ~/ \\(ti/' $@
 
 $(builddir)/man/systemd.cron.7: $(srcdir)/man/systemd.cron.7.in
 	$(call in2out,$<,$@)

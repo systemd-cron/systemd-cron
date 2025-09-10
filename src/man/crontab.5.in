@@ -1,3 +1,4 @@
+'\" t
 .\"/* Copyright 1988,1990,1993,1994 by Paul Vixie
 .\" * All rights reserved
 .\" *
@@ -17,402 +18,444 @@
 .\"
 .\" $Id: crontab.5,v 2.4 1994/01/15 20:43:43 vixie Exp $
 .\"
-.TH CRONTAB 5 "03 July 2014" "systemd-cron @version@" "crontab"
-.UC 4
-.SH NAME
-crontab \- tables for driving systemd-cron
-.SH DESCRIPTION
+.Dd 2025-09-10
+.Dt CRONTAB 5
+.Os systemd-cron @version@
+.
+.Sh NAME
+.Nm crontab
+.Nd tables for driving systemd-cron
+.
+.Sh DESCRIPTION
 A
-.I crontab
-file contains instructions to
-.IR systemd-cron
-of the general form: ``run this command at this time on this date''.
-Each user has their own crontab, and commands in any given crontab will be
-executed as the user who owns the crontab.
-.PP
-Blank lines and leading spaces and tabs are ignored.  Lines whose first
-non-space character is a hash-sign (#) are comments, and are ignored.
+.Nm
+file contains instructions for
+.Nm systemd-cron
+of the general form
+.Qq run this command at this time on this date .
+Each user has their own
+.Nm ,
+and commands in any given
+.Nm
+will be executed as the user who owns it.
+.Pp
+Blank lines and leading spaces and tabs are ignored.
+Lines whose first non-space character is a hash
+.Pq Sq Sy #
+are comments, and are ignored.
 Note that comments are not allowed on the same line as cron commands, since
-they will be taken to be part of the command.  Similarly, comments are not
+they will be taken to be part of the command.
+Similarly, comments are not
 allowed on the same line as environment variable settings.
-.PP
-An active line in a crontab will be either an environment setting or a cron
-command.  The crontab file is parsed from top to bottom, so any environment
-settings will affect only the cron commands below them in the file.
-An environment setting is of the form,
-.PP
-    name = value
-.PP
-where the spaces around the equal-sign (=) are optional, and any subsequent
-non-leading spaces in
-.I value
-will be part of the value assigned to
-.IR name .
+.Pp
+An active line in a
+.Nm
+will be either an environment setting or a cron command.
 The
-.I value
-string may be placed in quotes (single or double, but matching) to preserve
-leading or trailing blanks. The
-.I value
+.Nm
+file is parsed from top to bottom, so any environment
+settings will affect only the cron commands below them in the file.
+An environment setting takes the form
+.Dl Va name Li = Va value
+where the white-space around the equals sign
+.Pq Sq Sy =
+is optional,
+and any subsequent non-leading non-trailing white-space will be part of the value assigned to
+.Va name .
+.Va value
+may be placed in matching quotes
+.Pq So Sy ' Sc or Sq Sy \&" ,
+to preserve embedded leading or trailing white-space.
+The
+.Va value
 string is
-.B not
+.Em not
 parsed for environmental substitutions or replacement of variables, thus lines
 like
-.PP
-    PATH = $HOME/bin:$PATH
-.PP
-will not work as you might expect. And neither will this work
-.PP
-    A=1
-    B=2
-    C=$A $B
-.PP
-There will not be any substitution for the defined variables in the
-last value.
-.PP
-In PATH, tilde-expansion is performed on elements starting with "~/",
+.Dl PATH = $HOME/bin:$PATH
+will not work as you might expect.
+And neither will this work:
+.Bd -literal -compact -offset indent
+A=1
+B=2
+C=$A $B
+.Ed
+There will not be any substitution for the defined variables in the last value
+.Pq i.e., Va C No will be Qo Li $A $B Qc , not Qq Li 1 2 .
+.Pp
+In
+.Sy PATH ,
+tilde-expansion is performed on elements starting with
+.Qq Sy ~/ ,
 so this works as expected:
-.PP
-     SHELL=/bin/bash
-     PATH=~/bin:/usr/bin/:/bin
-.PP
-
-.I Special variables:
-.TP
-.BR SHELL ", " PATH ", " USER ", " LOGNAME ", " HOME ", " LANG
-Those are set up automatically by systemd itself, see
-.IR systemd.exec (5)
-SHELL defaults to /bin/sh.
-SHELL and PATH may be overridden by settings in the crontab.
-
-.TP
-.B MAILTO
-.br
+.Bd -literal -compact -offset indent
+SHELL=/bin/bash
+PATH=~/bin:/usr/bin/:/bin
+.Ed
+.
+.Ss Special variables
+.Bl -tag
+.It Sy SHELL , PATH , USER , LOGNAME , HOME , LANG
+Those are set up automatically by systemd, see
+.Xr systemd.exec 5 .
+.Sy SHELL
+defaults to
+.Pa /bin/sh .
+.Sy SHELL
+and
+.Sy PATH
+may be overridden by settings in the
+.Nm .
+.
+.It Sy MAILTO
 When sending output from a job,
-.IR systemd.cron (7)
-will look at MAILTO. If MAILTO is defined mail is sent to this email address.
-MAILTO may also be used to direct mail to multiple
-recipients by separating recipient users with a comma.
-If MAILTO is defined but empty (MAILTO=""), no mail will be sent.
-Otherwise mail is sent to the owner of the crontab.
+.Xr systemd.cron 7
+will look at
+.Sy MAILTO :
+if defined, mail is sent to this email address.
+.Sy MAILTO
+may also be used to direct mail to multiple
+recipients by separating recipient users with a comma
+.Pq Sq Sy ,\& .
+If
+.Sy MAILTO
+is set but empty
+.Pq Li MAILTO="" , MAILTO= ,
+no mail will be sent.
+Otherwise mail is sent to the
+.Nm Ns 's
+owner.
 .br
 By default, this mail contains
-.B systemctl status
+.Nm systemctl Cm status
 and the full log for the failed run, copied from the journal.
-
-.TP
-.B MAILFROM
-.br
+.
+.It Sy MAILFROM
 When sending output from a job,
-.IR systemd.cron (7)
-will look at MAILFROM. If MAILFROM is defined, mail is sent from this email address.
+.Xr systemd.cron 7
+will look at
+.Sy MAILFROM :
+if defined, mail is sent from this email address.
 Otherwise it's seen as being sent by "root".
-
-.TP
-.B CRON_MAIL_SUCCESS
+.
+.It Sy CRON_MAIL_SUCCESS
 Control if (when) to send mail with output from successful jobs.
-.br
-.BR 'nonempty' ,\  'non-empty' :
+.Bl -tag -compact -width ".Sy always, yes, true, 1"
+.It Sy nonempty , non-empty Ns \z:
 mail is only sent if the job left anything in the journal
 (i.e. wrote something to the standard output or error streams);
 this is the default, and matches classic cron
-.br
-.BR 'always' ,\  'yes' ,\  'true' ,\  '1' :
+.It Sy always , yes , true , 1 Ns \z:
 always send mail
-.br
-.BR 'never' ,\  'no' ,\  'false' ,\  '0' :
+.It Sy never , no , false , 0 Ns \z:
 never send mail for a successful job
-.IP
+.El
+.Pp
 Mail is
-.I always
+.Em always
 sent for failed jobs.
-
-.TP
-.B CRON_MAIL_FORMAT
+.
+.It Sy CRON_MAIL_FORMAT
 Control the format of the content of cron-job-related messages.
-.br
-.BR 'normal' :
-.B systemctl status
+.Bl -tag -compact -width ".Sy nometadata , no-metadata"
+.It Sy normal Ns \z:
+.Nm systemctl Cm status
 +
-.B journalctl
+.Nm journalctl
 output (incl. time, process names, the usual) for the run;
 this is the default
-.br
-.BR 'nometadata' ,\  'no-metadata' :
+.It Sy nometadata , no-metadata Ns \z:
 raw journal contents
-.RB ( -o\ cat :
-just standard output + error streams);
+.Pq Fl o Cm cat : No just standard output + error streams ;
 this matches classic cron
-.IP
-.B CRON_MAIL_SUCCESS
+.El
+.Pp
+.Sy CRON_MAIL_SUCCESS
 and
-.BR CRON_MAIL_FORMAT ,
+.Sy CRON_MAIL_FORMAT ,
 if changed in
-.IR /etc/crontab ,
+.Pa /etc/crontab ,
 are remembered for all other crontabs
-.RI ( /etc/cron.d ", " /etc/anacron ", users'\ crontabs)"
+.Pq Pa /etc/cron.d ,  /etc/anacron , No users' crontabs
 and act as an administrator-controlled default.
 They can be set to
-.BR 'inherit'
+.Sy inherit
 to get that default back.
-
-.TP
-.B CRON_INHERIT_VARIABLES
+.
+.It Sy CRON_INHERIT_VARIABLES
 In the top-level
-.IR /etc/crontab :
-a whitespace-separated list of variables
-.RI ( including " control statements that get removed from the environment otherwise)"
+.Pa /etc/crontab :
+a white-space-separated list of variables
+.Pq Em including No control statements that get removed from the environment otherwise
 to remember into other crontabs
-.RI ( /etc/cron.d ", users'\ crontabs; not " /etc/anacron ).
+.Pq Pa /etc/cron.d , No users' crontabs ; not Pa /etc/anacron .
 This allows instituting a global
-.BR RANDOM_DELAY / SHELL /&c.\&
+.Sy RANDOM_DELAY Ns / Ns Sy SHELL Ns /&c.\&
 default policy.
 .br
 Elsewhere: ignored.
-
-.TP
-.B RANDOM_DELAY
-(in minutes) environment variable is translated to
-.BR RandomizedDelaySec= .
-
-.TP
-.B DELAY
-(in minutes) environment variable is translated to
-.BR OnBootSec= .
-This works like the 'delay' field of anacrontab(5) and make systemd wait # minutes
-after boot before starting the unit. This value can also be used to spread out
-the start times of @daily/@weekly/@monthly... jobs on a 24/24 system.
-
-.TP
-.B START_HOURS_RANGE
-(in hours) environment variable is translated to the
-.I 'hour'
+.
+.It Sy RANDOM_DELAY
+(in minutes) environment variable translated to
+.Sy RandomizedDelaySec= .
+.
+.It Sy DELAY
+(in minutes) environment variable translated to
+.Sy OnBootSec= .
+This works like the
+.Xr anacrontab 5
+.Va delay
+and makes systemd wait the given amount of minutes
+after boot before starting the unit.
+This value can also be used to spread out
+the start times of
+.Sy @daily Ns / Ns Sy @weekly Ns / Ns Sy @monthly Ns /&c.\&
+jobs on an always-on system.
+.
+.It Sy START_HOURS_RANGE
+(in hours) environment variable translated to the
+.Va hour
 component of
-.BR OnCalendar= .
-This variable is inherited from anacrontab(5), but also supported in crontab(5)
-by systemd-crontab-generator. Anacron expect a time range in the START-END format (eg: 6-9),
-systemd-crontab-generator will only use the starting hour of the range as reference.
-Unless you set this variable, all the @daily/@weekly/@monthly/@yearly jobs
-will run at midnight. If you set this variable and the system was off during
-the ours defined in the range, the (persistent) job will start at boot.
-
-.TP
-.B PERSISTENT
-With this flag, you can override the generator default heuristic.
-.br
-.BR 'yes' :
+.Sy OnCalendar= .
+This variable is inherited from
+.Xr anacrontab 5 ,
+but also supported in
+.Xr crontab 5 Ns s
+by
+.Xr systemd-crontab-generator 8 .
+.Xr anacron 8
+expects a time range like
+.Qq Va start Ns - Ns Va end ,
+but
+.Xr systemd-crontab-generator 8
+only uses the starting hour of the range as reference.
+Unless you set this variable, all
+.Sy @daily Ns / Ns Sy @weekly Ns / Ns Sy @monthly Ns /&c.\&
+jobs will run at midnight.
+If you do set this variable and the system was off during
+the hours defined in the range, persistent jobs will start at boot.
+.
+.It Sy PERSISTENT
+This boolean flag can override the generator's default heuristic:
+.Bl -tag -compact -offset 2n -width ".Sy auto"
+.It Sy yes Ns \z:
 force all further jobs to be persistent
-.br
-.BR 'auto' :
-only recognize @ keywords to be persistent
+.It Sy auto Ns \z:
+only recognize
+.Sy @
+keywords to be persistent
 (this is the default)
-.br
-.BR 'no' :
-force all further jobs not to be persistent
-
-.TP
-.BR TZ ", " CRON_TZ
+.It Sy no Ns \z:
+force all further jobs to not be persistent
+.El
+.
+.It Sy TZ , CRON_TZ
 The job is scheduled in this time-zone instead of in the system time-zone.
 Must be a full IANA time-zone name
-(as found under
-.IR /usr/share/zoneinfo ),
-or empty to reset to the default timezone,
+.Pq as found under Pa /usr/share/zoneinfo ,
+or empty to reset to the default timezone;
 otherwise no special semantics.
 Always passed to the job.
-
-.TP
-.B BATCH
+.
+.It Sy BATCH
 This boolean flag is translated to options
-.B CPUSchedulingPolicy=idle
+.Sy CPUSchedulingPolicy=idle
 and
-.B IOSchedulingClass=idle
+.Sy IOSchedulingClass=idle
 when set.
-
-.TP
-.B CRON_BATCH_LOADAVG_BELOW
+.
+.It Sy CRON_BATCH_LOADAVG_BELOW
 If set and nonempty, delay starting the job until the 1-minute system load average drops below the set value.
 All jobs using this option join a global queue scheduling a random eligible job every 30 seconds.
-
-.TP
-.B CRON_BATCH_THROTTLE_GROUP
+.
+.It Sy CRON_BATCH_THROTTLE_GROUP
 If set and nonempty, all jobs with the same value form a group where
 no two jobs can run concurrently
 and no job is started within 5 minutes of another exiting.
 .br
 If combined with
-.BR CRON_BATCH_LOADAVG_BELOW ,
+.Sy CRON_BATCH_LOADAVG_BELOW ,
 the job joins its
-.B C_B_THROTTLE_GROUP
+.Sy CRON_BATCH_THROTTLE_GROUP
 queue only, but the load threshold still applies.
 .br
 See
-.BR "CRON_BATCH_… EXAMPLE" .
-
-.PP
-The format of a
-.B cron command
-is the same as the one defined by the cron daemon.
+.Sx EXAMPLES , CRON_BATCH_… .
+.El
+.
+.Ss The format of a cron command
+is the same as the one defined by the classic cron daemon.
 Each line has five time and date fields,
-followed by a command, followed by a newline character ('\\n').
-The system crontab (/etc/crontab) and the packages crontabs (/etc/cron.d/*)
-use the same format, except that the username for the command is specified after the time and
-date fields and before the command. The fields may be separated
-by spaces or tabs.
-.PP
+followed by a command, followed by a new-line character.
+The system crontab
+.Pq Pa /etc/crontab
+and the packages' crontabs
+.Pq Pa /etc/cron.d/ Ns Va *
+use the same format, except that the username for the command is specified between the time/date fields and the command.
+Fields may be separated by spaces or tabs.
+.Pp
 Commands are executed by
-.IR systemd
-when the minute, hour, and month of year fields match the current time,
-.I and
-when at least one of the two day fields (day of month, or day of week)
-match the current time (see ``Note'' below).
+.Xr systemd 1
+when the minute, hour, and month-of-year fields match the current time,
+.Em and
+when at least one of the two day fields (day-of-month or day-of-week)
+match the current time
+.Pq see Sx Note No below .
 The time and date fields are:
-.IP
-.ta 1.5i
-field	allowed values
-.br
------	--------------
-.br
-minute	0-59
-.br
-hour	0-23
-.br
-day of month	1-31
-.br
-month	1-12 (or names, see below)
-.br
-day of week	0-7 (0 or 7 is Sun, or use names)
-.br
-.PP
-A field may be an asterisk (*), which always stands for ``first\-last''.
-.PP
-Ranges of numbers are allowed.  Ranges are two numbers separated
-with a hyphen.  The specified range is inclusive.  For example,
-8-11 for an ``hours'' entry specifies execution at hours 8, 9, 10
-and 11.
-.PP
-A random value (within the legal range) may be obtained by using the
-`~'
-character in a field.
+.TS
+lw5 l l .
+	field	allowed values
+	_	_
+	minute	0-59
+	hour	0-23
+	day-of-month	1-31
+	month	1-12 (or names, see below)
+	day-of-week	0-7 (Sun is 0 or 7, or use names)
+.TE
+.Pp
+A field may be an asterisk
+.Pq Sq Sy * ,
+which always stands for
+.Qq Va first Ns - Ns Va last .
+.Pp
+Ranges of numbers are allowed.
+Ranges are two numbers separated with a hyphen
+.Pq Sq Sy - .
+The specified range is inclusive.
+For example,
+.Sy 8-11
+for an
+.Va hours
+entry specifies execution at hours
+.Sy 8 , 9 , 10 , No and Sy 11 .
+.Pp
+A random value (within the legal range) may be obtained by using the tilde
+.Pq Sq Sy ~
+character instead of the hyphen.
 The interval of the random value may be specified explicitly, for example
-``0~30''
-will result in a random value between 0 and 30 inclusive.
-If either (or both) of the numbers on either side of the
-`~'
+.Sy 0~30
+will result in a random value between
+.Sy 0 No and Sy 30 ,
+inclusive.
+If either (or both) of the numbers on the sides of the
+.Sq Sy ~
 are omitted, the appropriate limit (low or high) for the field will be used.
-.PP
-Lists are allowed.  A list is a set of numbers (or ranges)
-separated by commas.  Examples: ``1,2,5,9'', ``0-4,8-12''.
-.PP
-Step values can be used in conjunction with ranges.  Following
-a range with ``/<number>'' specifies skips of the number's value
-through the range.  For example, ``0-23/2'' can be used in the hours
-field to specify command execution every other hour (the alternative
-in the V7 standard is ``0,2,4,6,8,10,12,14,16,18,20,22'').  Steps are
-also permitted after an asterisk, so if you want to say ``every two
-hours'', just use ``*/2''.
-.PP
-Names can also be used for the ``month'' and ``day of week''
-fields.  Use the first three letters of the particular
-day or month (case doesn't matter).  Ranges or
-lists of names are not allowed.
-.PP
-The ``sixth'' field (the rest of the line) specifies the command to be
-run.
+.Pp
+Lists are allowed.
+A list is a set of numbers (or ranges) separated by commas.
+Examples:
+.Sy 1,2,5,9 , 0-4,8-12 .
+.Pp
+Step values can be used in conjunction with ranges.
+Following a range with
+.Qq Sy / Ns Va number
+specifies skips of
+.Va number Ns 's
+value through the range.
+For example,
+.Sy 0-23/2
+can be used in the hours field to specify command execution every other hour
+.Pq the alternative in At v7 standard form is Sy 0,2,4,6,8,10,12,14,16,18,20,22 .
+Steps are also permitted after an asterisk, so if you want to say
+"every two hours", just use
+.Sy */2 .
+.Pp
+Names can also be used for the
+.Va month
+and
+.Va day-of-week
+fields.
+Use at least the first three letters of the particular
+day or month (case doesn't matter).
+Ranges or lists of names are not allowed.
+.Pp
+The rest of the line, after the fields, specifies the command to be run.
 The entire command portion of the line
-will be executed by /bin/sh or by the shell
-specified in the SHELL variable of the crontab file.
-.PP
-If the command contains an unescaped
-.B %
+will be executed by
+.Pa /bin/sh
+or by the shell specified in the
+.Sy SHELL
+variable of the
+.Nm
+file.
+.Pp
+If the command contains an unescaped percent
+.Pq Sq Sy %
 character,
 it is instead split thereon:
 the part before is run by the shell,
 the part after is given on the standard input stream, with each subsequent
-.B %
-replaced by a newline.
-.BR % s
+.Sy %
+replaced by a new-line.
+.Sy % Ns s
 can be escaped as
-.BR \e% ,
+.Qq Sy \e% ,
 and produce a literal
-.RB % .
-.PP
-systemd-crontab-generator doesn't handle multi-line command split by
-the
-.B %
-character like vixie-cron.
-.PP
-Note: The day of a command's execution can be specified by two
-fields \(em day of month, and day of week.  If both fields are
-restricted (i.e., aren't
-.BR * ),
+.Sy % .
+.
+.Ss Note
+The day of a command's execution can be specified by two
+fields \(em day-of-month and day-of-week.
+If both fields are restricted
+.Pq i.e., aren't Sy * ,
 the command will be run when
-.I either
-field matches the current time.  For example,
-.br
-``30 4 1,15 * 5''
-would cause a command to be run at 4:30 am on the 1st and 15th of each
-month, plus every Friday. One can, however, achieve the desired result
-by adding a test to the command (see the last example in EXAMPLE CRON FILE
-below).
-.PP
+.Em either
+field matches the current time.
+For example,
+.Dl  30 4 1,15 * 5 command
+would run
+.Va command
+at 4:30 am on the 1st and 15th of each month, plus every Friday.
+One can, however, achieve the desired result
+by adding a test to the command
+.Pq see the last example in Sx EXAMPLES , User's crontab No below .
+.Pp
 Instead of the first five fields, one of eight special strings may appear:
-.IP
-.ta 1.5i
-string	meaning
-.br
-------	-------
-.br
-@reboot	Run once, at startup.
-.br
-@yearly	Run once a year, "0 0 1 1 *".
-.br
-@annually	(same as @yearly)
-.br
-@monthly	Run once a month, "0 0 1 * *".
-.br
-@weekly	Run once a week, "0 0 * * 0".
-.br
-@daily	Run once a day, "0 0 * * *".
-.br
-@midnight	(same as @daily)
-.br
-@hourly	Run once an hour, "0 * * * *".
-.br
-.PP
-Please note that startup, as far as @reboot is concerned,
+.TS
+l   l  l l
+lw5 lb l lb .
+	string	meaning	equivalent
+	_	_	_
+	@reboot	Run once, at startup	\fR(none)\fP
+	@yearly	Run once a year	0 0 1 1 *
+	@annually	\^	\^
+	@monthly	Run once a month	0 0 1 * *
+	@weekly	Run once a week	0 0 * * 0
+	@daily	Run once a day	0 0 * * *
+	@midnight	\^	\^
+	@hourly	Run once an hour	0 * * * *
+.TE
+.Pp
+Please note that startup, as far as
+.Sy @reboot
+is concerned,
 may be before some system daemons,
-or other facilities, were startup.  This is due to the boot order
-sequence of the machine.
-
-.SH EXAMPLE CRON FILE
-
-The following lists an example of a user crontab file.
-
-.nf
-
+or other facilities, were started.
+.
+.Sh EXAMPLES
+.Ss User's crontab
+.Bd -literal -compact
 # use /bin/bash to run commands, instead of the default /bin/sh
 SHELL=/bin/bash
-# mail errors to `paul', no matter whose crontab this is
+# mail errors to 'paul', no matter whose crontab this is
 MAILTO=paul
 #
 # run five minutes after midnight, every day
-5 0 * * *       $HOME/bin/daily.job >> $HOME/tmp/out 2>&1
+5 0 * * *       ~/bin/daily.job >> ~/tmp/out 2>&1
 # run at 2:15pm on the first of every month
 .\" -- output mailed to paul
-15 14 1 * *     $HOME/bin/monthly
+15 14 1 * *     ~/bin/monthly
 # run at 10 pm on weekdays, annoy Joe
 # runs 'mail \-s "It's 10 pm" joe', with 'Joe,\en\enWhere are your kids?\en' on stdin
 0 22 * * 1-5    mail \-s "It's 10pm" joe%Joe,%%Where are your kids?%
-23 0-23/2 * * * echo "run 23 minutes after midn, 2am, 4am ..., everyday"
+23 0-23/2 * * * echo "run 23 minutes after midn, 2am, 4am …, everyday"
 5 4 * * sun     echo "run at 5 after 4 every sunday"
 # Run on every second Saturday of the month
-0 4 8-14 * *    test $(date +\\%u) \-eq 6 && echo "2nd Saturday"
-.fi
-.SH EXAMPLE SYSTEM CRON FILE
-
-The following lists the content of a regular system-wide crontab file. Unlike a
-user's crontab, this file has the username field, as used by /etc/crontab.
-
-.nf
+0 4 8-14 * *    test $(date +\e%u) \-eq 6 && echo "2nd Saturday"
+.Ed
+.
+.Ss System crontab
+.Bd -literal -compact
 # /etc/crontab: system-wide crontab
 # Unlike any other crontab you don't have to run the `crontab'
 # command to install the new version when you edit this file
@@ -422,23 +465,23 @@ user's crontab, this file has the username field, as used by /etc/crontab.
 SHELL=/bin/sh
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 
-# m h dom mon dow user	command
+# m h dom mon dow user  command
 17 * * * *  root  cd / && run-parts \-\-report /etc/cron.hourly
 25 6 * * *  root  test \-x /usr/sbin/anacron || ( cd / && run-parts \-\-report /etc/cron.daily )
 47 6 * * 7  root  test \-x /usr/sbin/anacron || ( cd / && run-parts \-\-report /etc/cron.weekly )
 52 6 1 * *  root  test \-x /usr/sbin/anacron || ( cd / && run-parts \-\-report /etc/cron.monthly )
 #
-.fi
-
-.PP
-This is only an example,
-.B systemd-cron uses native units instead for those jobs.
-.br
-If you add those lines, your jobs will run twice.
-
-.SH CRON_BATCH_… EXAMPLE
-.nf
-.in +4
+.Ed
+.Pp
+This is only an example:
+.Xr systemd-crontab-generator 8
+uses native units listed in
+.Xr systemd.cron 7
+for those jobs instead;
+if you add those lines, your jobs may run twice.
+.
+.Ss CRON_BATCH_…\&
+.Bd -literal -compact -offset indent
 CRON_BATCH_THROTTLE_GROUP=first
  0 0 * * * sleep  2m # a
  0 0 * * * sleep  4m # b
@@ -448,12 +491,10 @@ CRON_BATCH_THROTTLE_GROUP=first
 CRON_BATCH_THROTTLE_GROUP=second
  2 0 * * * sleep  3m # q
  2 0 * * * sleep 11m # w
-.in -4
-.fi
+.Ed
 may result in any of the following job runs
 (horizontal axis is time, one minute per column, other jobs unaffected):
-.nf
-.in +4
+.Bd -literal -compact -offset indent
 00   05   10   15   20   25   30
 aa     cccc     bbbb     LL
   qqq     wwwwwwwwwww
@@ -466,57 +507,63 @@ cccc     bbbb     LL     aa
 
 cccc     aa     bbbb     LL
   wwwwwwwwwww     qqq
-.in -4
-.fi
-
-.SH SEE ALSO
-systemd.cron(7), systemd-crontab-generator(8), crontab(1)
-
+.Ed
+.
+.Sh SEE ALSO
+.Xr crontab 1 ,
+.Xr systemd.cron 7 ,
+.Xr systemd-crontab-generator 8
+.Pp
 Some extra settings can only be tweaked with
-.PP
-    systemctl edit cron-<schedule>.[timer|service]
-.TP
-see systemd.cron(7) for more details.
-
-.SH LIMITATIONS
+.Dl Nm systemctl Cm edit Li cron- Ns Va schedule Ns Li .\& Ns Brq Li timer,service
+.
+.Sh LIMITATIONS
 The
-.I crontab
-syntax does not make it possible to define all possible periods one could
-imagine. For example, it is not straightforward to define the last
-weekday of a month. If a task needs to be run in a specific period of time
-that cannot be defined in the
-.I crontab
-syntax, the best approach would be to have the program itself check the
-date and time information and continue execution only if the period
+.Nm
+syntax does not make it possible to define all possible periods one could imagine.
+For example, it is not straightforward to define the last weekday of a month.
+If a task needs to be run in a specific period of time that cannot be represented in a
+.Nm ,
+the best approach would be to have the job itself check the
+date and time information and continue execution only if the current time
 matches the desired one.
-
-.B systemd-crontab-generator
-doesn't support these
-.B vixie-cron
-features:
-.TP
-*
-spawning forking daemons, the 'Service' units are all set with 'Type=oneshot'
-.TP
-*
-vixie-cron requires that each entry in a crontab end in a newline character. If the
-last entry in a crontab is missing a newline (ie, terminated by EOF), vixie-cron will
-consider the crontab (at least partially) broken.
-.br
-systemd-crontab-generator considers this crontab as valid
-
-.SH DIAGNOSTICS
-You can see how your crontab was translated by typing:
-.br
-.B systemctl cat cron-<userid>-*
-.PP
-.B systemctl cat
-supports command-line completion.
-
-.SH AUTHOR
-Paul Vixie <paul@vix.com> is the author of
-.I cron
-and original creator of this manual page. This page has also been modified for
-Debian by Steve Greenland, Javier Fernandez-Sanguino and Christian Kastner.
-.br
-This page has been reworded by Alexandre Detiste for inclusion in systemd-cron.
+.Pp
+.Xr systemd-crontab-generator 8
+doesn't support the following Vixie Cron features:
+.Bl -bullet -compact -width 0
+.It
+spawning forking daemons, the
+.Xr systemd.service 5
+units are all configured with
+.Sy Type=oneshot
+.
+.It
+Vixie Cron requires that each
+.Nm
+entry end in a new-line.
+If the last entry in a crontab is missing a new-line,
+Vixie Cron will consider it (at least partially) broken.
+.Xr systemd-crontab-generator 8
+considers this crontab valid.
+.El
+.
+.Sh DIAGNOSTICS
+You can see how your crontab was translated by running
+.Dl Nm systemctl Cm cat Li cron- Ns Va username Ns Li -*
+(though completion may be more convenient).
+.
+.Sh AUTHORS
+.An -nosplit
+.An Paul Vixie Aq Mt paul@vix.com
+is the author of his popular cron implementaton
+and original creator of this manual page.
+This page has also been modified for Debian by
+.An Steve Greenland ,
+.An Javier Fernandez-Sanguino ,
+and
+.An Christian Kastner .
+This page has been reworded by
+.An Alexandre Detiste
+and further editorialised by
+.An наб Aq Mt nabijaczleweli@nabijaczleweli.xyz
+for inclusion in systemd-cron.

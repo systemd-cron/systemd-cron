@@ -58,7 +58,7 @@ There exists packages available for:
 
 
 Using [`contrib/sendmail-ala-vixie`][14] and the right `CRON_MAIL_*=` configuration,
-the e-mail format and firing conditions can be matched to vixie cron precisely.
+the e-mail format and firing conditions can be matched to Vixie Cron precisely.
 
 A complete list of all packages can be browsed at [Repology][13].
 
