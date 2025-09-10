@@ -1114,12 +1114,8 @@ static auto parse_crontab(std::string_view filename, withuser_t withuser, std::m
 		if(!regexec(&ENVVAR_RE, line.data(), sizeof(matches) / sizeof(*matches), matches, REG_STARTEND)) {
 			auto key   = line.substr(matches[1].rm_so, matches[1].rm_eo - matches[1].rm_so);
 			auto value = line.substr(matches[2].rm_so, matches[2].rm_eo - matches[2].rm_so);
-			for(char tostrip : {'\'', '\"', ' '}) {
-				while(!value.empty() && value[0] == tostrip)
-					value.remove_prefix(1);
-				while(!value.empty() && value.back() == tostrip)
-					value.remove_suffix(1);
-			}
+			while(value.size() >= 2 && ((value[0] == '\'' && value.back() == '\'') || (value[0] == '\"' && value.back() == '\"')))
+				value.remove_prefix(1), value.remove_suffix(1);
 			if(key == "PERSISTENT"sv && value == "auto"sv)
 				environment.erase("PERSISTENT"sv);
 			else if(key == "CRON_INHERIT_VARIABLES"sv)
