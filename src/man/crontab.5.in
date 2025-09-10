@@ -446,11 +446,11 @@ see systemd.cron(7) for more details.
 The
 .I crontab
 syntax does not make it possible to define all possible periods one could
-imagine off. For example, it is not straightforward to define the last
+imagine. For example, it is not straightforward to define the last
 weekday of a month. If a task needs to be run in a specific period of time
 that cannot be defined in the
 .I crontab
-syntaxs the best approach would be to have the program itself check the
+syntax, the best approach would be to have the program itself check the
 date and time information and continue execution only if the period
 matches the desired one.
 
@@ -470,12 +470,12 @@ consider the crontab (at least partially) broken.
 systemd-crontab-generator considers this crontab as valid
 
 .SH DIAGNOSTICS
-You can see how your crontab where translated by typing:
+You can see how your crontab was translated by typing:
 .br
 .B systemctl cat cron-<userid>-*
 .PP
 .B systemctl cat
-does support command-line completion.
+supports command-line completion.
 
 .SH AUTHOR
 Paul Vixie <paul@vix.com> is the author of
