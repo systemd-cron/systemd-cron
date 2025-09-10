@@ -545,6 +545,37 @@ If the last entry in a crontab is missing a new-line,
 Vixie Cron will consider it (at least partially) broken.
 .Xr systemd-crontab-generator 8
 considers this crontab valid.
+.
+.It
+The parsing of quoting of environment variable
+.Va value Ns s
+depends on Vixie Cron distributor and vintage;
+in non-error cases, behaviour described herein (removing quote pairs while possible) agrees with Debian bookworm's.
+.
+.It
+An unpaired outer-most quote
+.Pq Sy VAR=" , VAR="whatever" '
+induces a parse error in Vixie Cron.
+.Xr systemd-crontab-generator 8 ,
+seeing no pairs, simply stops processing.
+.
+.It
+systemd-cron since v1.16 (2023-07-10) but before v2.6.0 (2025-??-??)
+.\" TODO:                                                ^
+dequoted
+.Va value Ns s
+by stripping white-space from both sides,
+then removing initial and terminal
+.Sy ' Ns s ,
+then removing initial and terminal
+.Sy ' Ns s ,
+then removing initial and terminal spaces
+.Pq So " " Sc Ns s .
+This naturally meant it was impossible to have a
+.Va value
+with terminal or initial spaces.
+.br
+systemd-cron before v1.4.0 (2014-11-04) hadn't processed quotes at all, and since \(en didn't run the space removal step.
 .El
 .
 .Sh DIAGNOSTICS

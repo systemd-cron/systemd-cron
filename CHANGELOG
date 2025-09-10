@@ -1,4 +1,4 @@
-v2.6.0 : 2025-??-??
+v2.6.0 : 2025-??-??  (TODO: put the date in crontab.5.in (grep TODO))
 
    [adetiste, Pramod]
    Update: contrib/systemd-cron.spec and other Fedora compat
@@ -7,8 +7,22 @@ v2.6.0 : 2025-??-??
    Fix: Ignore /etc/cron.*/anacron (Debian #1106000)
 
    [наб]
-   Fix: Makefile understands $LDLIBS
-   Fix: Generate TimeoutStartSec=infinity when needed with DELAY=
+   Fix: De-quoting of ENVVAR = VALUE statements:
+        + after stripping white-space,
+          the following substitutions are applied to exhaustion:
+          a) 'whatever' -> whatever
+          b) "whatever" -> whatever
+          this matches the non-error cases of bookworm Vixie Cron
+        + systemd-cron since v1.16 (2023-07-10) did:
+          1. strip white-space from both sides
+          2. remove initial and terminal 's
+          3. remove initial and terminal "s
+          4. remove initial and terminal spaces
+        + systemd-cron since v1.4.0 (2014-11-04) did the same but without step 4
+        + systemd-cron before then hadn't processed quotes at all
+
+        So this is a potentially-breaking change.
+
    New feature: CRON_BATCH_LOADAVG_BELOW=123
                 to delay the job until when the 1-minute loadavg goes under 123
                 (all jobs with C_B_LOADAVG_BELOW set and not C_B_THROTTLE_GROUP
@@ -20,6 +34,9 @@ v2.6.0 : 2025-??-??
                 - no job is started sooner than 5 minutes after a job exited
                 See new crontab(5) for excruciating detail, or
                   https://github.com/systemd-cron/systemd-cron/issues/173
+
+   Fix: Makefile understands $LDLIBS
+   Fix: Generate TimeoutStartSec=infinity when needed with DELAY=
    New: libsystemd.pc dependency
         (the C_B_THROTTLE_GROUP helper needs to talk to systemd over dbus)
    New: tmpfiles.d(5) configuration making /dev/shm/systemd-cron.… (for C_B_…)
