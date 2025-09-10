@@ -200,10 +200,9 @@ assert_dat() {  # file content testname
 	assert_ney cron-crontab-dummy-19.service 'TimeoutStartSec'                                              test_cron_mail_format=no-metadata
 	assert_key cron-crontab-dummy-20.service 'ExecStartPre'    '!/usr/libexec/systemd-cron/loadavg_dam 10'  test_cron_batch_loadavg_below=10
 	assert_key cron-crontab-dummy-20.service 'TimeoutStartSec' 'infinity'                                   test_cron_batch_loadavg_below=10
-	assert_key cron-crontab-dummy-21.service 'ExecStartPre'    '!/usr/libexec/systemd-cron/loadavg_dam 10
-ExecStartPre=!/usr/libexec/systemd-cron/throttle_group grouper'                                           test_cron_batch_throttle_group=grouper
+	assert_key cron-crontab-dummy-21.service 'ExecStartPre'    '!/usr/libexec/systemd-cron/throttle_group grouper 10' test_cron_batch_throttle_group=grouper
 	assert_key cron-crontab-dummy-21.service 'TimeoutStartSec' 'infinity'                                   test_cron_batch_throttle_group=grouper
-	assert_key cron-crontab-dummy-22.service 'ExecStartPre'    '!/usr/libexec/systemd-cron/throttle_group grouper' test_cron_batch_throttle_group=
+	assert_key cron-crontab-dummy-22.service 'ExecStartPre'    '!/usr/libexec/systemd-cron/throttle_group grouper'    test_cron_batch_throttle_group=
 	assert_key cron-crontab-dummy-22.service 'TimeoutStartSec' 'infinity'                                   test_cron_batch_throttle_group=
 	assert_ney cron-crontab-dummy-23.service 'ExecStartPre'                                                 test_cron_batch_loadavg_below=
 	assert_ney cron-crontab-dummy-23.service 'TimeoutStartSec'                                              test_cron_batch_loadavg_below=

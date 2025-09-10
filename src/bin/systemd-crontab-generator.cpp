@@ -909,10 +909,12 @@ struct Job {
 		if(!this->schedule.empty() && this->boot_delay)
 			if(!UPTIME || this->boot_delay > *UPTIME)
 				std::fprintf(into, "ExecStartPre=-%s %zu\n", BOOT_DELAY, this->boot_delay), have_startpre = true;
-		if(!this->cron_batch_loadavg_below.empty())
-			std::fprintf(into, "ExecStartPre=!%s %.*s\n", LOADAVG_DAM, FORMAT_SV(this->cron_batch_loadavg_below)), have_startpre = true;
 		if(!this->cron_batch_throttle_group.empty())
-			std::fprintf(into, "ExecStartPre=!%s %.*s\n", THROTTLE_GROUP, FORMAT_SV(this->cron_batch_throttle_group)), have_startpre = true;
+			std::fprintf(into, "ExecStartPre=!%s %.*s%*s%.*s\n", THROTTLE_GROUP, FORMAT_SV(this->cron_batch_throttle_group), !this->cron_batch_loadavg_below.empty(),
+			             "", FORMAT_SV(this->cron_batch_loadavg_below)),
+			    have_startpre = true;
+		else if(!this->cron_batch_loadavg_below.empty())
+			std::fprintf(into, "ExecStartPre=!%s %.*s\n", LOADAVG_DAM, FORMAT_SV(this->cron_batch_loadavg_below)), have_startpre = true;
 		if(have_startpre)
 			std::fputs("TimeoutStartSec=infinity\n", into);
 		std::fprintf(into, "ExecStart=%.*s\n", FORMAT_SV(this->execstart));

@@ -237,6 +237,12 @@ All jobs using this option join a global queue scheduling a random eligible job 
 If set and nonempty, all jobs with the same value form a group where
 no two jobs can run concurrently
 and no job is started within 5 minutes of another exiting.
+.br
+If combined with
+.BR CRON_BATCH_LOADAVG_BELOW ,
+the job joins its
+.B THROTTLE_GROUP
+queue only, but the load threshold still applies.
 
 .PP
 The format of a

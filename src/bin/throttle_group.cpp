@@ -176,9 +176,17 @@ auto main(int, const char * const * argv) -> int {
 	self = *argv++;
 	if(*argv && *argv == "--"sv)
 		++argv;
-	if(!*argv || *(argv + 1))
-		return std::fprintf(stderr, "usage: %s group\n", self.data()), 1;
-	group = *argv;
+	if(!*argv || (*(argv + 1) && *(argv + 2)))
+		return std::fprintf(stderr, "usage: %s group [below-loadavg]\n", self.data()), 1;
+	group = *argv++;
+
+	struct timespec freq{5, 0};
+	std::optional<double> load_target;
+	if(*argv) {
+		freq = {30, 0};  // matches loadavg_dam
+		if(auto err = vore::parse_floating(*argv, load_target.emplace()); err || ((load_target <= 0) && (err = "<= 0")))
+			return std::fprintf(stderr, "%s: %s: %s\n", self.data(), *argv, err), 1;
+	}
 
 
 	shm_t * shm;
@@ -203,16 +211,23 @@ auto main(int, const char * const * argv) -> int {
 	}
 
 	for(;;) {
+		if(load_target)
+			if(double load; getloadavg(&load, 1) != 1 || load > *load_target) {
+				nanosleep(&freq, nullptr);
+				continue;  // load too high
+			}
+
 		const auto last = shm->load();
 		clock_gettime(CLOCK_MONOTONIC_COARSE, &now);
-		if(!((now - last) > (struct timespec){5, 0})) {
+		if(!((now - last) > freq)) {
 			// multiple jobs started at the same time may, due to jitter, spawn 20ms apart,
 			// and the status change due to the first exiting races the second throttle_group,
 			// which leads to apparent double-spend; stabilise for 5s (testing says 1s is too short)
 			// (this means we can only spawn 0.2 throttled jobs per second. ah well)
-			sleep(5);
+			nanosleep(&freq, nullptr);
 			continue;
 		}
+
 
 		sd_bus_message * units_r;
 		if(sd_bus_error err{}; sd_bus_call_method(bus, "org.freedesktop.systemd1", "/org/freedesktop/systemd1", "org.freedesktop.systemd1.Manager",
@@ -275,7 +290,7 @@ auto main(int, const char * const * argv) -> int {
 		}
 
 		if(auto value = last; !shm->compare_exchange_strong(value, {pid, now})) {
-			sleep(5);  // someone else did something in the mean-time, look again
+			nanosleep(&freq, nullptr);  // someone else did something in the mean-time, look again
 			continue;
 		}
 
