@@ -1,3 +1,29 @@
+v2.6.0 : 2025-??-??
+
+   [adetiste, Pramod]
+   Update: contrib/systemd-cron.spec and other Fedora compat
+
+   [adetiste]
+   Fix: Ignore /etc/cron.*/anacron (Debian #1106000)
+
+   [наб]
+   Fix: Makefile understands $LDLIBS
+   Fix: Generate TimeoutStartSec=infinity when needed with DELAY=
+   New feature: CRON_BATCH_LOADAVG_BELOW=123
+                to delay the job until when the 1-minute loadavg goes under 123
+                (all jobs with C_B_LOADAVG_BELOW set and not C_B_THROTTLE_GROUP
+                 join a global queue starting jobs no more often than 30s apart)
+   New feature: CRON_BATCH_THROTTLE_GROUP=whatever
+                to force the job into throttle group whatever.
+                Jobs within a throttle group uphold 2 invariants:
+                - no two jobs are running at the same time
+                - no job is started sooner than 5 minutes after a job exited
+                See new crontab(5) for excruciating detail, or
+                  https://github.com/systemd-cron/systemd-cron/issues/173
+   New: libsystemd.pc dependency
+        (the C_B_THROTTLE_GROUP helper needs to talk to systemd over dbus)
+   New: tmpfiles.d(5) configuration making /dev/shm/systemd-cron.… (for C_B_…)
+
 v2.5.1 : 2025-02-18
 
    [Josef Johansson]

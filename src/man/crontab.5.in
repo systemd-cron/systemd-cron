@@ -241,8 +241,11 @@ and no job is started within 5 minutes of another exiting.
 If combined with
 .BR CRON_BATCH_LOADAVG_BELOW ,
 the job joins its
-.B THROTTLE_GROUP
+.B C_B_THROTTLE_GROUP
 queue only, but the load threshold still applies.
+.br
+See
+.BR "CRON_BATCH_… EXAMPLE" .
 
 .PP
 The format of a
@@ -432,6 +435,39 @@ This is only an example,
 .B systemd-cron uses native units instead for those jobs.
 .br
 If you add those lines, your jobs will run twice.
+
+.SH CRON_BATCH_… EXAMPLE
+.nf
+.in +4
+CRON_BATCH_THROTTLE_GROUP=first
+ 0 0 * * * sleep  2m # a
+ 0 0 * * * sleep  4m # b
+ 0 0 * * * sleep  4m # c
+17 0 * * * sleep  2m # L
+
+CRON_BATCH_THROTTLE_GROUP=second
+ 2 0 * * * sleep  3m # q
+ 2 0 * * * sleep 11m # w
+.in -4
+.fi
+may result in any of the following job runs
+(horizontal axis is time, one minute per column, other jobs unaffected):
+.nf
+.in +4
+00   05   10   15   20   25   30
+aa     cccc     bbbb     LL
+  qqq     wwwwwwwwwww
+
+aa     cccc     bbbb     LL
+  qqq     wwwwwwwwwww
+
+cccc     bbbb     LL     aa
+  wwwwwwwwwww     qqq
+
+cccc     aa     bbbb     LL
+  wwwwwwwwwww     qqq
+.in -4
+.fi
 
 .SH SEE ALSO
 systemd.cron(7), systemd-crontab-generator(8), crontab(1)
