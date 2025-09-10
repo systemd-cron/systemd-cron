@@ -1,5 +1,5 @@
-/* Copyright (C) 2025 наб (nabijaczleweli@nabijaczleweli.xyz)
- * SPDX-License-Identifier: 0BSD
+/* SPDX-License-Identifier: 0BSD
+ * Copyright (C) 2025 наб (nabijaczleweli@nabijaczleweli.xyz)
  */
 
 #include "libvoreutils.hpp"

@@ -1,5 +1,5 @@
-/* Copyright (C) 2025 наб (nabijaczleweli@nabijaczleweli.xyz)
- * SPDX-License-Identifier: 0BSD
+/* SPDX-License-Identifier: 0BSD
+ * Copyright (C) 2025 наб (nabijaczleweli@nabijaczleweli.xyz)
  *
  * Talk to systemd over org.freedesktop.systemd1(5) to:
  * 1. find other jobs matching "cron-*.service" with ExecStartPre=argv[0] argv[1] [...]

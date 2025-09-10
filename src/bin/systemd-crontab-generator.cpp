@@ -1,6 +1,6 @@
-/* Copyright (C) 2023-2025 наб (nabijaczleweli@nabijaczleweli.xyz)
+/* SPDX-License-Identifier: MIT
+ * Copyright (C) 2023-2025 наб (nabijaczleweli@nabijaczleweli.xyz)
  * Copyright (C) 2023-2024 Alexandre Detiste (alexandre@detiste.be)
- * SPDX-License-Identifier: MIT
  */
 
 #include "libvoreutils.hpp"

@@ -1,7 +1,7 @@
+# SPDX-License-Identifier: MIT
 # Copyright (C) 2015-2025 Alexandre Detiste (alexandre@detiste.be)
 # Copyright (C) 2025 Josef Johansson (josef@oderland.se)
 # Copyright (C) 2025 Pramod (pramodvu1502@proton.me)
-# SPDX-License-Identifier: MIT
 
 Name:           systemd-cron
 Version:        2.5.1
