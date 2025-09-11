@@ -25,8 +25,10 @@ Dependencies
 * UsrMerged system
 * C and C++20 compilers
 * libmd (-lmd)
+* libsystemd (-lsystemd)
 * pkgconf (optional)
-* support for /usr/lib/sysusers.d/*.conf (optional)
+* support for /usr/lib/sysusers.d/\*.conf (optional)
+* support for /usr/lib/tmpfiles.d/\*.conf (optional)
 * [run-parts][3] (optional, disabled by default)
 * sendmail from $SENDMAIL or in $PATH or in /usr/sbin:/usr/lib (optional, evaluated at runtime)
 
@@ -101,6 +103,8 @@ Other options include (`pkgconf` may be overridden with `$PKG_CONFIG`):
   Default: `pkgconf systemd --variable=systemdsystemgeneratordir` or `<libdir>/systemd/system-generators`.
 * `--sysusersdir=<path>` Path to systemd-sysusers snippets.
   Default: `pkgconf systemd --variable=sysusersdir` or `<libdir>/sysusers.d`.
+* `--tmpfilesdir=<path>` Path to systemd-tmpfiles snippets.
+  Default: `pkgconf systemd --variable=tmpfilesdir` or `<libdir>/tmpfiles.d`.
 * `--enable-boot[=yes|no]` Include support for the boot timer.
   Default: `yes`.
 * `--enable-minutely[=yes|no]` Include support for the minutely timer.

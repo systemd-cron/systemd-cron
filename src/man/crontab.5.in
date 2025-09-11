@@ -568,14 +568,14 @@ by stripping white-space from both sides,
 then removing initial and terminal
 .Sy ' Ns s ,
 then removing initial and terminal
-.Sy ' Ns s ,
+.Sy \&" Ns s ,
 then removing initial and terminal spaces
 .Pq So " " Sc Ns s .
 This naturally meant it was impossible to have a
 .Va value
 with terminal or initial spaces.
 .br
-systemd-cron before v1.4.0 (2014-11-04) hadn't processed quotes at all, and since \(en didn't run the space removal step.
+systemd-cron before v1.4.0 (2014-11-04) hadn't processed quotes at all, and between v1.4.0 and 1.16 didn't run the space removal step.
 .El
 .
 .Sh DIAGNOSTICS
