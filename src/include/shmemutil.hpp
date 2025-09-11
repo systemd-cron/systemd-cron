@@ -28,7 +28,7 @@ namespace {
 		}
 
 		operator struct timespec() const {
-			return {this->last_time_won_sec, std::chrono::duration_cast<std::chrono::nanoseconds>(subsec{this->last_time_won_subsec}).count()};
+			return {static_cast<time_t>(this->last_time_won_sec), std::chrono::duration_cast<std::chrono::nanoseconds>(subsec{this->last_time_won_subsec}).count()};
 		}
 
 		static auto map(const char * self, shm_t *& shm) -> int {

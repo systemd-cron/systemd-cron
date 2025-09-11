@@ -61,10 +61,10 @@ busctl --system call org.freedesktop.systemd1 /org/freedesktop/systemd1 org.free
 	awk '{gsub(/\\"/, ""); gsub(/" ([0-9]*) "/, "\" \""); gsub(/" "/, "\"\n\""); gsub(/"/, ""); print}' |
 	while read -r name && read -r description && read -r load_state && read -r active_state && read -r active_sub_state && read -r following && read -r object && read -r job_type && read -r job_path; do
 		[ "$load_state" = "loaded" ] || continue
-		[ "${name%@*}"  = "$name"  ] || continue  # first name may have garbage on front (doesn't matter for this)
+		[ "${name%@*}"  = "$name"  ] || continue  # first name may have garbage on front (doesn''t matter for this)
 		busctl --system get-property org.freedesktop.systemd1 "$object" org.freedesktop.systemd1.Service ExecMainStartTimestampMonotonic ExecMainExitTimestampMonotonic ExecStartPre | paste -s &
 	done | while read -r _ ExecMainStartTimestampMonotonic _ ExecMainExitTimestampMonotonic _ ExecStartPre; do
-		[ "${ExecStartPre%"\"$0\" \"$group\""*}" != "$ExecStartPre" ] || continue
+		[ "${ExecStartPre%"\"$0\" \"$group\""*}" != "$ExecStartPre" ] || continue  # "
 		echo ExecMainStartTimestampMonotonic=$ExecMainStartTimestampMonotonic
 		echo ExecMainExitTimestampMonotonic =$ExecMainExitTimestampMonotonic
 	done
