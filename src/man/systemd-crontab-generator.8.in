@@ -93,8 +93,8 @@ for more verbose output.
 .
 .Sh SEE ALSO
 .Xr crontab 5 ,
-.Xr systemd.unit 5 ,
 .Xr systemd.timer 5 ,
+.Xr systemd.unit 5 ,
 .Xr systemd.cron 7
 .
 .\".Sh AUTHOR

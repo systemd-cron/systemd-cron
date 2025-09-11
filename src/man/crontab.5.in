@@ -560,9 +560,7 @@ induces a parse error in Vixie Cron.
 seeing no pairs, simply stops processing.
 .
 .It
-systemd-cron since v1.16 (2023-07-10) but before v2.6.0 (2025-??-??)
-.\" TODO:                                                ^
-dequoted
+systemd-cron since v1.16 (2023-07-10) but before v2.6.0 (2025-09-11) dequoted
 .Va value Ns s
 by stripping white-space from both sides,
 then removing initial and terminal

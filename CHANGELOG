@@ -1,4 +1,4 @@
-v2.6.0 : 2025-??-??  (TODO: put the date in crontab.5.in (grep TODO))
+v2.6.0 : 2025-09-11
 
    [adetiste, Pramod]
    Update: contrib/systemd-cron.spec and other Fedora compat
