@@ -15,7 +15,7 @@ namespace {
 		static const constexpr std::size_t PIDBITS    = 22;  // 2^22 is the current max max (but any max is ok)
 		static const constexpr std::size_t SUBSECBITS = 64 - 32 - PIDBITS;
 		std::uint64_t last_winner : PIDBITS;   // the process that was dispatched
-		std::uint64_t last_time_won_sec : 32;  // last time a process was dispatched
+		std::uint64_t last_time_won_sec : 32;  // last time a process was dispatched (in monotonic time, so we allow for an uptime of up to 136 years)
 		std::uint64_t last_time_won_subsec : SUBSECBITS;
 		using subsec = std::chrono::duration<std::uint64_t, std::ratio<1, 1llu << SUBSECBITS>>;
 
