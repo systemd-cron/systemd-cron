@@ -157,7 +157,8 @@ namespace {
 				return -1;
 
 			auto sec      = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::microseconds{usec});
-			this->*member = {sec.count(), std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::microseconds{usec} - sec).count()};
+			this->*member = {static_cast<time_t>(sec.count()),
+			                 static_cast<int>(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::microseconds{usec} - sec).count())};
 
 			if(this->ExecMainStartTimestampMonotonic && this->ExecMainExitTimestampMonotonic) {
 				if(*this->ExecMainStartTimestampMonotonic > *this->ExecMainExitTimestampMonotonic) {  // should've been caught by active_state check
