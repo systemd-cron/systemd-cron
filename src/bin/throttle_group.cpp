@@ -16,14 +16,14 @@
  * | map(object.get-property(ExecStartPre)) &
  * | filter(ExecStartPre.argv ~ ^[$0, $group, ...])
  * if((active_state = "activating" && active_sub_state != "start-pre") || # Type=oneshot is always activating and never active
- *                                                                        # activating + start-pre means running ExecStartPre=,
- *                                                                        # which we need to exclude to not deadlock against other throttle_groups
- *    active_state ∈ {"active", "reloading"})                  # reloading is a special type of active
+ * | (                                                                    # activating + start-pre means running ExecStartPre=,
+ * | (                                                                    # which we need to exclude to not deadlock against other throttle_groups
+ * | (active_state ∈ {"active", "reloading"})                  # reloading is a special type of active
  * | | sleep(BLANKING_INTERVAL)                                # a unit from our group is currently running
  * | ^ short-circuit back to top
  * |
  * | map(object.get-property(ExecMainStartTimestampMonotonic)) &
- * | map(object.get-property(ExecMainExitTimestampMonotonic))  &
+ * | map(object.get-property(ExecMainExitTimestampMonotonic))
  * if(ExecMainStartTimestampMonotonic > ExecMainExitTimestampMonotonic)
  * | | sleep(BLANKING_INTERVAL)                                # a unit from our group is currently running (race)
  * | ^ short-circuit back to top
