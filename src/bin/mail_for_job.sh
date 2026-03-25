@@ -50,7 +50,7 @@ systemctl show --property=User --property=Environment --property=SourcePath --pr
 
 	export user  # used by custom sendmails!
 	mailto="$user"
-	mailfrom='root'
+	mailfrom="${MAILFROM:-root}"
 
 	sendmail="$SENDMAIL"
 	for kv in $job_env; do
