@@ -136,7 +136,9 @@ When sending output from a job,
 will look at
 .Sy MAILFROM :
 if defined, mail is sent from this email address.
-Otherwise it's seen as being sent by "root".
+Otherwise it's seen as being sent by "root"
+(or the administrator's override from
+.Nm cron-mail@.service ) .
 .
 .It Sy CRON_MAIL_SUCCESS
 Control if (when) to send mail with output from successful jobs.

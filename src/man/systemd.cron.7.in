@@ -128,10 +128,6 @@ to view the output of scripts run from these units.
 .
 .It Nm cron-mail@.service
 Sends mail
-(via
-.Xr sendmail 1 ,
-which can be overridden with
-.Pf $ Ev SENDMAIL )
 in case a cron service unit fails, succeeds, or succeeds-but-only-if-it-wrote-something.
 The instance name
 .Pq the bit after the Sy @
@@ -163,7 +159,18 @@ log reason before exiting silently.
 Overriding this via
 .Nm systemctl Cm edit
 can be useful, especially for units under
-.Pa /etc/cron. Ns Ar * .
+.Pa /etc/cron. Ns Ar * :
+set
+.Pf $ Ev SENDMAIL
+or
+.Pf $ Ev MAILFROM
+to override the defaults
+.Xr ( sendmail 1
+and "root", respectively).
+.Pp
+.Pf $ Ev SENDMAIL
+can be also be set from the global systemd environment
+.Pq Nm systemctl Ic show-environment .
 .El
 .
 .Sh BUGS
