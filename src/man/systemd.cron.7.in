@@ -152,9 +152,8 @@ Started and stopped by
 .It Nm cron- Ns Ar schedule Ns Nm .service
 Runs scripts in the
 .Pa /etc/cron. Ns Ar *
-directories via
-.Xr run-parts 1 ,
-q.v. for name filtering.
+directories with
+.Nm run-parts .
 You can use
 .Xr journalctl 1
 to view the output of scripts run from these units.
@@ -289,6 +288,7 @@ defined in
 .Pp
 .Xr run-parts 8
 is used to run scripts, which must be executable by root.
+See its manual page for the filter applied to script filenames.
 . \}
 .
 .Sh DIAGNOSTICS
