@@ -12,6 +12,8 @@ Filters applied to basenames for files in...
 | (vixie-)cron       | Debian     | `^[[:alnum:]_-]*$`
 | cronie             | all        | not `^\.`, not `~$`, not `^#`, not `\.rpm(save|orig|new)$`, not ".cron.hostname"
 | systemd-cron 2.6.0 | all        | not `^\.`, not `~`, not `\.dpkg`, not `\.rpm`, not "0anacron", not "anacron"
+| systemd-cron 2.7.0 | Debian     | `^[[:alnum:]_-]*$`, not "0anacron", not "anacron"
+| systemd-cron 2.7.0 | not Debian | not `^\.`, not `~$`, not `\.dpkg`, not `\.rpm`, not "0anacron", not "anacron"
 | bcron              | Debian     | `^[[:alnum:]_-]*$`
 | bcron              | not Debian | not `\.`
 | dcron              | all        | not `\.`, not "cron.update"

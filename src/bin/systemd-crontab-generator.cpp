@@ -33,11 +33,14 @@ static const char * const MONTHS_RANGE             = "[jan, dec] or [1, 12]";
 
 static const char * SELF;
 static bool RUN_BY_SYSTEMD;
-static const constexpr std::string_view VALID_CHARS = "-"
+static const constexpr std::string_view ASCII_ALNUM = "-"
                                                       "0123456789"
                                                       "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                                                       "_"
                                                       "abcdefghijklmnopqrstuvwxyz"sv;  // keep sorted
+static constexpr bool is_ascii_alnum(char c) {
+	return std::binary_search(std::begin(ASCII_ALNUM), std::end(ASCII_ALNUM), c);
+}
 
 
 static const constexpr std::pair<std::string_view, std::string_view> PART2TIMER[] = {
@@ -525,9 +528,7 @@ struct Job {
 
 	// decode & validate
 	auto decode() -> void {
-		this->jobid.erase(std::remove_if(std::begin(this->jobid), std::end(this->jobid),
-		                                 [](char c) { return !std::binary_search(std::begin(VALID_CHARS), std::end(VALID_CHARS), c); }),
-		                  std::end(this->jobid));
+		this->jobid.erase(std::remove_if(std::begin(this->jobid), std::end(this->jobid), [](char c) { return !is_ascii_alnum(c); }), std::end(this->jobid));
 		this->decode_command();
 	}
 
@@ -1319,8 +1320,12 @@ static auto is_backup(const char * path, const std::string_view & name) -> bool 
 	if(name == ".placeholder"sv)
 		return true;
 
-	bool backup = name.starts_with('.') || name.ends_with('~') || name.find(".dpkg-"sv) != std::string_view::npos ||
-	              name.find(".rpm"sv) != std::string_view::npos || name == "0anacron"sv || name == "anacron"sv;
+	bool backup = name == "0anacron"sv || name == "anacron"sv;
+	if(USE_DEBIAN_BASENAME_FILTER)
+		backup = backup || !std::all_of(std::begin(name), std::end(name), is_ascii_alnum);
+	else
+		backup = backup || name.starts_with('.') || name.ends_with('~') || name.find(".dpkg-"sv) != std::string_view::npos ||
+		         name.find(".rpm"sv) != std::string_view::npos;
 	if(backup)
 		log(Log::DEBUG, "ignoring %s/%.*s", path, FORMAT_SV(name));
 	return backup;

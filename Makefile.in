@@ -8,6 +8,7 @@ version			:= @version@
 schedules		:= @schedules@
 schedules_not		:= @schedules_not@
 enable_runparts		:= @enable_runparts@
+enable_debian_basename_filter	:= @enable_debian_basename_filter@
 have_onsuccess		:= @have_onsuccess@
 use_loglevelmax		:= @use_loglevelmax@
 part2timer		:= @part2timer@
@@ -36,8 +37,8 @@ tarball		:= $(outdir)/dist/$(distname).tar.xz
 
 ifneq ($(enable_runparts),no)
 out_services	:= $(foreach schedule,$(schedules),$(builddir)/units/cron-$(schedule).service)
-out_timers		:= $(foreach schedule,$(schedules),$(builddir)/units/cron-$(schedule).timer)
-out_targets		:= $(foreach schedule,$(schedules),$(builddir)/units/cron-$(schedule).target)
+out_timers	:= $(foreach schedule,$(schedules),$(builddir)/units/cron-$(schedule).timer)
+out_targets	:= $(foreach schedule,$(schedules),$(builddir)/units/cron-$(schedule).target)
 else
 out_services	:= $(builddir)/units/systemd-cron-cleaner.service
 out_timers	:= $(builddir)/units/systemd-cron-cleaner.timer
@@ -73,6 +74,7 @@ define in2out
 		-e "s|\@version\@|$(version)|g" \
 		-e "s|\@use_loglevelmax\@|$(use_loglevelmax)|g" \
 		-e "s|\@enable_runparts\@|$(enable_runparts)|g" \
+		-e "s|\@enable_debian_basename_filter\@|$(enable_debian_basename_filter)|g" \
 		-e "$(if $(filter $(have_onsuccess),yes),s|\@remove_if_no_onsuccess\@||g,/\@remove_if_no_onsuccess\@/d)" \
 		-e "s|\@schedule\@|$3|g" \
 		-e "s|\@requires\@|$4|g" \
@@ -91,7 +93,7 @@ dist: $(tarball)
 
 test: test-unshare test-nounshare
 test-unshare: all
-	unshare -rm test/test-generator $(enable_runparts) "$(statedir)" $(have_onsuccess)
+	unshare -rm test/test-generator $(enable_runparts) "$(statedir)" $(have_onsuccess) $(enable_debian_basename_filter)
 	unshare -ru test/test-m_f_j $(version)
 	unshare -rm test/test-r_s_s
 test-nounshare: all
@@ -207,6 +209,7 @@ $(builddir)/include/configuration.hpp : $(srcdir)/include/configuration.hpp.in
 	mkdir -p $(builddir)/include
 	sed -e 's:\@use_loglevelmax\@:$(use_loglevelmax):' \
 	    -e 's:\@use_runparts\@:$(if $(filter $(enable_runparts),yes),true,false):' \
+	    -e 's:\@use_debian_basename_filter\@:$(if $(filter $(enable_debian_basename_filter),yes),true,false):' \
 	    -e 's:\@version\@:$(version):' \
 	    -e 's:\@libexecdir\@:$(libexecdir):' \
 	    -e 's:\@statedir\@:$(statedir):' \

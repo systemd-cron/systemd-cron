@@ -86,6 +86,40 @@ Native systemd timers will override cron jobs with the same name.
 You can also use this mechanism to mask an unneeded crontab provided by a package via
 .Nm systemctl Cm mask Ar package Ns Li .timer .
 .El
+.Pp
+File names of crontabs in
+.Pa /etc/cron.d
+.if '@enable_runparts@'no' \{ .
+and scripts in
+.Pa /etc/cron. Ns Ar schedule
+. \}
+must
+.ie '@enable_debian_basename_filter@'yes' \{ .
+consist only of
+.Xr ascii 7
+alphanumerics,
+underscores
+.Pq Sq Sy _ ,
+and dashes
+.Pq Sq Sy -
+.Pq match the regular expression Qq Li ^[[:alnum:]_-]*$ ;
+they will be ignored otherwise.
+. \}
+.el \{ .
+not start with a dot
+.Pq Sq Sy .\& ,
+end with a tilde
+.Pq Sq Sy ~ ,
+or contain
+.Qq Sy .dpkg-
+or
+.Qq Sy .rpm ;
+they will be ignored if they do.
+. \}
+.Pa 0anacron
+and
+.Pa anacron
+are always ignored.
 .
 .Sh UNITS
 .Bl -tag -compact -width ".Nm cron- Ns Ar schedule Ns Nm .service"
@@ -104,22 +138,23 @@ to re-run the generator.
 .Pp
 .
 .if '@enable_runparts@'yes' \{ .
+.It Nm cron- Ns Ar schedule Ns Nm .target
+Pulls in
+.Nm cron- Ns Ar schedule Ns Nm .service .
+.\" TODO: why does it do this? This doesn't appear to be referenced anywhere else.
+.
 .It Nm cron- Ns Ar schedule Ns Nm .timer
 Triggers
-.Nm cron- Ns Ar schedule Ns Nm .service
-on
-.Ar target .
-Started and stopped by the
-cron.target unit.
-.
-.It Nm cron- Ns Ar schedule Ns Nm .target
-Pulls in all service units wanted by the target, i.a.\&
 .Nm cron- Ns Ar schedule Ns Nm .service .
+Started and stopped by
+.Nm cron.target .
 .
 .It Nm cron- Ns Ar schedule Ns Nm .service
 Runs scripts in the
 .Pa /etc/cron. Ns Ar *
-directories.
+directories via
+.Xr run-parts 1 ,
+q.v. for name filtering.
 You can use
 .Xr journalctl 1
 to view the output of scripts run from these units.

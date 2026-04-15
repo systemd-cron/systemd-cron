@@ -4,6 +4,7 @@ using namespace std::literals;
 static const char * const VERSION                       = "@version@";
 static const constexpr std::string_view USE_LOGLEVELMAX = "@use_loglevelmax@"sv;
 static const constexpr bool USE_RUNPARTS                = @use_runparts@;
+static const constexpr bool USE_DEBIAN_BASENAME_FILTER  = @use_debian_basename_filter@;
 static const constexpr bool HAVE_ONSUCCESS              = @have_onsuccess@;
 static const char * const BOOT_DELAY                    = "@libexecdir@/systemd-cron/boot_delay";
 static const char * const LOADAVG_DAM                   = "@libexecdir@/systemd-cron/loadavg_dam";

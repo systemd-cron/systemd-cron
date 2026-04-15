@@ -97,6 +97,8 @@ Other options include (`pkgconf` may be overridden with `$PKG_CONFIG`):
 
 * `--enable-runparts[=yes|no]` Use static units for /etc/cron.{hourly,daily,...}
   Default: `no`.
+* `--enable-debian-basename-filter[=yes|no]` Filter crontabs under /etc/cron.d/ and jobs under /etc/cron.{hourly,daily,...} to `^[[:alnum:]_-]*$` like Debian cron and run-parts instead of (not `^\.` and not `~$`); no effect on the latter if `--enable-runparts`
+  Default: `no`.
 * `--unitdir=<path>` Path to systemd unit files.
   Default: `pkgconf systemd --variable=systemdsystemunitdir` or `<libdir>/systemd/system`.
 * `--generatordir=<path>` Path to systemd generators.

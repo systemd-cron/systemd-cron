@@ -9,6 +9,10 @@ v2.7.0 : 2026-??-??  (TODO: put the date in crontab.5.in (grep TODO))
         (before) start with '.' or contain  '~' or contain ".dpkg-" or ".rpm"
         (after)  start with '.' or end with '~' or contain ".dpkg-" or ".rpm"
 
+   New: ./configure --enable-debian-basename-filter (default no),
+        which instead considers them backups if they don't match
+        /^[[:alnum:]_-]*$/. This matches Debian cron and run-parts behaviour.
+
 v2.6.0 : 2025-09-11
 
    [adetiste, Pramod]

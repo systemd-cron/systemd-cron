@@ -10,6 +10,8 @@ USE_RUN_PARTS="${1:-no}"
 echo "USE_RUN_PARTS: $USE_RUN_PARTS"
 HAVE_ONSUCCESS="${3:-yes}"
 echo "HAVE_ONSUCCESS: $HAVE_ONSUCCESS"
+USE_DEBIAN_BASENAME_FILTER="${4:-no}"
+echo "USE_DEBIAN_BASENAME_FILTER: $USE_DEBIAN_BASENAME_FILTER"
 
 mount -t tmpfs tmpfs /etc || exit
 STATEDIR="${2:-"/var/spool/cron"}"
@@ -312,10 +314,13 @@ fi
 	rm -r /etc/cron.*
 	printf '%s\n' 'root:x:0:0:root:/root:/bin/sh' 'eroot:x:0:0:root:/root:/bin/ed' > /etc/passwd
 	cp "${TESTDIR}crontab" /etc
-	mkdir /etc/cron.daily
+	mkdir /etc/cron.d /etc/cron.daily
 	echo id > /etc/cron.daily/id
 	chmod +x /etc/cron.daily/id
 	> /etc/cron.daily/nonexecutable
+
+	cp /etc/cron.daily/id /etc/cron.daily/non.debian.daily
+	echo '@daily root This crontab will be filtered out by --enable-debian-basename-filter' > /etc/cron.d/non.debian.d
 
 	"$S_C_G" /etc/out2 || { err=$?; echo "$S_C_G" /etc/out2 = $err >&2; exit $err; }
 	cd /etc/out2 || exit
@@ -364,6 +369,19 @@ then
 	assert_key cron-daily-id.service  'ExecStart'         '/etc/cron.daily/id'                       /etc/cron.daily
 	assert_key cron-daily-id.timer    'OnCalendar'        '*-*-* 5:10:0'                             /etc/cron.daily
 	assert_key cron-daily-id.timer    'Persistent'        'true'                                     /etc/cron.daily
+fi
+
+if [ "$USE_DEBIAN_BASENAME_FILTER" = 'yes' ]
+then
+	[ -e cron-daily-nondebiandaily.service ] && { err=1; echo "cron-daily-nondebiandaily.service exists!"; }
+	[ -e cron-daily-nondebiandaily.timer   ] && { err=1; echo "cron-daily-nondebiandaily.timer exists!"; }
+	[ -e cron-nondebiand-root-332c7b1e616245113174512a44db5258.service ] && { err=1; echo "cron-nondebiand-root-332c7b1e616245113174512a44db5258.service exists!"; }
+	[ -e cron-nondebiand-root-332c7b1e616245113174512a44db5258.timer   ] && { err=1; echo "cron-nondebiand-root-332c7b1e616245113174512a44db5258.timer exists!"; }
+else
+	assert_key cron-daily-nondebiandaily.service                             'SourcePath' '/etc/cron.daily/non.debian.daily' --enable-debian-basename-filter
+	assert_key cron-daily-nondebiandaily.timer                               'SourcePath' '/etc/cron.daily/non.debian.daily' --enable-debian-basename-filter
+	assert_key cron-nondebiand-root-332c7b1e616245113174512a44db5258.service 'SourcePath' '/etc/cron.d/non.debian.d' --enable-debian-basename-filter
+	assert_key cron-nondebiand-root-332c7b1e616245113174512a44db5258.timer   'SourcePath' '/etc/cron.d/non.debian.d' --enable-debian-basename-filter
 fi
 }
 test_test_crontab_common
