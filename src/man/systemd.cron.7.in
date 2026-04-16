@@ -1,4 +1,4 @@
-.Dd 2025-09-06
+.Dd 2026-04-16
 .Dt SYSTEMD.CRON 7
 .Os systemd-cron @version@
 .
@@ -102,7 +102,7 @@ underscores
 .Pq Sq Sy _ ,
 and dashes
 .Pq Sq Sy -
-.Pq match the regular expression Qq Li ^[[:alnum:]_-]*$ ;
+.Pq match the C-locale regular expression Qq Li ^[[:alnum:]_-]*$ ;
 they will be ignored otherwise.
 . \}
 .el \{ .
