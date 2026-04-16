@@ -18,7 +18,7 @@
 .\"
 .\" $Id: crontab.5,v 2.4 1994/01/15 20:43:43 vixie Exp $
 .\"
-.Dd 2025-09-10
+.Dd 2026-04-16
 .Dt CRONTAB 5
 .Os systemd-cron @version@
 .

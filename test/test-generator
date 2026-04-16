@@ -380,8 +380,8 @@ then
 else
 	assert_key cron-daily-nondebiandaily.service                             'SourcePath' '/etc/cron.daily/non.debian.daily' --enable-debian-basename-filter
 	assert_key cron-daily-nondebiandaily.timer                               'SourcePath' '/etc/cron.daily/non.debian.daily' --enable-debian-basename-filter
-	assert_key cron-nondebiand-root-332c7b1e616245113174512a44db5258.service 'SourcePath' '/etc/cron.d/non.debian.d' --enable-debian-basename-filter
-	assert_key cron-nondebiand-root-332c7b1e616245113174512a44db5258.timer   'SourcePath' '/etc/cron.d/non.debian.d' --enable-debian-basename-filter
+	assert_key cron-nondebiand-root-332c7b1e616245113174512a44db5258.service 'SourcePath' '/etc/cron.d/non.debian.d'         --enable-debian-basename-filter
+	assert_key cron-nondebiand-root-332c7b1e616245113174512a44db5258.timer   'SourcePath' '/etc/cron.d/non.debian.d'         --enable-debian-basename-filter
 fi
 }
 test_test_crontab_common
