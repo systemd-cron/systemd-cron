@@ -586,7 +586,7 @@ You can see how your crontab was translated by running
 .Sh AUTHORS
 .An -nosplit
 .An Paul Vixie Aq Mt paul@vix.com
-is the author of his popular cron implementaton
+is the author of his popular cron implementation
 and original creator of this manual page.
 This page has also been modified for Debian by
 .An Steve Greenland ,
