@@ -1056,8 +1056,13 @@ static auto for_each_file(const char * dirname, F && cbk) -> void {
 		auto fd = dirfd(dir);
 		struct stat sb;
 		for(auto && ent : dir)
-			if(ent.d_type == DT_REG || (!fstatat(fd, ent.d_name, &sb, 0) && S_ISREG(sb.st_mode)))
-				cbk(ent.d_name);
+			switch(ent.d_type) {
+				case DT_UNKNOWN:
+				case DT_LNK:
+					if(!fstatat(fd, ent.d_name, &sb, 0) && S_ISREG(sb.st_mode))
+					case DT_REG:
+						cbk(ent.d_name);
+			}
 	}
 }
 
