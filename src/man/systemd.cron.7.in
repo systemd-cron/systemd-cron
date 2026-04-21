@@ -141,7 +141,6 @@ to re-run the generator.
 .It Nm cron- Ns Ar schedule Ns Nm .target
 Pulls in
 .Nm cron- Ns Ar schedule Ns Nm .service .
-.\" TODO: why does it do this? This doesn't appear to be referenced anywhere else.
 .
 .It Nm cron- Ns Ar schedule Ns Nm .timer
 Triggers
