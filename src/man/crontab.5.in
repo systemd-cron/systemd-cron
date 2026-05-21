@@ -292,6 +292,10 @@ queue only, but the load threshold still applies.
 .br
 See
 .Sx EXAMPLES , CRON_BATCH_… .
+.
+.It Sy CRON_LOG_NAMESPACE
+If set and nonempty, translated to
+.Sy LogNamespace= .
 .El
 .
 .Ss The format of a cron command

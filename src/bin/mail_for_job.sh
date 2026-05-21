@@ -25,13 +25,14 @@ SENDMAIL="$(command -v "$SENDMAIL" || command -v sendmail || command -v /usr/sbi
 	exit 0
 }
 
-systemctl show --property=User --property=Environment --property=SourcePath --property=Description --property=ActiveState --property=InvocationID "$unit" | {
+systemctl show --property=User --property=Environment --property=SourcePath --property=Description --property=ActiveState --property=InvocationID --property=LogNamespace "$unit" | {
 	user=
 	job_env=
 	source_path=
 	description=
 	active_state=
 	invocation_id=
+	log_namespace=
 	while IFS='=' read -r k v; do
 		case "$k" in
 			'User'        )	user="$v"          ;;
@@ -40,6 +41,7 @@ systemctl show --property=User --property=Environment --property=SourcePath --pr
 			'Description' )	description="$v"   ;;
 			'ActiveState' )	active_state="$v"  ;;
 			'InvocationID')	invocation_id="$v" ;;
+			'LogNamespace')	log_namespace="$v" ;;
 		esac
 	done
 	[ -z "$user" ] && user='root'
@@ -47,6 +49,7 @@ systemctl show --property=User --property=Environment --property=SourcePath --pr
 	[ "${source_path#'@statedir@/'}" != "$source_path" ] && source_path="${source_path#'@statedir@/'}'s crontab"
 	# Description is either »[Cron] "0 * * * * program"« or »[Cron] /etc/crontab«; we don't care about the latter
 	[ "${description#'[Cron] "'}" != "$description" ] && source_path="$source_path ${description#'[Cron] '}"
+	[ -n "$log_namespace" ] && journalctl() { command journalctl --namespace +"$log_namespace" "$@"; }
 
 	export user  # used by custom sendmails!
 	mailto="$user"

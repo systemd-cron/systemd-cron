@@ -176,6 +176,7 @@ struct Job {
 	std::optional<std::string_view> user_home;  // 'static
 	uid_t user_uid;
 	gid_t user_gid;
+	std::string_view cron_log_namespace;
 	cron_mail_success_t cron_mail_success;
 	cron_mail_format_t cron_mail_format;
 	struct {
@@ -308,6 +309,8 @@ struct Job {
 				this->cron_batch_loadavg_below = v;
 			else if(k == "CRON_BATCH_THROTTLE_GROUP"sv)
 				this->cron_batch_throttle_group = v;
+			else if(k == "CRON_LOG_NAMESPACE"sv)
+				this->cron_log_namespace = v;
 			else if(k == "CRON_MAIL_SUCCESS"sv) {
 				if(v == "never"sv || systemd_bool_false(v))
 					this->cron_mail_success = cron_mail_success_t::never;
@@ -908,6 +911,8 @@ struct Job {
 		std::fputs("Type=oneshot\n", into);
 		std::fputs("IgnoreSIGPIPE=false\n", into);
 		std::fputs("SyslogFacility=cron\n", into);
+		if(!this->cron_log_namespace.empty())
+			std::fprintf(into, "LogNamespace=%.*s\n", FORMAT_SV(this->cron_log_namespace));
 		if(USE_LOGLEVELMAX != "no"sv)
 			std::fprintf(into, "LogLevelMax=%.*s\n", FORMAT_SV(USE_LOGLEVELMAX));
 		bool have_startpre{};
