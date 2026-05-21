@@ -359,6 +359,12 @@ test_test_crontab_common() {
 	assert_key 'cron-crontab-root-68d29d8cf7f485d7c7821ca686d61ffd.timer' 'Description' '[Timer] "~ ~ ~ ~ ~ root echo ~"' root-\~
 	assert_key 'cron-crontab-root-68d29d8cf7f485d7c7821ca686d61ffd.timer' 'Persistent'  'true'                            root-\~
 
+	assert_key cron-crontab-root-3.timer                                  'Description' '[Timer] "~ ~ ~ ~ ~ root echo ~ n"' root-not-unique
+	assert_ney cron-crontab-root-3.timer                                  'Persistent'                                      root-not-unique
+
+	assert_key 'cron-crontab-root-1b968f359f8f870c40ee074fc5751038.timer' 'Description' '[Timer] "~ ~ ~ ~ ~ root echo ~ y"' root-yes-unique
+	assert_ney 'cron-crontab-root-1b968f359f8f870c40ee074fc5751038.timer' 'Persistent'                                      root-yes-unique
+
 if [ "$USE_RUN_PARTS" = 'no' ]
 then
 	[ -e cron-daily-nonexecutable.service ] && { err=1; echo "cron-daily-nonexecutable.service exists!"; }

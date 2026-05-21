@@ -18,7 +18,7 @@
 .\"
 .\" $Id: crontab.5,v 2.4 1994/01/15 20:43:43 vixie Exp $
 .\"
-.Dd 2026-04-16
+.Dd 2026-05-21
 .Dt CRONTAB 5
 .Os systemd-cron @version@
 .
@@ -178,7 +178,7 @@ and
 if changed in
 .Pa /etc/crontab ,
 are remembered for all other crontabs
-.Pq Pa /etc/cron.d ,  /etc/anacron , No users' crontabs
+.Pq Pa /etc/cron.d , /etc/anacron , No users' crontabs
 and act as an administrator-controlled default.
 They can be set to
 .Sy inherit
@@ -251,6 +251,14 @@ force all further jobs to not be persistent
 .Pp
 Persistent jobs start automatically on boot if they were supposed to have run while the system was off
 .Pq Sy Persistent=true .
+.
+.It Sy CRON_UNIQUE_UNITS
+This boolean flag replaces the generator's default unit naming convention for subsequent units
+.Pq sequential per Nm
+with a unique (persistent) hash; cf.\&
+.Xr systemd.cron 7 ,
+.Sx BUGS .
+Persistent jobs are always generated with unique names.
 .
 .It Sy TZ , CRON_TZ
 The job is scheduled in this time-zone instead of in the system time-zone.

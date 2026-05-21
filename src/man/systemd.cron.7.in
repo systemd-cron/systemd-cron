@@ -1,4 +1,4 @@
-.Dd 2026-04-16
+.Dd 2026-05-21
 .Dt SYSTEMD.CRON 7
 .Os systemd-cron @version@
 .
@@ -223,6 +223,10 @@ so if a job changes (by direct editing or by removing (commenting out) a previou
 and mail is sent for that job,
 the metadata (description, name, other configuration) will be wrong (too new).
 The journal output is correct.
+Setting
+.Sy CRON_UNIQUE_UNITS
+will work around this
+.Pq but break existing Nm systemctl Ic edit Ns \& overrides .
 .
 .Sh EXTENSIONS
 The generator can optionally turn any crontabs in persistent timers with the

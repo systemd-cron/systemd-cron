@@ -166,6 +166,7 @@ struct Job {
 	std::size_t boot_delay;
 	std::size_t start_hour;
 	bool persistent;
+	bool cron_unique_units;
 	bool batch;
 	std::string_view cron_batch_loadavg_below;
 	std::string_view cron_batch_throttle_group;
@@ -250,6 +251,7 @@ struct Job {
 		this->last_dom        = false;
 		this->last_dow        = false;
 
+		this->cron_unique_units = false;
 		this->cron_mail_success = cron_mail_success_t::dflt;
 		this->cron_mail_format  = cron_mail_format_t::dflt;
 	}
@@ -280,6 +282,8 @@ struct Job {
 		for(auto && [k, v] : environment) {
 			if(k == "PERSISTENT"sv)
 				this->persistent = systemd_bool(v);
+			else if(k == "CRON_UNIQUE_UNITS"sv)
+				this->cron_unique_units = systemd_bool(v);
 			else if(k == "RANDOM_DELAY"sv) {
 				bool err{};
 				this->random_delay = int_map(v, err);
@@ -974,7 +978,7 @@ struct Job {
 	auto generate_unit_name(std::uint64_t & seq) -> void {
 		assert(!this->jobid.empty());
 		this->unit_name = ("cron-"s += this->jobid) += '-';
-		if(!this->persistent) {
+		if(!(this->persistent || this->cron_unique_units)) {
 			char buf[20 + 1];  // 18446744073709551615
 			this->unit_name += std::string_view{buf, static_cast<std::size_t>(std::snprintf(buf, sizeof(buf), "%" PRIu64 "", seq++))};
 		} else {

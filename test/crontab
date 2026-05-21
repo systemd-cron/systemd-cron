@@ -24,3 +24,7 @@ START_HOURS_RANGE=3-22
 @daily root ls
 PERSISTENT=true
 ~ ~ ~ ~ ~ root echo ~
+PERSISTENT=false
+~ ~ ~ ~ ~ root echo ~ n
+CRON_UNIQUE_UNITS=true
+~ ~ ~ ~ ~ root echo ~ y
