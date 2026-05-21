@@ -708,15 +708,18 @@ struct Job {
 				this->schedule_raw = this->schedule;
 		}
 
+#define ADDBOTH(what)             \
+	do {                            \
+		this->schedule += what;       \
+		if(this->persistent)          \
+			this->schedule_raw += what; \
+	} while(false)
 		auto timespec_comma = [&](auto && field, auto && raw) {
 			char buf[3 + 1];  // 255
 			auto first = true;
 			for(auto f : field) {
-				if(!std::exchange(first, false)) {
-					this->schedule += ',';
-					if(this->persistent && !raw)
-						this->schedule_raw += ',';
-				}
+				if(!std::exchange(first, false))
+					ADDBOTH(',');
 
 				std::string_view to_append;
 				if(f == TIMESPEC_ASTERISK)
@@ -724,29 +727,20 @@ struct Job {
 				else
 					to_append = {buf, static_cast<std::size_t>(std::snprintf(buf, sizeof(buf), "%" PRIu8 "", f))};
 
-				this->schedule += to_append;
-				if(this->persistent && !raw)
-					this->schedule_raw += to_append;
+				ADDBOTH(to_append);
 			}
 
 			if(this->persistent && raw)
 				this->schedule_raw += *raw;
 		};
-#define ADDBOTH(what)     \
-	this->schedule += what; \
-	if(this->persistent)    \
-	this->schedule_raw += what
 		timespec_comma(this->timespec_month, this->timespec_month_raw);
-		if(this->last_dow || this->last_dom) {
+		if(this->last_dow || this->last_dom)
 			ADDBOTH('~');
-		} else {
+		else
 			ADDBOTH('-');
-		}
 		timespec_comma(this->timespec_dom, this->timespec_dom_raw);
-		if(this->last_dow) {
-			ADDBOTH('/');
-			ADDBOTH('1');
-		}
+		if(this->last_dow)
+			ADDBOTH("/1"sv);
 		ADDBOTH(' ');
 		timespec_comma(this->timespec_hour, this->timespec_hour_raw);
 		ADDBOTH(':');
