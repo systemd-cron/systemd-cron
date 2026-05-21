@@ -234,8 +234,6 @@ only uses the starting hour of the range as reference.
 Unless you set this variable, all
 .Sy @daily Ns / Ns Sy @weekly Ns / Ns Sy @monthly Ns /&c.\&
 jobs will run at midnight.
-If you do set this variable and the system was off during
-the hours defined in the range, persistent jobs will start at boot.
 .
 .It Sy PERSISTENT
 This boolean flag can override the generator's default heuristic:
@@ -250,6 +248,7 @@ keywords to be persistent
 .It Sy no Ns \z:
 force all further jobs to not be persistent
 .El
+Persistent jobs start automatically on boot if they were supposed to have run while the system was off.
 .
 .It Sy TZ , CRON_TZ
 The job is scheduled in this time-zone instead of in the system time-zone.
