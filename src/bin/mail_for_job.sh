@@ -72,7 +72,7 @@ systemctl show --property=User --property=Environment --property=SourcePath --pr
 		# INVOCATION_ID=          matches messages from systemd
 		# _SYSTEMD_INVOCATION_ID= matches messages from the service
 		# SYSLOG_FACILITY=9       matches lines from the standard output and standard error only (we set SyslogFacility=cron, cron=9)
-		journalctl -qu "$unit" _SYSTEMD_INVOCATION_ID="$invocation_id" SYSLOG_FACILITY=9 | read -r _ || {
+		journalctl -o cat -qu "$unit" _SYSTEMD_INVOCATION_ID="$invocation_id" SYSLOG_FACILITY=9 | read -r _ || {
 			[ -n "$verbose" ] && printf 'This cron job (%s) produced no output, therefore quitting\n' "$unit" >&2
 			exit 0
 		}
