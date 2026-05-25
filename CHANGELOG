@@ -1,3 +1,18 @@
+v2.8.0 : 2026-05-xx
+
+   [наб]
+   Clarify: crontab(5)'s misunderstanding of persistent jobs
+            (they just get started on boot if they would've run while off)
+
+   New: CRON_UNIQUE_UNITS=bool to generate MD5 instead of sequential unit names
+        (separated from & now implied by PERSISTENT)
+   This works around a pseudo-race condition in cron-mail@ that happens
+   when a crontab is edited (reordered) while one of its services is running
+   (cf. systemd.cron(7), BUGS).
+
+   New: CRON_LOG_NAMESPACE=$name, translated to LogNamespace=$name,
+                                  logging to systemd-journald@$name
+
 v2.7.1 : 2026-04-19
 
    [adetiste]
