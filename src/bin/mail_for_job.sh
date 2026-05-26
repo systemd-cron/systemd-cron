@@ -81,6 +81,13 @@ systemctl show --property=User --property=Environment --property=SourcePath --pr
 		}
 	}
 
+	source_path="$(
+		journalctl -o cat -qu "$unit" _SYSTEMD_INVOCATION_ID="$invocation_id" --output-fields CRON_JOB | {
+			read -r desc && [ -n "$desc" ] && source_path="$desc"
+			printf '%s\n' "$source_path"
+		}
+	)"
+
 	[ "$active_state" = 'failed' ] && why='Failure' || why='Output'  # '[tarta] Failure: /etc/cron.daily/whatever' or '[tarta] Output: /etc/cron.daily/whatever'
 	{
 		# Encode the message in raw 8-bit UTF-8. w/o base64

@@ -221,8 +221,10 @@ are generated with sequential names,
 so if a job changes (by direct editing or by removing (commenting out) a previous job)
 .Em while it is running ,
 and mail is sent for that job,
-the metadata (description, name, other configuration) will be wrong (too new).
-The journal output is correct.
+some configuration may be wrong (too new) and
+.Xr systemctl Ic status
+may be confusing.
+The journal output and e-mail subject are correct.
 Setting
 .Sy CRON_UNIQUE_UNITS
 will work around this
@@ -235,6 +237,11 @@ and
 .Sy @ Ns -keyword
 are started on boot if a run was missed while the system was off.
 A regular cron and anacron setup won't catch up on the missed executions of crontabs on reboot.
+.Pp
+Generated units log to the journal with
+.Sy CRON_JOB=
+set to the job line
+.Pq Xr systemd.journal-fields 7 .
 .
 .Sh EXAMPLES
 .Ss Start cron units

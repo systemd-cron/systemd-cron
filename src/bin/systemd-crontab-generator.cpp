@@ -923,6 +923,29 @@ struct Job {
 		std::fputc('\n', into);
 
 		std::fputs("[Service]\n", into);
+		{
+			std::fputs("LogExtraFields=CRON_JOB=\"", into);
+			if(this->line[0] != '/')
+				std::fputs("\\\"", into);
+
+			// % already escaped
+			auto desc = std::visit([](auto && ld) { return std::string_view{ld}; }, this->line_description);
+			for(std::size_t idx; (idx = desc.find_first_of("\\\"")) != std::string_view::npos;) {
+				std::fwrite(desc.data(), 1, idx, into);
+				desc.remove_prefix(idx);
+
+				while(!desc.empty() && (desc[0] == '\"' || desc[0] == '\\')) {
+					std::fputc('\\', into);
+					std::fputc(desc[0], into);
+					desc.remove_prefix(1);
+				}
+			}
+			std::fwrite(desc.data(), 1, desc.size(), into);
+
+			if(this->line[0] != '/')
+				std::fputs("\\\"", into);
+			std::fputs("\"\n", into);
+		}
 		std::fprintf(into, "User=%.*s\n", FORMAT_SV(this->user));
 		if(*PAMNAME)
 			std::fputs("PAMName=" PAMNAME "\n", into);  // + default KillMode=control-group (can't have =process with PAMName)
