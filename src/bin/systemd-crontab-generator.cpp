@@ -823,10 +823,12 @@ struct Job {
 					case static_cast<std::size_t>(-1):  // EILSEQ: reset, output byte as \xXX
 						st   = {};
 						conv = 1;
-						std::fprintf(into, "\\x%02hhx", desc[0]);
-						break;
-					case static_cast<std::size_t>(-2):  // incomplete: truncate
+						goto hex;
+					case static_cast<std::size_t>(-2):  // incomplete: output rest as \xXX
 						conv = desc.size();
+					hex:
+						for(auto byte : desc.substr(0, conv))
+							std::fprintf(into, "\\x%02hhx", byte);
 						break;
 					default:
 						if(c == '%')  // % is special in systemd units, %% is literal
