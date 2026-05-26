@@ -422,16 +422,17 @@ test_test_crontab_common
 
 {
 	# 【	(U+3010, UTF-8 e3 80 90	): LEFT BLACK LENTICULAR BRACKET
-	value="pi$(printf 【 | head -c-1)teczek $(printf 【 | head -c-1)"
+	printf '%s\n' "pi$(printf 【 | head -c-1)te@zek $(printf 【 | head -c-1)" | tr @ '\0' > /etc/heniek.tr
 
 	rm -r /etc/cron.*
-	printf '%s\n' "1 2 3 4 5 heniek $value" > /etc/crontab
+	{ printf '1 2 3 4 5 heniek '; cat /etc/heniek.tr; echo; } > /etc/crontab
 
 	"$S_C_G" /etc/out-trunc || { err=$?; echo "$S_C_G" /etc/out-trunc = $err >&2; exit $err; }
 	cd /etc/out-trunc || exit
 
-	assert_key cron-crontab-heniek-0.service 'Description' '[Cron] "1 2 3 4 5 heniek pi\xe3\x80teczek \xe3\x80"' heniek\'s-invalid-and-truncated-program
-	assert_dat cron-crontab-heniek-0.sh      "$value"                                                            heniek\'s-invalid-and-truncated-program
+	assert_key cron-crontab-heniek-0.service 'Description'    '[Cron] "1 2 3 4 5 heniek pi\xe3\x80te\x00zek \xe3\x80"'            heniek\'s-invalid-and-truncated-program
+	assert_key cron-crontab-heniek-0.service 'LogExtraFields' 'CRON_JOB="\"1 2 3 4 5 heniek pi\\xe3\\x80te\\x00zek \\xe3\\x80\""' heniek\'s-invalid-and-truncated-program+LogExtraFields
+	cmp /etc/heniek.tr cron-crontab-heniek-0.sh || { err=1; echo "heniek's-invalid-and-truncated-copied-verbatim" >&2; }
 }
 
 exit $err

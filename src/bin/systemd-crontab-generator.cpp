@@ -8,6 +8,7 @@
 #include <md5.h>
 #include <random>
 #include <sys/fsuid.h>
+#include <variant>
 static const constexpr auto key_or_plain = [](auto && lhs, auto && rhs) {
 	static const constexpr auto key =
 	    vore::overload{[](const std::string_view & s) { return s; }, [](const std::pair<std::string_view, std::string_view> & kv) { return kv.first; }};
@@ -146,6 +147,7 @@ struct Job {
 	std::string filename;
 	std::string_view basename;
 	std::string_view line;
+	std::variant<std::string_view, std::string> line_description;
 	std::vector<std::string_view> parts;
 	std::map<std::string_view, std::string_view> environment;
 	std::string environment_PATH_storage;  // borrowed into environment on expansion
@@ -809,35 +811,52 @@ struct Job {
 		return scriptlet;
 	}
 
+	auto describe_line() -> void {
+		if(!std::visit([](auto && ld) { return ld.empty(); }, this->line_description))
+			return;
+
+		this->line_description = this->line;
+		std::string * escaped{};
+
+		char buf[4 + 1];  // \xAA
+		auto desc = this->line;
+		mbstate_t st{};
+		for(std::size_t conv; !desc.empty(); desc.remove_prefix(conv))
+			switch(conv = std::mbrlen(desc.data(), desc.size(), &st)) {
+				case static_cast<std::size_t>(-1):  // EILSEQ: reset, output byte as \xXX
+					st = {};
+					[[fallthrough]];
+				case 0:  // embedded NUL, output byte as \xXX
+					conv = 1;
+					goto hex;
+				case static_cast<std::size_t>(-2):  // incomplete: output rest as \xXX
+					conv = desc.size();
+				hex:
+					if(!escaped)
+						escaped = &this->line_description.emplace<std::string>(this->line.substr(0, this->line.size() - desc.size()));
+					for(auto byte : desc.substr(0, conv))
+						escaped->append(buf, std::sprintf(buf, "\\x%02hhx", byte));
+					break;
+				default:
+					if(desc.front() == '%') {  // % is special in systemd units, %% is literal
+						if(!escaped)
+							escaped = &this->line_description.emplace<std::string>(this->line.substr(0, this->line.size() - desc.size()));
+						escaped->append("%%"sv);
+					} else  //
+						if(escaped)
+							escaped->append(desc.data(), conv);
+					continue;
+			}
+	}
+
 	auto generate_unit_header(FILE * into, const char * tp) -> void {
 		std::fputs("[Unit]\n", into);
 		std::fprintf(into, "Description=[%s] ", tp);
 		if(this->line[0] != '/')
 			std::fputc('\"', into);
-		{
-			auto desc = this->line;
-			wchar_t c;
-			mbstate_t st{};
-			for(std::size_t conv; !desc.empty() && (conv = std::mbrtowc(&c, desc.data(), desc.size(), &st)); desc.remove_prefix(conv))
-				switch(conv) {
-					case static_cast<std::size_t>(-1):  // EILSEQ: reset, output byte as \xXX
-						st   = {};
-						conv = 1;
-						goto hex;
-					case static_cast<std::size_t>(-2):  // incomplete: output rest as \xXX
-						conv = desc.size();
-					hex:
-						for(auto byte : desc.substr(0, conv))
-							std::fprintf(into, "\\x%02hhx", byte);
-						break;
-					default:
-						if(c == '%')  // % is special in systemd units, %% is literal
-							std::fputs("%%", into);
-						else
-							std::fwrite(desc.data(), 1, conv, into);
-						continue;
-				}
-		}
+		this->describe_line();
+		std::fwrite(std::visit([](auto && ld) -> const char * { return ld.data(); }, this->line_description), 1,
+		            std::visit([](auto && ld) { return ld.size(); }, this->line_description), into);
 		if(this->line[0] != '/')
 			std::fputc('\"', into);
 		std::fputc('\n', into);
