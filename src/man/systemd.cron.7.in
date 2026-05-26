@@ -229,9 +229,12 @@ will work around this
 .Pq but break existing Nm systemctl Ic edit Ns \& overrides .
 .
 .Sh EXTENSIONS
-The generator can optionally turn any crontabs in persistent timers with the
+Jobs with
 .Ev PERSISTENT Ns = Ns Sy true
-flag, while a regular cron and anacron setup won't catch up on the missed executions of crontabs on reboot.
+and
+.Sy @ Ns -keyword
+are started on boot if a run was missed while the system was off.
+A regular cron and anacron setup won't catch up on the missed executions of crontabs on reboot.
 .
 .Sh EXAMPLES
 .Ss Start cron units
