@@ -1,4 +1,4 @@
-.Dd 2026-05-21
+.Dd 2026-05-26
 .Dt SYSTEMD.CRON 7
 .Os systemd-cron @version@
 .

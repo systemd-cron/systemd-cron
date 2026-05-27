@@ -1,3 +1,10 @@
+v2.8.1 : 2026-05-27
+
+   [наб]
+   Fix: pseudo-race condition described in v2.8.0 w.r.t. the e-mail Subject
+   New: generated services have a copy of Description= in
+                                          LogExtraFields=CRON_JOB=
+
 v2.8.0 : 2026-05-25
 
    [наб]
