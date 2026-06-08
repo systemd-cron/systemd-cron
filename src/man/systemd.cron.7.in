@@ -203,7 +203,7 @@ and "root", respectively).
 .Pp
 .Pf $ Ev SENDMAIL
 can be also be set from the global systemd environment
-.Pq Nm systemctl Ic show-environment .
+.Pq Nm systemctl Cm show-environment .
 .El
 .
 .Sh BUGS
@@ -222,13 +222,13 @@ so if a job changes (by direct editing or by removing (commenting out) a previou
 .Em while it is running ,
 and mail is sent for that job,
 some configuration may be wrong (too new) and
-.Xr systemctl Ic status
+.Nm systemctl Cm status
 may be confusing.
 The journal output and e-mail subject are correct.
 Setting
 .Sy CRON_UNIQUE_UNITS
 will work around this
-.Pq but break existing Nm systemctl Ic edit Ns \& overrides .
+.Pq but break existing Nm systemctl Cm edit Ns \& overrides .
 .
 .Sh EXTENSIONS
 Jobs with
