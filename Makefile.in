@@ -44,6 +44,7 @@ out_services	:= $(builddir)/units/systemd-cron-cleaner.service
 out_timers	:= $(builddir)/units/systemd-cron-cleaner.timer
 out_targets	:=
 endif
+out_tmpfiles            := $(builddir)/lib/tmpfiles.d/systemd-cron.conf
 out_units		:= $(out_services) $(out_timers) $(out_targets) $(builddir)/units/cron.target \
                            $(builddir)/units/cron-update.path $(builddir)/units/cron-update.service \
                            $(builddir)/units/cron-mail@.service
@@ -51,7 +52,7 @@ out_manuals		:= $(patsubst $(srcdir)/man/%.in,$(builddir)/man/%,$(wildcard $(src
 out_programs_sh		:= $(subst $(srcdir),$(builddir),$(patsubst %.sh,%,$(wildcard $(srcdir)/bin/*.sh)))
 out_programs_cpp	:= $(subst $(srcdir),$(builddir),$(patsubst %.cpp,%,$(wildcard $(srcdir)/bin/*.cpp)))
 out_programs_c		:= $(subst $(srcdir),$(builddir),$(patsubst %.c,%,$(wildcard $(srcdir)/bin/*.c)))
-outputs			:= $(out_units) $(out_manuals) $(out_programs_sh) $(out_programs_cpp) $(out_programs_c)
+outputs			:= $(out_tmpfiles) $(out_units) $(out_manuals) $(out_programs_sh) $(out_programs_cpp) $(out_programs_c)
 
 define \n
 
@@ -110,7 +111,7 @@ install: all
 	install -m755 -D $(builddir)/bin/mail_for_job $(DESTDIR)$(libexecdir)/systemd-cron/mail_for_job
 	install -m755 -D $(builddir)/bin/boot_delay $(DESTDIR)$(libexecdir)/systemd-cron/boot_delay
 	install -m644 -D $(srcdir)/lib/sysusers.d/systemd-cron.conf $(DESTDIR)$(sysusersdir)/systemd-cron.conf
-	install -m644 -D $(srcdir)/lib/tmpfiles.d/systemd-cron.conf $(DESTDIR)$(tmpfilesdir)/systemd-cron.conf
+	install -m644 -D $(builddir)/lib/tmpfiles.d/systemd-cron.conf $(DESTDIR)$(tmpfilesdir)/systemd-cron.conf
 	install -m755 -D $(builddir)/bin/crontab_setgid $(DESTDIR)$(libexecdir)/systemd-cron/crontab_setgid
 
 	install -m644 -D $(builddir)/man/systemd.cron.7 $(DESTDIR)$(mandir)/man7/systemd.cron.7
@@ -135,6 +136,9 @@ else
 	install -m644 $(builddir)/units/systemd-cron-cleaner.timer $(DESTDIR)$(unitdir)
 	install -m644 $(builddir)/units/systemd-cron-cleaner.service $(DESTDIR)$(unitdir)
 endif
+
+$(builddir)/lib/tmpfiles.d/systemd-cron.conf: $(srcdir)/lib/tmpfiles.d/systemd-cron.conf.in
+	$(call in2out,$<,$@)
 
 $(builddir)/units/cron-update.path: $(srcdir)/units/cron-update.path.in
 	$(call in2out,$<,$@)
@@ -261,7 +265,7 @@ $(outdir):
 	mkdir -p $@
 
 $(builddir):
-	mkdir -p $@/bin $@/man $@/units $@/include
+	mkdir -p $@/bin $@/man $@/units $@/include $@/lib/tmpfiles.d
 
 $(distdir):
 	mkdir -p $(distdir)
