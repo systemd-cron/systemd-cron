@@ -1,3 +1,17 @@
+v2.8.2 : 2026-06-xx
+
+   [adetiste]
+   Fix: potentially weird owner of new user crontabs after crontab(1) -u as root
+        by setting mode & owner of crontab_setgid in tmpfiles.d config
+
+   [Vadim Misbakh-Soloviov]
+   Fix: for same reason, don't try to reset crontab modes in crontab(1) -l/-r
+
+   [наб]
+   Fix:     when installing crontab as root, set file ownership better
+   Fix:     markup in systemd.cron(7)
+   Clarify: mention other CRON_ variables in crontab(5) inheritance rules
+
 v2.8.1 : 2026-05-27
 
    [наб]
