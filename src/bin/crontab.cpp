@@ -159,21 +159,6 @@ static auto version() -> int {
 	return 0;
 }
 
-// try to fix things up if running as root
-static auto try_chmod(const char * cron_file = nullptr, const char * user = nullptr) -> void {
-	struct stat sb;
-	if(stat(SETGID_HELPER, &sb))
-		return;
-
-	if(!chown(CRONTAB_DIR, 0, sb.st_gid))
-		(void)chmod(CRONTAB_DIR, 01730);  // rwx-wx--T
-
-	if(cron_file && user)
-		if(auto ent = getpwnam(user))
-			if(!chown(cron_file, ent->pw_uid, sb.st_gid))
-				(void)chmod(cron_file, 00600);  // rw-------
-}
-
 // Divide the crontab into three colour-coded sexions:
 //   blue    for comments        (metadata for the user)
 //   green   for time specs      (metadata for cron)
@@ -222,7 +207,6 @@ static auto list(const char * cron_file, const char * user) -> int {
 		else
 			colour_crontab(f);
 		check(cron_file);
-		try_chmod(cron_file, user);
 		return 0;
 	}
 	auto err = errno;
@@ -266,7 +250,6 @@ static auto list(const char * cron_file, const char * user) -> int {
 
 
 static auto remove(const char * cron_file, const char * user, bool ask) -> int {
-	try_chmod();
 	if(ask && !confirm("Are you sure you want to delete %s? ", cron_file))
 		return 0;
 
@@ -319,11 +302,17 @@ static auto replace_crontab(const char * cron_file, const char * user, FILE * fr
 	copy_FILE(from, final_tmp);
 	if(std::fflush(final_tmp))
 		return false;
+
+	if(struct stat sb; !stat(SETGID_HELPER, &sb))
+		(void)fchown(fileno(final_tmp), -1, sb.st_gid);
+
+	if(auto ent = getpwnam(user))
+		(void)fchown(fileno(final_tmp), ent->pw_uid, -1);
+
 	if(rename(final_tmp_path, cron_file))
 		return false;
 	final_tmp_path.armed = false;
 
-	try_chmod(cron_file, user);
 	return true;
 }
 
