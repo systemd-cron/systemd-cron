@@ -192,7 +192,7 @@ a white-space-separated list of variables
 to remember into other crontabs
 .Pq Pa /etc/cron.d , No users' crontabs ; not Pa /etc/anacron .
 This allows instituting a global
-.Sy RANDOM_DELAY Ns / Ns Sy SHELL Ns /&c.\&
+.Sy RANDOM_DELAY Ns / Ns Sy SHELL Ns / Ns Sy CRON_… Ns /&c.\&
 default policy.
 .br
 Elsewhere: ignored.
